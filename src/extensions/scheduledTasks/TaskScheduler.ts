@@ -185,8 +185,11 @@ export class TaskScheduler {
 	}
 
 	/** Execute now without storing a job. Thrown errors remain failures. */
-	public async run(task: TaskResolvable, context?: TaskRunContext): Promise<number> {
-		if (this.closed) throw new Error('This task scheduler is closed.');
+	public run(task: TaskResolvable, context?: TaskRunContext): Promise<number> {
+		return this.operation(() => this.runTask(task, context));
+	}
+
+	private async runTask(task: TaskResolvable, context?: TaskRunContext): Promise<number> {
 		const { name, payload } = this.resolveTask(task);
 		const client = container.client;
 		const module = client.modules.require('tasks').get(name);

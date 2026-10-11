@@ -2,6 +2,22 @@ import { describe, expect, test } from 'bun:test';
 import { deepClone } from '../../../src/utilities/index';
 
 describe('deepClone', () => {
+	test('clones dictionaries with a null prototype', () => {
+		const source = Object.assign(Object.create(null), { nested: { value: 1 } });
+		const clone = deepClone(source);
+		expect(Object.getPrototypeOf(clone)).toBeNull();
+		expect(clone.nested).toEqual({ value: 1 });
+		expect(clone.nested).not.toBe(source.nested);
+	});
+
+	test('treats an own constructor property as data', () => {
+		const source = { constructor: { name: 'example' }, nested: { value: 1 } };
+		const clone = deepClone(source);
+		expect(Object.getPrototypeOf(clone)).toBe(Object.prototype);
+		expect(clone).toEqual(source);
+		expect(clone.constructor).not.toBe(source.constructor);
+	});
+
 	test('GIVEN null THEN returns same', () => {
 		const source = null;
 		expect(deepClone(source)).toEqual(source);

@@ -2,6 +2,10 @@ import { describe, expect, test } from 'bun:test';
 import { zip } from '../../../src/utilities/iterators/index';
 
 describe('zip', () => {
+	test('GIVEN no input iterables THEN terminates immediately', () => {
+		expect(zip().next()).toEqual({ done: true, value: undefined });
+	});
+
 	test('GIVEN multiple iterables with same length THEN returns zipped iterable', () => {
 		const iterable1 = [1, 2, 3];
 		const iterable2 = ['a', 'b', 'c'];

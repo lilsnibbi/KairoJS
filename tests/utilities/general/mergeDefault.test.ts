@@ -2,6 +2,29 @@ import { describe, expect, test } from 'bun:test';
 import { mergeDefault } from '../../../src/utilities/index';
 
 describe('mergeDefault', () => {
+	test('applies prototype-named JSON defaults without changing prototypes', () => {
+		const base = JSON.parse('{"__proto__":{"kairoDefaultPolluted":true}}');
+		const overwrites = {};
+		try {
+			mergeDefault(base, overwrites);
+			expect(Object.hasOwn(Object.prototype, 'kairoDefaultPolluted')).toBe(false);
+			expect(Object.getPrototypeOf(overwrites)).toBe(Object.prototype);
+			expect(Object.hasOwn(overwrites, '__proto__')).toBe(true);
+			expect(overwrites).toEqual(base);
+		} finally {
+			Reflect.deleteProperty(Object.prototype, 'kairoDefaultPolluted');
+		}
+	});
+
+	test('does not treat inherited properties as supplied overrides', () => {
+		const inherited = { settings: { original: true } };
+		const overwrites = Object.create(inherited);
+		mergeDefault({ settings: { added: true }, toString: 'label' }, overwrites);
+		expect(inherited.settings).toEqual({ original: true });
+		expect(overwrites.settings).toEqual({ added: true });
+		expect(overwrites.toString).toBe('label');
+	});
+
 	test('GIVEN empty overwrites THEN returns base', () => {
 		const base = { a: 0, b: 1 };
 		const overwrites = {};

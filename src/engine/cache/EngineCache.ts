@@ -1,5 +1,5 @@
 import type { APIChannel, APIGuildMember, APIMessage, APIRole } from 'discord-api-types/v10';
-import { GatewayDispatchEvents as E } from 'discord-api-types/v10';
+import { ChannelType, GatewayDispatchEvents as E } from 'discord-api-types/v10';
 import { integer, record } from '../common';
 import type { $GatewayDispatch } from '../gateway/types';
 import { visitActivity } from './activity';
@@ -168,7 +168,14 @@ export class EngineCache {
 				const owner = this.channelOwners.get(id) ?? '';
 				this.removeChannel(id);
 				// Deleting a parent channel also invalidates resident child threads.
-				for (const [child, entry] of this.channels) if ('parent_id' in entry.data && entry.data.parent_id === id) this.removeChannel(child);
+				for (const [child, { data: channel }] of this.channels)
+					if (
+						(channel.type === ChannelType.AnnouncementThread ||
+							channel.type === ChannelType.PublicThread ||
+							channel.type === ChannelType.PrivateThread) &&
+						channel.parent_id === id
+					)
+						this.removeChannel(child);
 				return [{ kind: 'channel', id, scope: owner, previous, payload }];
 			}
 			case E.ThreadListSync: {

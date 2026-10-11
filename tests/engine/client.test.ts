@@ -174,6 +174,20 @@ test('event unsubscribe and async rejection reporting preserve subsequent callba
 	expect(() => hub.on('event', () => {})).toThrow('closed');
 });
 
+test('repeating an old unsubscribe preserves replacement event listeners', () => {
+	const hub = new EventHub<{ event: number }>(10, () => {});
+	const off = hub.on('event', () => {});
+	off();
+	const received: number[] = [];
+	hub.on('event', (value) => {
+		received.push(value);
+	});
+	off();
+	hub.emit('event', 2);
+	expect(received).toEqual([2]);
+	hub.close();
+});
+
 test('initial interaction responses cannot race; native body is passed unchanged', async () => {
 	const release = Promise.withResolvers<Response>();
 	let body: unknown;

@@ -54,10 +54,11 @@ export function deepClone<T>(source: T): T {
 	}
 
 	if (typeof source === 'object') {
-		const output = new ((source as T & (object | Record<PropertyKey, unknown>)).constructor as ObjectConstructor)() as unknown as Record<
-			PropertyKey,
-			unknown
-		>;
+		const prototype = Object.getPrototypeOf(source);
+		const output: Record<PropertyKey, unknown> =
+			prototype === null || prototype === Object.prototype
+				? Object.create(prototype)
+				: new ((source as object).constructor as ObjectConstructor)();
 
 		for (const [key, value] of Object.entries(source)) {
 			Object.defineProperty(output, key, {

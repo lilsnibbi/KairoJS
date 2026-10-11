@@ -182,17 +182,28 @@ export class ShardCoordinator {
 		const instance = request.headers.get('x-kairo-instance');
 		if (!identifier.allows(instance)) return new Response('Invalid identity', { status: 400 });
 		if (this.sessions.has(host.id)) return new Response('Worker already connected', { status: 409 });
+		let claimed: boolean;
 		try {
-			this.state!.claim(host.id, instance);
+			claimed = this.state!.claim(host.id, instance);
 		} catch {
 			return new Response('Worker ownership is reserved', { status: 409 });
 		}
 		const session: Session = { host, instance, lastSeen: performance.now(), ready: new Map(), ids: new Set(), released: false };
 		this.sessions.set(host.id, session);
-		// Supervisors only register/reconnect after the previous children have exited.
-		this.state!.stopped(host.id);
-		if (server.upgrade(request, { data: session })) return undefined;
-		this.sessions.delete(host.id);
+		let upgraded = false;
+		try {
+			upgraded = server.upgrade(request, { data: session });
+			if (upgraded) {
+				// Only a completed registration proves the previous children have exited.
+				this.state!.stopped(host.id);
+				return undefined;
+			}
+		} finally {
+			if (!upgraded) {
+				this.sessions.delete(host.id);
+				if (claimed) this.state!.release(host.id);
+			}
+		}
 		return new Response('Upgrade required', { status: 400 });
 	}
 	private receive(session: Session, message: Frame): void {

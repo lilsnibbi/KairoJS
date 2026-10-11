@@ -2,6 +2,28 @@ import { describe, expect, test } from 'bun:test';
 import { mergeObjects } from '../../../src/utilities/index';
 
 describe('mergeObjects', () => {
+	test('merges prototype-named JSON keys without changing prototypes', () => {
+		const source = JSON.parse('{"__proto__":{"kairoMergePolluted":true},"constructor":{"prototype":{"safe":true}}}');
+		const target = {};
+		try {
+			mergeObjects(target, source);
+			expect(Object.hasOwn(Object.prototype, 'kairoMergePolluted')).toBe(false);
+			expect(Object.getPrototypeOf(target)).toBe(Object.prototype);
+			expect(Object.hasOwn(target, '__proto__')).toBe(true);
+			expect(target).toEqual(source);
+		} finally {
+			Reflect.deleteProperty(Object.prototype, 'kairoMergePolluted');
+		}
+	});
+
+	test('does not merge into inherited objects', () => {
+		const inherited = { settings: { original: true } };
+		const target = Object.create(inherited);
+		mergeObjects(target, { settings: { added: true } });
+		expect(inherited.settings).toEqual({ original: true });
+		expect(target.settings).toEqual({ added: true });
+	});
+
 	test('GIVEN basic THEN returns expected', () => {
 		const source = { a: 0, b: 1 };
 		const target = {};

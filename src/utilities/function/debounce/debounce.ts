@@ -95,7 +95,7 @@ export function debounce<FnArgumentsType extends any[], FnReturnType>(
 
 	function trailingEdge(time: number) {
 		timerId = undefined;
-		return invokeFunc(time);
+		return lastArgs === undefined ? result : invokeFunc(time);
 	}
 
 	function cancel() {
@@ -110,7 +110,9 @@ export function debounce<FnArgumentsType extends any[], FnReturnType>(
 	}
 
 	function flush() {
-		return timerId === undefined ? result : trailingEdge(Date.now());
+		if (timerId === undefined) return result;
+		clearTimeout(timerId);
+		return trailingEdge(Date.now());
 	}
 
 	function debounced(...args: FnArgumentsType) {
@@ -126,6 +128,7 @@ export function debounce<FnArgumentsType extends any[], FnReturnType>(
 			}
 			if (maxWait !== null) {
 				// Handle invocations in a tight loop.
+				clearTimeout(timerId);
 				timerId = setTimeout(timerExpired, wait);
 				return invokeFunc(lastCallTime);
 			}

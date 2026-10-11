@@ -34,6 +34,7 @@ export class EventIterator<V extends unknown[]> implements AsyncIterableIterator
 
 	/** The queue of received values. */
 	#queue: V[] = [];
+	readonly #waiters = new Set<() => void>();
 
 	/** The number of events that have passed the filter. */
 	#passed = 0;
@@ -74,10 +75,12 @@ export class EventIterator<V extends unknown[]> implements AsyncIterableIterator
 		if (this.#ended) return;
 		this.#ended = true;
 		this.#queue = [];
+		if (this.#idleTimer) clearTimeout(this.#idleTimer);
 
 		this.emitter.off(this.event, this.#push);
 		const maxListeners = this.emitter.getMaxListeners();
 		if (maxListeners !== 0) this.emitter.setMaxListeners(maxListeners - 1);
+		for (const resume of this.#waiters) resume();
 	}
 
 	/** The next value that's received from the EventEmitter. */
@@ -87,35 +90,24 @@ export class EventIterator<V extends unknown[]> implements AsyncIterableIterator
 			const value = this.#queue.shift()!;
 			if (!this.filter(value)) return this.next();
 			if (++this.#passed >= this.#limit) this.end();
-			if (this.#idleTimer) this.#idleTimer.refresh();
+			else if (this.#idleTimer) this.#idleTimer.refresh();
 			return { done: false, value };
 		}
 
-		// If the iterator ended, clean-up timer and return a done response:
+		// If the iterator ended, return a done response:
 		if (this.#ended) {
-			if (this.#idleTimer) clearTimeout(this.#idleTimer);
 			return { done: true, value: undefined as never };
 		}
 
 		// Listen for a new element from the emitter:
 		return new Promise<IteratorResult<V>>((resolve) => {
-			let idleTimer: NodeJS.Timeout | undefined | null = null;
-
-			// If there is an idle time set, we will create a temporary timer,
-			// which will cause the iterator to end if no new elements are received:
-			if (this.#idle) {
-				idleTimer = setTimeout(() => {
-					this.end();
-					resolve(this.next());
-				}, this.#idle);
-			}
-
-			// Once it has received at least one value, we will clear the timer (if defined),
-			// and resolve with the new value:
-			this.emitter.once(this.event, () => {
-				if (idleTimer) clearTimeout(idleTimer);
+			const resume = () => {
+				if (!this.#waiters.delete(resume)) return;
+				this.emitter.off(this.event, resume);
 				resolve(this.next());
-			});
+			};
+			this.#waiters.add(resume);
+			this.emitter.once(this.event, resume);
 		});
 	}
 
@@ -138,6 +130,6 @@ export class EventIterator<V extends unknown[]> implements AsyncIterableIterator
 
 	/** Pushes a value into the queue. */
 	protected push(...value: V): void {
-		this.#queue.push(value);
+		if (!this.#ended) this.#queue.push(value);
 	}
 }

@@ -25,7 +25,7 @@ export class AsyncQueueEntry {
 			const index = this.queue['promises'].indexOf(this);
 			if (index !== -1) this.queue['promises'].splice(index, 1);
 
-			this.reject(new Error('Request aborted manually'));
+			this.abort();
 		};
 		this.signal.addEventListener('abort', this.signalListener);
 		return this;

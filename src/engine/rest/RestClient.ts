@@ -110,7 +110,12 @@ export class RestClient {
 			request.path.startsWith('//') ||
 			request.path.includes('\\') ||
 			request.path.includes('#') ||
-			request.path.split(/[/?]/).some((part) => part === '..' || part === '.')
+			request.path.charCodeAt(request.path.length - 1) <= 0x20 ||
+			/[\t\r\n]/.test(request.path) ||
+			request.path
+				.replace(/%2e/gi, '.')
+				.split(/[/?]/)
+				.some((part) => part === '..' || part === '.')
 		)
 			return Promise.reject(new TypeError('REST paths must be absolute API paths without traversal.'));
 		const signal = request.signal ? AbortSignal.any([request.signal, this.lifetime.signal]) : this.lifetime.signal;

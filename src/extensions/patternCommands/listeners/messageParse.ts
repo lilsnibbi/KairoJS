@@ -57,7 +57,7 @@ export class MessageParseListener extends Listener<typeof Events.PreMessageParse
 
 			if (
 				content.match(
-					new RegExp(patternCommand.matchFullName ? `\b${key}\b` : key, client.options.caseInsensitiveCommands ? 'i' : undefined)
+					new RegExp(patternCommand.matchFullName ? `\\b(?:${key})\\b` : key, client.options.caseInsensitiveCommands ? 'i' : undefined)
 				)
 			) {
 				possiblePatternCommands.push({

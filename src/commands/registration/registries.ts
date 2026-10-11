@@ -116,11 +116,11 @@ export async function handleBulkOverwrite(commandStore: CommandStore, applicatio
 	}
 
 	// Handle global commands
-	await retry(() => handleBulkOverwriteGlobalCommands(commandStore, applicationCommands, foundGlobalCommands), bulkOVerwriteRetries);
+	await handleBulkOverwriteGlobalCommands(commandStore, applicationCommands, foundGlobalCommands);
 
 	// Handle guild commands
 	for (const [guildId, guildCommands] of Object.entries(foundGuildCommands)) {
-		await retry(() => handleBulkOverwriteGuildCommands(commandStore, applicationCommands, guildId, guildCommands), bulkOVerwriteRetries);
+		await handleBulkOverwriteGuildCommands(commandStore, applicationCommands, guildId, guildCommands);
 	}
 
 	container.client.emit(Events.ApplicationCommandRegistriesRegistered, registries, Date.now() - now);
@@ -133,11 +133,13 @@ async function handleBulkOverwriteGlobalCommands(
 ) {
 	try {
 		bulkOverwriteDebug(`Overwriting global application commands, now at ${foundGlobalCommands.length} commands`);
-		const result = await applicationCommands.set(foundGlobalCommands.map((x) => x.data));
+		const result = await retry(() => applicationCommands.set(foundGlobalCommands.map((x) => x.data)), bulkOVerwriteRetries);
 
 		// Go through each registered command, find its module and alias it
 		for (const [id, globalCommand] of result.entries()) {
-			const module = foundGlobalCommands.find((x) => x.data.name === globalCommand.name)?.module;
+			const module = foundGlobalCommands.find(
+				(x) => x.data.name === globalCommand.name && (x.data.type ?? ApplicationCommandType.ChatInput) === globalCommand.type
+			)?.module;
 
 			if (module) {
 				const registry = module.applicationCommandRegistry;
@@ -180,17 +182,20 @@ async function handleBulkOverwriteGuildCommands(
 ) {
 	try {
 		bulkOverwriteDebug(`Overwriting guild application commands for guild ${guildId}, now at ${guildCommands.length} commands`);
-		const result = await applicationCommands.set(
-			guildCommands.map((x) => x.data),
-			guildId
+		const result = await retry(
+			() =>
+				applicationCommands.set(
+					guildCommands.map((x) => x.data),
+					guildId
+				),
+			bulkOVerwriteRetries
 		);
 
 		// Go through each registered command, find its module and alias it
 		for (const [id, guildCommand] of result.entries()) {
-			// I really hope nobody has a guild command with the same name as another command -.-
-			// Not like they could anyways as Discord would throw an error for duplicate names
-			// But yknow... If you're reading this and you did this... Why?
-			const module = guildCommands.find((x) => x.data.name === guildCommand.name)?.module;
+			const module = guildCommands.find(
+				(x) => x.data.name === guildCommand.name && (x.data.type ?? ApplicationCommandType.ChatInput) === guildCommand.type
+			)?.module;
 
 			if (module) {
 				const registry = module.applicationCommandRegistry;

@@ -31,8 +31,19 @@ export class RateLimitManager<K = string> extends Map<K, RateLimit<K>> {
 
 	/** Wraps Collection's set method to set interval to sweep inactive {@link RateLimit}s. */
 	public override set(id: K, value: RateLimit<K>): this {
-		this.sweepInterval ??= setInterval(this.sweep.bind(this), RateLimitManager.sweepIntervalDuration);
+		this.sweepInterval ??= setInterval(this.sweep.bind(this), RateLimitManager.sweepIntervalDuration).unref();
 		return super.set(id, value);
+	}
+
+	public override delete(id: K): boolean {
+		const deleted = super.delete(id);
+		this.clearEmptyInterval();
+		return deleted;
+	}
+
+	public override clear(): void {
+		super.clear();
+		this.clearEmptyInterval();
 	}
 
 	/** Wraps Collection's sweep method to clear the interval when this manager is empty. */
@@ -40,7 +51,10 @@ export class RateLimitManager<K = string> extends Map<K, RateLimit<K>> {
 		for (const [id, value] of this.entries()) {
 			if (value.expired) this.delete(id);
 		}
+		this.clearEmptyInterval();
+	}
 
+	private clearEmptyInterval(): void {
 		if (this.size === 0 && this.sweepInterval !== undefined && this.sweepInterval !== null) {
 			clearInterval(this.sweepInterval);
 			this.sweepInterval = null;

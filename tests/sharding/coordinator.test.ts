@@ -72,6 +72,51 @@ describe('authenticated coordinator on real WebSockets', () => {
 			await s.close();
 		}
 	});
+	test('does not reserve fresh ownership after a rejected WebSocket handshake', async () => {
+		const s = await stack();
+		try {
+			const response = await fetch(s.coordinator.url!.replace('ws:', 'http:'), {
+				headers: {
+					authorization: `Bearer ${tokenA}`,
+					'x-kairo-worker': 'a',
+					'x-kairo-instance': 'invalid-handshake',
+					upgrade: 'websocket'
+				}
+			});
+			expect(response.status).toBe(400);
+			const replacement = await s.host('a');
+			expect(replacement.isConnected).toBe(true);
+		} finally {
+			await s.close();
+		}
+	});
+	test('preserves existing ownership after a rejected reconnect handshake', async () => {
+		const s = await stack();
+		try {
+			const owner = await peer(s.coordinator.url!, 'a');
+			await owner.close();
+			await until(() => !s.coordinator.workers[0].connected);
+			const response = await fetch(s.coordinator.url!.replace('ws:', 'http:'), {
+				headers: {
+					authorization: `Bearer ${tokenA}`,
+					'x-kairo-worker': 'a',
+					'x-kairo-instance': owner.instance,
+					upgrade: 'websocket'
+				}
+			});
+			expect(response.status).toBe(400);
+			const competitor = new ShardManager({ id: 'a', url: s.coordinator.url!, token: tokenA, script: fixture, logger });
+			try {
+				await expect(competitor.start()).rejects.toThrow();
+			} finally {
+				await competitor.close();
+			}
+			const reconnect = await peer(s.coordinator.url!, 'a', owner.instance);
+			await reconnect.close();
+		} finally {
+			await s.close();
+		}
+	});
 	test('rejects duplicate shard registration and a host claiming another host shard', async () => {
 		const s = await stack();
 		try {

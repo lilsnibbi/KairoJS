@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { Pending } from '../../src/sharding/transport/pending';
-import { decode, encode, frame, limits, sendSocket, tokenMatches } from '../../src/sharding/transport/protocol';
+import { decode, encode, failure, frame, limits, sendSocket, tokenMatches } from '../../src/sharding/transport/protocol';
+import { ShardError } from '../../src/sharding/types';
 
 describe('sharding transport boundaries', () => {
 	test('validates versions, operations, exact fields, types and encoded bytes', () => {
@@ -88,5 +89,17 @@ describe('sharding transport boundaries', () => {
 		pending.close();
 		await expect(closing).rejects.toThrow('closed');
 		expect(pending.size).toBe(0);
+	});
+	test('fits escaped and multibyte handler failures into the minimum transport limit', () => {
+		for (const [input, expected] of [
+			['ordinary failure', 'ordinary failure'],
+			['\0'.repeat(500), '\0'.repeat(83)],
+			['🙂'.repeat(500), '🙂'.repeat(125)]
+		]) {
+			const result = failure(new ShardError('x'.repeat(128), input));
+			expect(result.error.message).toBe(expected);
+			const encoded = encode(frame('result', 'x'.repeat(128), { shard: 4095, generation: 'x'.repeat(128), result }), 1024);
+			expect(decode(encoded, 1024, ['result']).data.result).toEqual(result);
+		}
 	});
 });

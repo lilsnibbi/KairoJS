@@ -66,6 +66,19 @@ describe('real loopback coordinator, supervisors and Bun shard processes', () =>
 			await s.close();
 		}
 	}, 20000);
+	test('keeps a shard alive when encoded handler error text exceeds its message limit', async () => {
+		const s = await stack({ limits: { maxBytes: 1024 } });
+		try {
+			const a = await s.host('a', { restart: false, env: { SHARD_TEST_MODE: 'largeError' } });
+			await until(() => a.processes[0]?.state === 'running');
+			const pid = a.processes[0].pid;
+			await expect(a.request(0, 'fail', null)).rejects.toMatchObject({ code: 'HANDLER' });
+			expect((await a.request(0, 'probe', { value: 7 })).value).toBe(7);
+			expect(a.processes[0].pid).toBe(pid);
+		} finally {
+			await s.close();
+		}
+	}, 10000);
 	test('bounds repeated crashes and kills a child that never boots', async () => {
 		const s = await stack();
 		try {

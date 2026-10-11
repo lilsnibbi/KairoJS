@@ -26,6 +26,7 @@ client.sharding.handle(
 client.sharding.handle('relay', (data) => client.sharding.request(data.target, 'probe', { value: data.value }));
 client.sharding.handle('all', async () => (await client.sharding.broadcast('probe', { value: 8 })).map((v) => v.shard));
 client.sharding.handle('fail', () => {
+	if (process.env.SHARD_TEST_MODE === 'largeError') throw new Error('\0🙂'.repeat(500));
 	throw new Error('Intentional handler failure');
 });
 client.sharding.handle('slow', async (data, context) => {

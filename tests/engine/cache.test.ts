@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { GatewayDispatchEvents as E } from 'discord-api-types/v10';
+import { ChannelType, GatewayDispatchEvents as E } from 'discord-api-types/v10';
 import { CacheStore } from '../../src/engine/cache/CacheStore';
 import { EngineCache } from '../../src/engine/cache/EngineCache';
 import { ScopedCache } from '../../src/engine/cache/ScopedCache';
@@ -166,6 +166,43 @@ describe('native cache semantics', () => {
 		cache.clear();
 		expect(cache.guilds.size + cache.channels.size + cache.roles.scopeCount).toBe(0);
 	});
+	test('category deletion preserves child channel identities and cached messages', () => {
+		const cache = new EngineCache({ messagesPerChannel: 2 });
+		const category = { id: '19', guild_id: '30', type: ChannelType.GuildCategory as const, name: 'category', position: 0 };
+		const child = {
+			id: '20',
+			guild_id: '30',
+			type: ChannelType.GuildText as const,
+			name: 'general',
+			position: 0,
+			parent_id: '19'
+		};
+		cache.putChannel(category);
+		cache.putChannel(child);
+		cache.apply(dispatch(E.MessageCreate, message()));
+		const before = cache.channels.peek('20');
+		const cachedMessage = cache.messages.peek('20', '100');
+		cache.apply(dispatch(E.ChannelDelete, category));
+		expect(cache.channels.peek('19')).toBeUndefined();
+		expect(cache.channels.peek('20')).toBe(before);
+		expect(cache.messages.peek('20', '100')).toBe(cachedMessage);
+		cache.apply(dispatch(E.ChannelUpdate, { ...child, parent_id: null }));
+		expect(cache.channels.peek('20')).toBe(before);
+		expect(before?.complete).toBe(true);
+		expect(before?.data).toHaveProperty('parent_id', null);
+	});
+	for (const type of [ChannelType.AnnouncementThread, ChannelType.PublicThread, ChannelType.PrivateThread] as const) {
+		test(`parent channel deletion still removes child thread type ${type} and its messages`, () => {
+			const cache = new EngineCache({ messagesPerChannel: 2 });
+			const parent = { id: '20', guild_id: '30', type: ChannelType.GuildText as const, name: 'general', position: 0 };
+			cache.putChannel(parent);
+			cache.putChannel({ id: '21', guild_id: '30', type, name: 'thread', parent_id: '20' });
+			cache.apply(dispatch(E.MessageCreate, { ...message(), channel_id: '21' }));
+			cache.apply(dispatch(E.ChannelDelete, parent));
+			expect(cache.channels.size).toBe(0);
+			expect(cache.messages.scopeCount).toBe(0);
+		});
+	}
 	test('prototype keys cannot modify object prototypes', () => {
 		const store = new CacheStore<object>();
 		store.patch('1', JSON.parse('{"__proto__":{"polluted":true},"constructor":{"prototype":{"polluted":true}}}') as object);

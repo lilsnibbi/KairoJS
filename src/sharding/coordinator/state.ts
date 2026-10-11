@@ -70,11 +70,12 @@ export class CoordinatorState {
 			throw error;
 		}
 	}
-	public claim(worker: string, instance: string): void {
+	public claim(worker: string, instance: string): boolean {
 		const current = this.read<string>(`owner:${worker}`);
 		if (current && current !== instance)
 			throw new ShardError('OWNERSHIP', 'Worker identity is reserved. Fence its old processes before releaseWorker().');
 		this.write(`owner:${worker}`, instance);
+		return current === undefined;
 	}
 	public release(worker: string): void {
 		this.db.query('DELETE FROM kairo_sharding WHERE key = ?').run(`owner:${worker}`);

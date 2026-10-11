@@ -1,10 +1,42 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, jest, test } from 'bun:test';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { RateLimitManager } from '../../../../../src/utilities/time/ratelimits/index';
 import { TimerManager } from '../../../../../src/utilities/time/timers/index';
 
 describe('RateLimitManager', () => {
 	afterEach(() => TimerManager.destroy());
+	test.each(['clear', 'delete'] as const)('stops the sweeper when %s removes the final bucket', (operation) => {
+		jest.useFakeTimers();
+		const manager = new RateLimitManager(60000);
+		manager.acquire('one');
+		if (operation === 'clear') manager.clear();
+		else manager.delete('one');
+		expect(jest.getTimerCount()).toBe(0);
+		manager.acquire('two');
+		jest.advanceTimersByTime(60000);
+		expect(manager.size).toBe(0);
+		expect(jest.getTimerCount()).toBe(0);
+	});
+
+	test('cooldown maintenance does not keep a Bun process alive', async () => {
+		const moduleUrl = new URL('../../../../../src/utilities/time/ratelimits/RateLimitManager.ts', import.meta.url).href;
+		const child = Bun.spawn(
+			[
+				process.execPath,
+				'-e',
+				`import { RateLimitManager } from ${JSON.stringify(moduleUrl)}; new RateLimitManager(60000).acquire('one');`
+			],
+			{ stdout: 'pipe', stderr: 'pipe' }
+		);
+		const timeout = setTimeout(() => child.kill(), 2000);
+		try {
+			expect(await child.exited).toBe(0);
+		} finally {
+			clearTimeout(timeout);
+			child.kill();
+			await child.exited;
+		}
+	});
 
 	test('Acquiring', () => {
 		const manager = new RateLimitManager(1000, 1);

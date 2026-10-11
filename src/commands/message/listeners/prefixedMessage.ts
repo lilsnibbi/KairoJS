@@ -47,6 +47,6 @@ export class PrefixedMessageListener extends Listener<typeof Events.PrefixedMess
 	}
 
 	private getCommandPrefix(content: string, prefix: string | RegExp): string {
-		return typeof prefix === 'string' ? prefix : prefix.exec(content)![0];
+		return typeof prefix === 'string' ? prefix : new RegExp(prefix).exec(content)![0];
 	}
 }

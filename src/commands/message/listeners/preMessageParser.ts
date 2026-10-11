@@ -30,7 +30,7 @@ export class PreMessageParserListener extends Listener<typeof Events.PreMessageP
 			}
 
 			prefix = mentionPrefix;
-		} else if (regexPrefix?.test(message.content)) {
+		} else if (regexPrefix && new RegExp(regexPrefix).test(message.content)) {
 			prefix = regexPrefix;
 		} else {
 			const prefixes = await client.fetchPrefix(message);

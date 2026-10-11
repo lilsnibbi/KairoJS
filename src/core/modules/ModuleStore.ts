@@ -24,6 +24,7 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 	private readonly [RegisteredModules] = new Map<string, ModuleRegistration<StoreName>>();
 	#loaded = false;
 	#initialization?: Promise<void>;
+	#preparedModules?: T[];
 	readonly #insertions = new Map<string, Promise<T>>();
 	readonly #unloads = new WeakMap<T, Promise<T>>();
 
@@ -41,10 +42,25 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 	async addModule(entry: ModuleRegistration<StoreName>): Promise<void> {
 		if (!isClass(entry.module) || !classExtends(entry.module, this.Constructor as Constructor<T>))
 			throw new TypeError(`Module "${entry.name}" must extend ${this.Constructor.name}.`);
-		if (this.#loaded)
-			await this.insert(
-				this.construct(entry.module as unknown as Constructor<T>, { name: entry.name, root: VirtualPath, path: VirtualPath, extension: '' })
-			);
+		if (!this.#loaded && this[RegisteredModules].has(entry.name)) {
+			this.warnDuplicate(entry.name, 'explicit registration');
+			return;
+		}
+		if (this.#loaded || this.#initialization || (this.#preparedModules && !this[RegisteredModules].has(entry.name))) {
+			const module = this.construct(entry.module as unknown as Constructor<T>, {
+				name: entry.name,
+				root: VirtualPath,
+				path: VirtualPath,
+				extension: ''
+			});
+			if (!this.#loaded && this.#insertions.has(module.name)) {
+				this.warnDuplicate(module.name, 'explicit registration');
+				return;
+			}
+			if (!this.#loaded && this.#preparedModules?.some((prepared) => prepared.name === module.name)) this.#preparedModules.push(module);
+			else if (this.#loaded || this.#initialization) await this.insert(module);
+			else this.#preparedModules!.push(module);
+		}
 		if (!this[RegisteredModules].has(entry.name)) this[RegisteredModules].set(entry.name, { ...entry });
 		else this.warnDuplicate(entry.name, 'explicit registration');
 	}
@@ -66,6 +82,7 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 				this.report(entry.name, cause);
 			}
 		}
+		this.#preparedModules = modules;
 		for (const file of files) modules.push(...(await this.prepareFile(root, file, imports)));
 		return modules;
 	}
@@ -90,14 +107,19 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 
 	/** Activate once. Bad modules are isolated; failed cleanup remains fatal. */
 	initialize(modules: T[]): Promise<void> {
+		if (!this.#initialization) this.#preparedModules = modules;
 		this.#initialization ??= Promise.resolve().then(async () => {
-			for (const module of modules) {
-				try {
-					await this.insert(module);
-				} catch (cause) {
-					if (cause instanceof ModuleCleanupError) throw cause;
-					this.report(module.location.full, cause);
+			try {
+				for (const module of modules) {
+					try {
+						await this.insert(module);
+					} catch (cause) {
+						if (cause instanceof ModuleCleanupError) throw cause;
+						this.report(module.location.full, cause);
+					}
 				}
+			} finally {
+				this.#preparedModules = undefined;
 			}
 			await this.strategy.onLoadAll(this);
 			this.#loaded = true;

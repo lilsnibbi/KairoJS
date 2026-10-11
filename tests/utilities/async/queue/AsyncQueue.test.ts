@@ -1,4 +1,5 @@
 import { describe, expect, jest, test } from 'bun:test';
+import { getEventListeners } from 'node:events';
 import { AsyncQueue, type AsyncQueueWaitOptions } from '../../../../src/utilities/async/queue/index';
 
 function genNumbers(queue: AsyncQueue) {
@@ -14,6 +15,20 @@ function genNumbers(queue: AsyncQueue) {
 }
 
 describe('AsyncQueue', () => {
+	test('removes the abort listener when a queued wait is cancelled', async () => {
+		const queue = new AsyncQueue();
+		const controller = new AbortController();
+		await queue.wait();
+		const pending = queue.wait({ signal: controller.signal });
+		void pending.catch(() => {});
+		controller.abort();
+		await expect(pending).rejects.toThrow('Request aborted manually');
+		expect(getEventListeners(controller.signal, 'abort')).toHaveLength(0);
+		expect(queue.remaining).toBe(1);
+		queue.shift();
+		expect(queue.remaining).toBe(0);
+	});
+
 	test('GIVEN await calls THEN increments after each', async () => {
 		const queue = new AsyncQueue();
 		const tester = genNumbers(queue);

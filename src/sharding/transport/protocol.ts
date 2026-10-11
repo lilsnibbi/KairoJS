@@ -137,11 +137,19 @@ export function decode(value: unknown, maxBytes: number, allowed: readonly Op[])
 	return parsed as Frame;
 }
 export function failure(error: unknown): { ok: false; error: { code: string; message: string } } {
+	let message = '';
+	let bytes = 0;
+	// Bound escaped UTF-8 too, so errors fit even the minimum message limit.
+	for (const character of (error instanceof Error ? error.message : 'Handler failed.').slice(0, 500)) {
+		bytes += Buffer.byteLength(JSON.stringify(character)) - 2;
+		if (bytes > 500) break;
+		message += character;
+	}
 	return {
 		ok: false,
 		error: {
 			code: error instanceof ShardError && identifier.allows(error.code) ? error.code : 'HANDLER',
-			message: (error instanceof Error ? error.message : 'Handler failed.').slice(0, 500)
+			message
 		}
 	};
 }

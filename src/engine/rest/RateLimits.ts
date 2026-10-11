@@ -77,7 +77,11 @@ export class RateLimits {
 		const until = this.clock.now() + Math.max(1, wait);
 		if ((record(body) && body.global === true) || headers.get('x-ratelimit-global') === 'true')
 			this.globalUntil = Math.max(this.globalUntil, until);
-		else this.remember(this.buckets, this.key(route), { remaining: 0, reset: until });
+		else {
+			const key = this.key(route);
+			const existing = this.buckets.get(key);
+			this.remember(this.buckets, key, { remaining: 0, reset: Math.max(existing?.remaining === 0 ? existing.reset : 0, until) });
+		}
 		return wait;
 	}
 	private remember<T>(map: Map<string, T>, key: string, value: T): void {

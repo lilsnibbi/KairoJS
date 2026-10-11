@@ -21,6 +21,60 @@ function hanging(_input: string | URL, init?: RequestInit): Promise<Response> {
 }
 
 describe('engine REST', () => {
+	test('rejects encoded dot-segment traversal before submitting a request', async () => {
+		let calls = 0;
+		const client = new RestClient('offline', {
+			fetch: async () => {
+				calls++;
+				return json();
+			}
+		});
+		try {
+			for (const path of [
+				'/..',
+				'/%2e%2e/users/@me',
+				'/.%2E/users/@me',
+				'/%2e./users/@me',
+				'/channels/.\t./users/@me',
+				'/.. ',
+				'/.%2e\u0000'
+			]) {
+				await expect(client.request({ method: 'GET', path })).rejects.toThrow('without traversal');
+			}
+			expect(calls).toBe(0);
+		} finally {
+			client.close();
+		}
+	});
+
+	test('overlapping learned-bucket 429 responses preserve the longest active cooldown', async () => {
+		const clock = new FakeClock();
+		const responses = [deferred<Response>(), deferred<Response>()];
+		let calls = 0;
+		const client = new RestClient('offline', {
+			clock,
+			fetch: async () => responses[calls++]?.promise ?? json()
+		});
+		const requests = [
+			client.request({ method: 'GET', path: '/channels/20/messages' }),
+			client.request({ method: 'GET', path: '/channels/20/pins' })
+		];
+		try {
+			responses[0].resolve(json({ retry_after: 0.25 }, 429, { 'x-ratelimit-bucket': 'shared' }));
+			await flush();
+			responses[1].resolve(json({ retry_after: 0.01 }, 429, { 'x-ratelimit-bucket': 'shared' }));
+			await flush();
+			await clock.advance(249);
+			expect(calls).toBe(2);
+			await clock.advance(1);
+			await Promise.all(requests);
+			expect(calls).toBe(4);
+		} finally {
+			client.close();
+			await Promise.allSettled(requests);
+		}
+	});
+
 	test('normalizes query and minor IDs while preserving major partitions and hiding interaction tokens', () => {
 		expect(routeKey('GET', '/channels/20/messages/100?limit=1')).toEqual(routeKey('GET', '/channels/20/messages/200?limit=2'));
 		expect(routeKey('GET', '/channels/20/messages').major).toBe('channels:20');

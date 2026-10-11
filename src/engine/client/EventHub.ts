@@ -27,7 +27,7 @@ export class EventHub<Events extends object> {
 		listeners.add(listener);
 		return () => {
 			listeners.delete(listener);
-			if (!listeners.size) this.listeners.delete(name);
+			if (!listeners.size && this.listeners.get(name) === listeners) this.listeners.delete(name);
 		};
 	}
 	public emit<K extends keyof Events>(name: K, value: Events[K]): void {
