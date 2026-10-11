@@ -11,6 +11,10 @@ A modular Discord framework for Bun, written in TypeScript and built on discord.
 - Shard coordination, host supervision and typed messaging.
 - Pagination, validation, collections, time helpers and other utilities.
 
+## Original engine milestone
+
+The experimental [native Discord engine](docs/engine.md) is available through `kairojs/engine`. It owns gateway sessions, REST and cache while the existing framework keeps its current runtime. Run `bun examples/engine/offline.ts` for a local connect/reply/resume demonstration with no Discord credentials.
+
 ## Getting started
 
 Use **Bun 1.4.2 or newer**. KairoJS runs TypeScript directly; no compilation step is required.

@@ -60,6 +60,10 @@
 		"./validation": {
 			"types": "./src/public/validation.ts",
 			"bun": "./src/public/validation.ts"
+		},
+		"./engine": {
+			"types": "./src/public/engine.ts",
+			"bun": "./src/public/engine.ts"
 		}
 	},
 	"types": "./src/index.ts",
@@ -80,7 +84,10 @@
 		"typecheck": "bun run --bun tsc --noEmit",
 		"check": "bun run --bun biome check .",
 		"format": "bun run --bun biome format --write .",
-		"smoke": "bun scripts/smoke.ts"
+		"smoke": "bun scripts/smoke.ts",
+		"engine:test": "bun test tests/engine",
+		"engine:build": "bun scripts/engineBuild.ts",
+		"engine:bench": "bun scripts/engineBench.ts"
 	},
 	"dependencies": {
 		"@discordjs/builders": "^1.13.0",
@@ -88,7 +95,7 @@
 		"@lilsnibbi/logger": "1.2.0",
 		"arktype": "^2.2.8",
 		"cron-parser": "4.9.0",
-		"discord-api-types": "^0.38.34",
+		"discord-api-types": "0.38.56",
 		"discord.js": "^14.27.0",
 		"i18next": "^25.8.18"
 	},

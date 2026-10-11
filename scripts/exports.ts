@@ -6,7 +6,7 @@ import baseline from '../tests/fixtures/public.json';
 /** Validate the same public contract in the checkout and the installed tarball. */
 export function auditExports(root: string, failures: string[]): void {
 	const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-	const paths = ['.', ...baseline.categories.map((name) => `./${name}`)];
+	const paths = ['.', './engine', ...baseline.categories.map((name) => `./${name}`)];
 	if (JSON.stringify(Object.keys(manifest.exports).sort()) !== JSON.stringify(paths.sort()))
 		failures.push('Package paths differ from the supported public contract.');
 	if (manifest.types !== './src/index.ts') failures.push('Root type fallback changed.');

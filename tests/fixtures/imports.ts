@@ -36,8 +36,9 @@ try {
 	const path = process.argv[2]!;
 	const first = await import(path);
 	const root = await import('kairojs');
+	const reference = path === 'kairojs/engine' ? await import('kairojs/engine') : root;
 	for (const [name, value] of Object.entries(first)) {
-		if (value !== root[name as keyof typeof root]) throw new Error(`Identity differs: ${path} ${name}`);
+		if (value !== Reflect.get(reference, name)) throw new Error(`Identity differs: ${path} ${name}`);
 	}
 	if (opened.length) throw new Error(`Import attempted resources: ${opened.join(', ')}`);
 	if (root.container.client || root.container.tasks || root.container.services || root.container.i18n)

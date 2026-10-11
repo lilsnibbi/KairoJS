@@ -79,6 +79,16 @@
 					}
 				}
 			}
+		},
+		{
+			"includes": ["src/engine/**", "tests/engine/**", "examples/engine/**", "scripts/engine*.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "error"
+					}
+				}
+			}
 		}
 	]
 }

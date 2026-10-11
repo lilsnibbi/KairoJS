@@ -26,3 +26,7 @@ Payloads must be acyclic JSON data. Accessors, symbol or hidden object fields, s
 Localisation loads JSON at startup from configured resource directories or `i18next.resources`. Translation backends, resource writes and hot reloading are unsupported.
 
 KairoJS shard coordination has its own authenticated protocol and persistent ownership state. It is incompatible with upstream discord-sharding databases and transports. Use the provided coordinator and host examples, assign every shard exactly once and retain the coordinator state file between restarts.
+
+## Experimental engine subpath
+
+`kairojs/engine` adds the independent Bun engine without changing the root API or existing KairoClient runtime. Native payloads and request bodies use discord-api-types 0.38.56. See [engine contracts and migration plan](docs/engine.md); this API is an explicit experimental milestone.

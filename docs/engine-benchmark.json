@@ -1,0 +1,83 @@
+{
+	"measuredAt": "2026-10-11T08:52:59.216Z",
+	"runtime": "Bun 1.4.2",
+	"platform": "win32",
+	"architecture": "x64",
+	"cpu": "13th Gen Intel(R) Core(TM) i7-13620H",
+	"kind": "Synthetic in-process microbenchmark, not Discord/network or cross-library performance",
+	"workload": {
+		"guildCount": 100,
+		"membersPerGuild": 1000,
+		"insertedPerGuild": 1100,
+		"retained": 100000,
+		"messageCache": false,
+		"access": "One visit to each resident guild/member pair per 100000-operation pass"
+	},
+	"memory": {
+		"beforeGCSettled": {
+			"rss": 50896896,
+			"heapTotal": 1836032,
+			"heapUsed": 976813,
+			"external": 279917,
+			"arrayBuffers": 0
+		},
+		"afterGCSettled": {
+			"rss": 140824576,
+			"heapTotal": 55854080,
+			"heapUsed": 53399762,
+			"external": 9283874,
+			"arrayBuffers": 0
+		},
+		"heapUsedDeltaBytes": 52422949,
+		"rssDeltaBytes": 89927680,
+		"approximateHeapBytesPerRetainedMember": 524.22949
+	},
+	"insert110000Ms": 276.667,
+	"targetedGet100000": {
+		"medianMs": 44.501,
+		"samplesMs": [
+			44.454,
+			48.411,
+			44.501,
+			48.925,
+			42.291
+		]
+	},
+	"iterate100000": {
+		"medianMs": 4.728,
+		"samplesMs": [
+			4.843,
+			4.508,
+			4.728,
+			4.776,
+			4.497
+		]
+	},
+	"partialMerge100000": {
+		"medianMs": 65.886,
+		"samplesMs": [
+			65.12,
+			65.509,
+			65.956,
+			71.798,
+			65.886
+		]
+	},
+	"gatewayMessageActivity10000": {
+		"medianMs": 44.121,
+		"samplesMs": [
+			45.424,
+			51.912,
+			40.168,
+			38.921,
+			44.121
+		]
+	},
+	"sink": 2400000,
+	"caveats": [
+		"One synthetic workload on one machine; five timed samples after warmup.",
+		"Repeated timestamps, role IDs and strings may be shared by the runtime.",
+		"Heap/RSS deltas include allocator and JIT behavior; approximate per-member value is not an object size.",
+		"No network, compression, live guild traffic, user handlers or comparison library included."
+	]
+}

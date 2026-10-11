@@ -39,7 +39,7 @@ const categories = {
 
 test('the complete existing root API is preserved and covered by explicit category paths', () => {
 	expect(Object.keys(Root).sort()).toEqual(baseline.runtime);
-	expect(Object.keys(manifest.exports).sort()).toEqual(['.', ...Object.keys(categories).map((name) => `./${name}`)].sort());
+	expect(Object.keys(manifest.exports).sort()).toEqual(['.', './engine', ...Object.keys(categories).map((name) => `./${name}`)].sort());
 	expect([...new Set(Object.values(categories).flatMap((category) => Object.keys(category)))].sort()).toEqual(baseline.runtime);
 });
 
@@ -80,7 +80,7 @@ test('category imports keep shared services, registration state, and the single-
 	}
 });
 
-for (const specifier of ['kairojs', ...Object.keys(categories).map((name) => `kairojs/${name}`)]) {
+for (const specifier of ['kairojs', 'kairojs/engine', ...Object.keys(categories).map((name) => `kairojs/${name}`)]) {
 	test(`${specifier} can be imported first without opening resources`, async () => {
 		const child = Bun.spawn([process.execPath, join(import.meta.dir, '../fixtures/imports.ts'), specifier], {
 			cwd: join(import.meta.dir, '../..'),

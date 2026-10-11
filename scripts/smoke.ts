@@ -80,7 +80,10 @@ try {
 `
 	);
 	await run(['consumer.ts'], consumer);
-	console.log('Package smoke test passed: public exports and shipped notices audited, packed, installed and loaded one command.');
+	await run([join(installed, 'examples/engine/offline.ts')], consumer);
+	console.log(
+		'Package smoke test passed: public exports and shipped notices audited, packed, installed, loaded one command and ran the offline engine.'
+	);
 } finally {
 	rmSync(consumer, { recursive: true, force: true });
 }
