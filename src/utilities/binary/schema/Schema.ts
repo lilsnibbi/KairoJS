@@ -208,22 +208,22 @@ export class Schema<Id extends number = number, Entries extends object = object>
 	}
 
 	/** Iterates over the schema's property names. */
-	public keys(): IterableIterator<KeyOfSchema<this>> {
-		return this.#types.keys() as IterableIterator<KeyOfSchema<this>>;
+	public keys(): IterableIterator<keyof Entries & string> {
+		return this.#types.keys() as IterableIterator<keyof Entries & string>;
 	}
 
 	/** Iterates over the schema's property values */
-	public values(): IterableIterator<ValueOfSchema<this>> {
-		return this.#types.values() as IterableIterator<ValueOfSchema<this>>;
+	public values(): IterableIterator<Entries[keyof Entries]> {
+		return this.#types.values() as IterableIterator<Entries[keyof Entries]>;
 	}
 
 	/** Iterates over the schema's property entries */
-	public entries(): IterableIterator<EntryOfSchema<this>> {
-		return this.#types.entries() as IterableIterator<EntryOfSchema<this>>;
+	public entries(): IterableIterator<{ [K in keyof Entries]: readonly [K, Entries[K]] }[keyof Entries]> {
+		return this.#types.entries() as IterableIterator<{ [K in keyof Entries]: readonly [K, Entries[K]] }[keyof Entries]>;
 	}
 
 	/** Iterates over the schema's property entries */
-	public [Symbol.iterator](): IterableIterator<EntryOfSchema<this>> {
+	public [Symbol.iterator](): IterableIterator<{ [K in keyof Entries]: readonly [K, Entries[K]] }[keyof Entries]> {
 		return this.entries();
 	}
 

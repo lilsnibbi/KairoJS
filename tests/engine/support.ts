@@ -49,7 +49,7 @@ export async function flush(): Promise<void> {
 
 export class FakeSocket implements $GatewaySocket {
 	public binaryType: BinaryType = 'arraybuffer';
-	public readyState: number = WebSocket.OPEN;
+	public readyState: $GatewaySocket['readyState'] = WebSocket.OPEN;
 	public onopen: $GatewaySocket['onopen'] = null;
 	public onmessage: $GatewaySocket['onmessage'] = null;
 	public onclose: $GatewaySocket['onclose'] = null;

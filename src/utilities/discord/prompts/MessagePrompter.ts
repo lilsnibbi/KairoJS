@@ -62,7 +62,8 @@ export class MessagePrompter<S extends keyof StrategyReturns = 'confirm'> {
 				throw new Error('No strategy provided');
 			}
 
-			strategyToRun = new mapStrategy(message, strategyOptions);
+			const Strategy = mapStrategy as Ctor<[message: MessagePrompterMessage, options?: StrategyOptions[S]], MessagePrompterBaseStrategy>;
+			strategyToRun = new Strategy(message, strategyOptions);
 		}
 
 		this.strategy = strategyToRun;
@@ -79,17 +80,13 @@ export class MessagePrompter<S extends keyof StrategyReturns = 'confirm'> {
 	}
 
 	/** The available strategies */
-	public static readonly strategies: Map<
+	public static readonly strategies = new Map<
 		keyof StrategyReturns,
-		Ctor<
-			| ConstructorParameters<typeof MessagePrompterConfirmStrategy>
-			| ConstructorParameters<typeof MessagePrompterNumberStrategy>
-			| ConstructorParameters<typeof MessagePrompterReactionStrategy>
-			| ConstructorParameters<typeof MessagePrompterMessageStrategy>,
-			MessagePrompterConfirmStrategy | MessagePrompterNumberStrategy | MessagePrompterReactionStrategy | MessagePrompterMessageStrategy
-		>
-		// @ts-expect-error 2322
-	> = new Map([
+		| typeof MessagePrompterConfirmStrategy
+		| typeof MessagePrompterNumberStrategy
+		| typeof MessagePrompterReactionStrategy
+		| typeof MessagePrompterMessageStrategy
+	>([
 		['confirm', MessagePrompterConfirmStrategy],
 		['number', MessagePrompterNumberStrategy],
 		['reaction', MessagePrompterReactionStrategy],
