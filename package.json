@@ -90,7 +90,7 @@
 		"engine:bench": "bun scripts/engineBench.ts"
 	},
 	"dependencies": {
-		"@discordjs/builders": "^1.13.0",
+		"@discordjs/builders": "^1.14.1",
 		"@discordjs/collection": "^2.1.1",
 		"@lilsnibbi/logger": "1.2.0",
 		"arktype": "^2.2.8",
