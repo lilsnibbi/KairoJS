@@ -97,7 +97,7 @@
 		"cron-parser": "4.9.0",
 		"discord-api-types": "0.38.56",
 		"discord.js": "^14.27.0",
-		"i18next": "^25.8.18"
+		"i18next": "^25.10.10"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.15",
