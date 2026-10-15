@@ -78,11 +78,11 @@
 	"engines": {
 		"bun": ">=1.4.2"
 	},
-	"packageManager": "bun@1.4.2",
+	"packageManager": "bun@1.4.3",
 	"scripts": {
 		"test": "bun test",
-		"typecheck": "bun run --bun tsc --noEmit",
-		"check": "bun run --bun biome check .",
+		"typecheck": "bun check",
+		"lint:check": "bun run --bun biome check .",
 		"format": "bun run --bun biome format --write .",
 		"smoke": "bun scripts/smoke.ts",
 		"engine:test": "bun test tests/engine",

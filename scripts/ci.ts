@@ -29,7 +29,7 @@ try {
 	await run('test', '--reporter=junit', `--reporter-outfile=${report}`);
 	assertCompleteTests(readFileSync(report, 'utf8'));
 	await run('run', 'typecheck');
-	await run('run', 'check');
+	await run('run', 'lint:check');
 	await run('examples/offline.ts');
 	await run('run', 'engine:build');
 	await run('examples/engine/offline.ts');

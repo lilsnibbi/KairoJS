@@ -13,12 +13,13 @@ KairoJS is a modular Discord framework shipped as raw TypeScript for Bun. There 
 
 ## Build, Test, and Development Commands
 
-Use Bun 1.4.2, the pinned CI version. From the repository root:
+Use Bun 1.4.3, the pinned CI version. From the repository root:
 
 - `bun install --frozen-lockfile`: install locked dependencies.
 - `bun test`: run the test suite.
 - `bun run typecheck`: check TypeScript without emitting files.
-- `bun run check`: run Biome lint and formatting checks.
+- `bun check`: run Bun's native TypeScript check.
+- `bun run lint:check`: run Biome lint and formatting checks.
 - `bun run format`: apply Biome formatting; review changes before committing.
 - `bun run smoke`: pack and test a temporary consumer installation.
 - `bun examples/offline.ts`: check the example bot's modules and shard messaging without Discord.
