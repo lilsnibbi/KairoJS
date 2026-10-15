@@ -18,8 +18,9 @@ async function main(): Promise<void> {
 		botToken: requiredEnv('DISCORD_TOKEN'),
 		statePath: Bun.env.SHARD_STATE_PATH?.trim() || './sharding.sqlite',
 		hostname: Bun.env.SHARD_COORDINATOR_HOST?.trim() || '127.0.0.1',
-		port: integerEnv('SHARD_COORDINATOR_PORT', 8080, 1, 65535),
+		port: integerEnv('SHARD_COORDINATOR_PORT', 8080, 0, 65535),
 		tls: cert && key ? { cert: Bun.file(cert), key: Bun.file(key) } : undefined,
+		// Host, shard and request activity is visible at info; debug adds frame metadata without payloads.
 		logger: exampleLogger
 	});
 	const detach = onShutdown(() => coordinator.close(), { logger: exampleLogger, component: 'coordinator' });

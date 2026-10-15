@@ -98,6 +98,13 @@ Restart the host after editing bot code. Stop the host first, then the coordinat
 
 The framework and example code share one `createConsoleLogger('Example')` per
 process. Coordinator listening and host assignment come from the framework.
+The coordinator also reports authenticated connections, shard registration and
+offline changes, login permits, request dispatch/results and ownership cleanup
+at info. Each connection has a `connectionId`; dispatch and outcome records
+share `requestId` and `routeId`, with the source/destination host and elapsed time.
+Authentication, capacity and timeout failures include fixed reasons/codes.
+Headers, secrets, request payloads and result bodies are omitted.
+
 Each live bot emits one info readiness message after the registration pass,
 with its shard, command and guild counts. The ready listener adds a debug cache
 record. It no longer repeats readiness with the bot's account tag.
@@ -114,11 +121,25 @@ set it. Startup failures release any constructed resources. Ctrl+C/SIGTERM
 reports shutdown requested, then completion or a cleanup failure; a failed
 startup or cleanup sets a nonzero exit status.
 
-Use `KAIRO_LOG_LEVEL=debug` for module and routing details,
+Use `KAIRO_LOG_LEVEL=debug` for frame operations and heartbeat ping/pong metadata,
 `KAIRO_LOG_FORMAT=json` for one record per line, and `KAIRO_LOG_STACKS=off` to omit
 source locations. See [console logging](../docs/console-logging.md) for all
 options and synthetic old-versus-new samples. To supply your own logger, pass
 it to `createBot(logger)` in `client.ts`; KairoJS keeps that instance.
+
+For detailed coordinator diagnostics in PowerShell:
+
+```powershell
+$env:KAIRO_LOG_LEVEL = 'debug'
+$env:KAIRO_LOG_FORMAT = 'json'
+bun --env-file=examples/.env examples/coordinator.ts
+```
+
+Info is the default and includes normal activity; debug adds frame metadata
+without wire bodies. Set the same variables in the host terminal when you also
+need host/child details. Run `coordinator.ts` in one terminal and `host.ts` in the
+other. An existing process keeps its loaded code; the old plain
+`Coordinator listening at ...` message indicates an older checkout/process.
 
 ## Environment settings
 
@@ -131,7 +152,7 @@ it to `createBot(logger)` in `client.ts`; KairoJS keeps that instance.
 | `SHARD_HOST_TOKEN` | This host's secret, 32–512 printable ASCII characters |
 | `SHARD_COORDINATOR_URL` | Host connection URL, default `ws://127.0.0.1:8080/sharding` |
 | `SHARD_COORDINATOR_HOST` | Coordinator's listening address, default `127.0.0.1` |
-| `SHARD_COORDINATOR_PORT` | Coordinator's port, default `8080` |
+| `SHARD_COORDINATOR_PORT` | Coordinator's port, default `8080`; `0` selects a free port, reported by the `listening` record |
 | `SHARD_STATE_PATH` | Persistent SQLite file, default `./sharding.sqlite`; relative to where you launch the coordinator |
 | `SHARD_WORKERS` | Optional JSON array of host IDs, secrets and shard assignments |
 | `SHARD_TLS_CERT`, `SHARD_TLS_KEY` | PEM certificate and private key paths for the coordinator's TLS listener |

@@ -24,6 +24,15 @@ and custom-logger compatibility path. The examples use these helpers for safe
 startup/shutdown errors and shard diagnostics. The engine example uses
 `interaction.respond({ type, data })`; its Discord reply content is unchanged.
 
+The coordinator now emits normal WebSocket activity at info: authenticated host
+connections, assignments, shard availability, login permits, request dispatch
+and outcomes, ownership release and shutdown. Rejected authentication/upgrades,
+timeouts and transport failures are visible at warn/error. Debug includes safe
+frame metadata and heartbeats. New `connectionId`, `requestId` and `routeId`
+context fields correlate activity without logging payloads or credentials.
+Use `KAIRO_LOG_LEVEL=warn` to suppress routine activity. Logger overrides and
+protocol behavior are unchanged; see [WebSocket activity](docs/console-logging.md#websocket-server-activity).
+
 ## Client and module startup
 
 - Supply `root` and explicit glob patterns through `modules`, for example `modules: { commands: 'commands/**/*.ts' }`. There is no implicit directory scan or `baseUserDirectory` option.

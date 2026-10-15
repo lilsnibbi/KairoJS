@@ -131,9 +131,9 @@ continues to select the dependency's original behavior.
   operation boundary so one failure is not printed at every retry. Gateway
   recovery, fatal closure, event-handler failure and handler-capacity exhaustion
   have different messages, with engine state and pending-handler counts.
-- Sharding includes coordinator listening, manager assignment, operation failures
-  and host/shard context. Child-process stdout/stderr remain inherited. IPC payloads,
-  tokens and identify messages are not dumped.
+- Sharding includes coordinator connection activity, shard availability, login
+  permits and request outcomes, plus host/shard correlation. Child-process
+  stdout/stderr remain inherited. IPC payloads and tokens are not dumped.
 - Extension failures carry extension and lifecycle phase. Module failures carry
   store and source. Scheduled tasks carry task/module or queue/storage context;
   storage recovery remains info. Required extension failures explain why startup
@@ -149,6 +149,65 @@ registration, sharding, scheduler or shutdown behavior. Existing errors still
 propagate through their existing APIs. Consumer-owned logs, Discord.js internals,
 CLI validation output and application logs are not intercepted. The supplied
 [examples](../examples/README.md#console-messages) use `logEvent` explicitly.
+
+## WebSocket server activity
+
+The sharding coordinator records activity at the operation boundary by default.
+The real `examples/coordinator.ts` entrypoint uses these records; no separate
+demo logger or option is needed.
+
+| Level | Events and meaning |
+| --- | --- |
+| Info | `listening`, `host_connected`: listener readiness, successful authentication, assignment list/count and whether ownership was resumed |
+| Info | `shard_registered`, `shard_offline`: the host registered a shard process for RPC routing or took it offline; this is separate from Discord gateway readiness |
+| Info | `identify_limits_updated`, `identify_queued`, `identify_granted`, `identify_completed`: effective remaining login allowance and permit lifecycle |
+| Info | `request_dispatched`, `request_completed`, `request_cancelled`: request destination, result completion or caller cancellation |
+| Info | `ownership_released`, normal `host_disconnected`, `stopping`, `stopped`: ownership and listener cleanup |
+| Warn | `authentication_rejected`, `upgrade_rejected`, `request_rejected`, `request_failed`, `request_timed_out`, `identify_failed`, `identify_timed_out`, `send_failed` and unexpected host disconnects |
+| Error | `startup_failed`, `protocol_rejected`, `identify_persistence_failed`, `gateway_metadata_refresh_failed`: startup, protocol or coordination failures |
+| Debug | `frame_received`, `frame_sent` (including heartbeat ping/pong), `late_result_ignored`, `upgrade_rolled_back`, startup/limit-refresh details |
+
+An exhausted or expired login allowance is reported at warn. Authenticated
+upgrade rejections include a fixed reason such as `host_already_connected` or
+`ownership_reserved`, without echoing submitted headers or identities.
+
+Each accepted WebSocket gets a server-generated `connectionId`, which changes
+on reconnect. Request records carry the source `host`/`connectionId`, original
+`requestId`, destination `routeId`, `destinationHost`/`destinationConnectionId`,
+target `shard`, `generation`, operation name, deadline and elapsed `durationMs`.
+Use `requestId` to pair dispatch with the terminal outcome, then use `routeId`
+to follow the destination invocation. A broadcast produces one request per shard.
+
+Disconnect records contain a fixed reason, numeric close code when available,
+ready-shard/pending counts and `ownershipRetained`. Raw close reasons, incoming
+authorization headers, unknown host-header values, payloads, result values and
+remote error messages are omitted. Configured host secrets and the Discord token
+are scrubbed from selected metadata even with a caller-supplied logger. Existing
+original-error causes on diagnostic errors remain available to custom loggers.
+Assignment arrays use the formatter's normal bounds and retain their full count.
+
+`KAIRO_LOG_LEVEL=debug` adds frame metadata, never wire bodies. Use
+`KAIRO_LOG_FORMAT=json` for collecting correlated records. `KAIRO_LOG_LEVEL=warn`
+keeps warnings/errors while suppressing routine activity. These are log filters;
+they do not alter routing, heartbeat deadlines, authentication, login permits,
+ownership or retry behavior. Cancellation records describe a cancellation
+request, not proof that a destination callback has finished.
+
+Excerpt from a real `bun examples/offline.ts` run, with IDs shortened and some
+context omitted here for readability:
+
+```text
+2026-10-15T02:49:29.111Z INFO  Example.sharding.coordinator host_connected | Authenticated host connected; sending its shard assignments. | host=local connectionId=364fe221... shards=[0,1] assignedCount=2 resumedOwnership=false
+2026-10-15T02:49:29.979Z INFO  Example.sharding.coordinator request_dispatched | Dispatched a shard request to its destination host. | requestId=303bc924... shard=0 host=local connectionId=364fe221... routeId=01d3c657... operation=exampleStats timeoutMs=5000
+2026-10-15T02:49:29.985Z INFO  Example.sharding.coordinator request_completed | Shard request completed. | requestId=303bc924... shard=0 host=local connectionId=364fe221... routeId=01d3c657... operation=exampleStats durationMs=6
+```
+
+`bun test tests/sharding/activity.test.ts tests/sharding/coordinator.test.ts`
+checks real loopback WebSockets, including the actual coordinator entrypoint in
+separate processes. Its Discord gateway metadata is supplied by a test-only
+preload; no live Discord request is made. Tests cover info/debug filtering,
+correlation, credential/body omission, custom sinks, authentication/ownership,
+requests, timeouts, heartbeat expiry and shutdown.
 
 ## Diagnostics, redaction and bounds
 
