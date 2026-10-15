@@ -1,6 +1,6 @@
 import type { Message } from 'discord.js';
 import { Args } from '../../../commands/arguments/Args';
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Listener } from '../../../events/listener';
 import { type MessageSubcommandNoMatchContext, SubcommandEvents } from '../types/Events';
 
@@ -10,6 +10,11 @@ export class MessageNoMatchListener extends Listener<typeof SubcommandEvents.Mes
 	}
 
 	public override run(_message: Message, _args: Args, context: MessageSubcommandNoMatchContext) {
-		writeLog(this.container.logger, 'error', context.message);
+		writeEvent(this.container.logger, 'error', {
+			component: 'subcommands',
+			event: 'message_no_match',
+			message: 'No matching message subcommand.',
+			context: { command: context.command.name }
+		});
 	}
 }

@@ -1,4 +1,4 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { Events, type ListenerErrorPayload } from '../events';
 import { Listener } from '../listener';
 
@@ -9,11 +9,12 @@ export class ListenerErrorListener extends Listener<typeof Events.ListenerError>
 
 	public run(error: unknown, context: ListenerErrorPayload) {
 		const { name, event, location } = context.module;
-		writeLog(
-			this.container.logger,
-			'error',
-			`Encountered error on event listener "${name}" for event "${String(event)}" at path "${location.full}"`,
-			error
-		);
+		writeEvent(this.container.logger, 'error', {
+			component: 'events',
+			event: 'listener_failed',
+			message: 'Event listener failed.',
+			error,
+			context: { listener: name, event: String(event), path: location.full }
+		});
 	}
 }

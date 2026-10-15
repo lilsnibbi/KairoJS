@@ -1,4 +1,4 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { Events, type MessageCommandErrorPayload } from '../events';
 import { Listener } from '../listener';
 
@@ -9,6 +9,12 @@ export class MessageErrorListener extends Listener<typeof Events.MessageCommandE
 
 	public run(error: unknown, context: MessageCommandErrorPayload) {
 		const { name, location } = context.command;
-		writeLog(this.container.logger, 'error', `Encountered error on message command "${name}" at path "${location.full}"`, error);
+		writeEvent(this.container.logger, 'error', {
+			component: 'commands',
+			event: 'message_command_failed',
+			message: 'Message command failed.',
+			error,
+			context: { command: name, path: location.full }
+		});
 	}
 }

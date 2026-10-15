@@ -1,14 +1,29 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { container } from '../../core/modules/index';
 
 export function bulkOverwriteError(message: string, ...other: unknown[]) {
-	writeLog(container.logger, 'error', `ApplicationCommandRegistries(BulkOverwrite) ${message}`, ...other);
+	writeEvent(container.logger, 'error', {
+		component: 'rest.registration',
+		event: 'bulk_overwrite_failed',
+		message,
+		error: other.length === 1 ? other[0] : other.length ? new AggregateError(other) : undefined
+	});
 }
 
 export function bulkOverwriteWarn(message: string, ...other: unknown[]) {
-	writeLog(container.logger, 'alert', `ApplicationCommandRegistries(BulkOverwrite) ${message}`, ...other);
+	writeEvent(container.logger, 'alert', {
+		component: 'rest.registration',
+		event: 'bulk_overwrite_warning',
+		message,
+		context: { detailCount: other.length }
+	});
 }
 
 export function bulkOverwriteDebug(message: string, ...other: unknown[]) {
-	writeLog(container.logger, 'debug', `ApplicationCommandRegistries(BulkOverwrite) ${message}`, ...other);
+	writeEvent(container.logger, 'debug', {
+		component: 'rest.registration',
+		event: 'bulk_overwrite_detail',
+		message,
+		context: { detailCount: other.length }
+	});
 }

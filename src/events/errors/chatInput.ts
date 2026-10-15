@@ -1,4 +1,4 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { type ChatInputCommandErrorPayload, Events } from '../events';
 import { Listener } from '../listener';
 
@@ -9,6 +9,12 @@ export class ChatInputErrorListener extends Listener<typeof Events.ChatInputComm
 
 	public run(error: unknown, context: ChatInputCommandErrorPayload) {
 		const { name, location } = context.command;
-		writeLog(this.container.logger, 'error', `Encountered error on chat input command "${name}" at path "${location.full}"`, error);
+		writeEvent(this.container.logger, 'error', {
+			component: 'commands',
+			event: 'chat_input_failed',
+			message: 'Chat input command failed.',
+			error,
+			context: { command: name, path: location.full }
+		});
 	}
 }

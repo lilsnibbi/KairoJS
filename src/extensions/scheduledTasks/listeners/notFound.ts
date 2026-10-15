@@ -1,4 +1,4 @@
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Listener } from '../../../events/listener';
 import { TaskEvents } from '../types/TaskEvents';
 
@@ -11,6 +11,11 @@ export class NotFoundListener extends Listener<typeof TaskEvents.ScheduledTaskNo
 	}
 
 	public override run(task: string) {
-		writeLog(this.container.logger, 'error', `[KairoJS tasks] There was no task found for "${task}"`);
+		writeEvent(this.container.logger, 'error', {
+			component: 'tasks',
+			event: 'task_not_found',
+			message: 'Scheduled task module not found; check registered task names.',
+			context: { task }
+		});
 	}
 }

@@ -1,3 +1,5 @@
+import { fallbackLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import type { PollOptions } from './poll';
 import { sleepSync } from './sleepSync';
 
@@ -34,7 +36,13 @@ export function pollSync<T>(cb: () => T, cbCondition: (value: T) => boolean, opt
 	for (let retries = 0; retries < maximumRetries && !cbCondition(result); retries++) {
 		if (Date.now() + waitBetweenRetries > end) throw new DOMException('This operation was aborted', 'AbortError');
 		if (waitBetweenRetries > 0) {
-			if (options.verbose) console.log(`Waiting ${waitBetweenRetries}ms before polling again...`);
+			if (options.verbose)
+				writeEvent(fallbackLogger(), 'notif', {
+					component: 'utilities.poll',
+					event: 'waiting',
+					message: 'Waiting before polling again.',
+					context: { delayMs: waitBetweenRetries, attempt: retries + 1, synchronous: true }
+				});
 			sleepSync(waitBetweenRetries);
 		}
 

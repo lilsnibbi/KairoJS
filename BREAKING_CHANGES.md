@@ -2,6 +2,12 @@
 
 KairoJS runs raw TypeScript on Bun 1.4.2 or newer. The package exports `types` and `bun` conditions and does not provide a Node.js build.
 
+## Console output
+
+Framework-created loggers now emit UTC ISO timestamp/severity/component/event/context records. `NOTIF`/`ALERT` render as `INFO`/`WARN`; default errors omit arbitrary messages/bodies and bound causes/stacks. Registration progress moves to debug, and definition differences retain paths instead of original/expected data. Standalone localisation diagnostics use stderr log records instead of process warnings. Update text log parsers or select `KAIRO_LOG_FORMAT=json`; see [console logging](docs/console-logging.md).
+
+The four-method `LoggerLike` contract, public `Logger` class, supplied logger identity/ownership, custom formatter settings and original error event arguments remain compatible. New optional `logging` client options and `createConsoleLogger` configure framework console output. Custom loggers receive a contextual string or an `Error` with the original cause. The Biome package script is now `lint:check` so `bun check` invokes Bun's native type checker; `typecheck` delegates to `bun check`. Development and CI pin Bun 1.4.3, which provides that checker; the runtime minimum stays unchanged.
+
 ## Client and module startup
 
 - Supply `root` and explicit glob patterns through `modules`, for example `modules: { commands: 'commands/**/*.ts' }`. There is no implicit directory scan or `baseUserDirectory` option.

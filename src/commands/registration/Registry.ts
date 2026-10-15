@@ -17,7 +17,7 @@ import {
 	type RESTPostAPIChatInputApplicationCommandsJSONBody,
 	type RESTPostAPIContextMenuApplicationCommandsJSONBody
 } from 'discord-api-types/v10';
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { container } from '../../core/modules/index';
 import type { CommandLocalisation } from '../../extensions/localisation/types';
 import { isNullishOrEmpty } from '../../utilities/index';
@@ -253,11 +253,7 @@ export class ApplicationCommandRegistry {
 		const errored = results.filter((result) => result.status === 'rejected') as PromiseRejectedResult[];
 
 		if (errored.length) {
-			this.error(`Received ${errored.length} errors while processing command registrations / updates`);
-
-			for (const error of errored) {
-				this.error(error.reason.stack ?? error.reason);
-			}
+			this.error('Application command registrations failed.', new AggregateError(errored.map((error) => error.reason)));
 		}
 	}
 
@@ -496,24 +492,17 @@ export class ApplicationCommandRegistry {
 	}
 
 	private logCommandDifferencesFound(applicationCommand: ApplicationCommand, logAsWarn: boolean, differences: CommandDifference[]) {
-		const finalMessage: string[] = [];
-		const pad = ' '.repeat(5);
-
-		for (const difference of differences) {
-			finalMessage.push(
-				[
-					`└── At path: ${difference.key}`, //
-					`${pad}├── Received: ${difference.original}`,
-					`${pad}└── Expected: ${difference.expected}`,
-					''
-				].join('\n')
-			);
-		}
-
-		const finalMessageNewLine = finalMessage.length ? '\n' : '';
-		const header = `Found differences for command "${applicationCommand.name}" (${applicationCommand.id}) versus provided api data.${finalMessageNewLine}`;
-
-		logAsWarn ? this.warn(header, ...finalMessage) : this.debug(header, ...finalMessage);
+		writeEvent(container.logger, logAsWarn ? 'alert' : 'debug', {
+			component: 'rest.registration',
+			event: 'differences_found',
+			message: 'Command definition differs; review its definition and overwrite behavior.',
+			context: {
+				command: this.commandName,
+				commandId: applicationCommand.id,
+				differenceCount: differences.length || undefined,
+				paths: differences.length ? differences.slice(0, 8).map((difference) => difference.key) : undefined
+			}
+		});
 	}
 
 	private async createMissingCommand(
@@ -525,11 +514,12 @@ export class ApplicationCommandRegistry {
 		try {
 			const result = await commandsManager.create(apiData, guildId);
 
-			this.info(
-				`Successfully created ${type}${guildId ? ' guild' : ''} command "${apiData.name}" with id "${
-					result.id
-				}". You should add the id to the "idHints" property of the register method you used!`
-			);
+			writeEvent(container.logger, 'notif', {
+				component: 'rest.registration',
+				event: 'command_created',
+				message: 'Application command created; retain its ID in idHints for stable routing.',
+				context: { command: this.commandName, registeredName: apiData.name, commandId: result.id, type, guildId }
+			});
 
 			switch (apiData.type) {
 				case undefined:
@@ -553,24 +543,36 @@ export class ApplicationCommandRegistry {
 		}
 	}
 
-	private info(message: string, ...other: unknown[]) {
-		writeLog(container.logger, 'notif', `ApplicationCommandRegistry[${this.commandName}] ${message}`, ...other);
-	}
-
 	private error(message: string, ...other: unknown[]) {
-		writeLog(container.logger, 'error', `ApplicationCommandRegistry[${this.commandName}] ${message}`, ...other);
+		writeEvent(container.logger, 'error', {
+			component: 'rest.registration',
+			event: 'command_registration_failed',
+			message,
+			context: { command: this.commandName },
+			error: other.length === 1 ? other[0] : other.length ? new AggregateError(other) : undefined
+		});
 	}
 
 	private warn(message: string, ...other: unknown[]) {
-		writeLog(container.logger, 'alert', `ApplicationCommandRegistry[${this.commandName}] ${message}`, ...other);
+		writeEvent(container.logger, 'alert', {
+			component: 'rest.registration',
+			event: 'command_registration_warning',
+			message,
+			context: { command: this.commandName, detailCount: other.length }
+		});
 	}
 
 	private debug(message: string, ...other: unknown[]) {
-		writeLog(container.logger, 'debug', `ApplicationCommandRegistry[${this.commandName}] ${message}`, ...other);
+		writeEvent(container.logger, 'debug', {
+			component: 'rest.registration',
+			event: 'command_registration_detail',
+			message,
+			context: { command: this.commandName, detailCount: other.length }
+		});
 	}
 
 	private trace(message: string, ...other: unknown[]) {
-		writeLog(container.logger, 'debug', `ApplicationCommandRegistry[${this.commandName}] ${message}`, ...other);
+		this.debug(message, ...other);
 	}
 }
 

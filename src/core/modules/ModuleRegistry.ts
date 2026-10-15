@@ -11,7 +11,7 @@ import { classExtends, isClass } from '../../utilities/index';
 import { container } from '../Container';
 import { RegisteredModules } from '../loading/constants';
 import { ModuleGlob, type ModulePatterns, moduleRoot } from '../loading/ModuleGlob';
-import { writeLog } from '../logging/diagnostics';
+import { writeEvent } from '../logging/diagnostics';
 import type { Module } from './Module';
 import type { ModuleRegistration, ModuleStore } from './ModuleStore';
 
@@ -57,15 +57,34 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 				if (glob)
 					try {
 						files = await glob.files((path, cause) => {
-							writeLog(container.logger, 'error', `Cannot discover ${store.name} modules at "${path}"; skipping this path.`, cause);
+							writeEvent(container.logger, 'error', {
+								component: 'modules',
+								event: 'path_discovery_failed',
+								message: 'Cannot discover modules; skipping this path.',
+								context: { store: store.name, path },
+								error: cause
+							});
 						});
 					} catch (cause) {
 						if (container.logger)
-							writeLog(container.logger, 'error', `Cannot discover ${store.name} files; continuing with registered modules.`, cause);
+							writeEvent(container.logger, 'error', {
+								component: 'modules',
+								event: 'discovery_failed',
+								message: 'Cannot discover files; continuing with registered modules.',
+								context: { store: store.name },
+								error: cause
+							});
 					}
 				staged.set(store, await store.prepare(files, glob?.root ?? process.cwd(), imports));
 			}
 			for (const [store, pieces] of staged) await store.initialize(pieces);
+			if (container.logger)
+				writeEvent(container.logger, 'debug', {
+					component: 'modules',
+					event: 'loaded',
+					message: 'Configured modules loaded.',
+					context: { stores: this.size, modules: [...this.values()].reduce((count, store) => count + store.size, 0) }
+				});
 		});
 		this.loadPromise = this.startup.catch(async (cause) => {
 			try {
@@ -113,7 +132,13 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 		if (queue) {
 			for (const entry of queue) {
 				if (!store[RegisteredModules].has(entry.name)) store[RegisteredModules].set(entry.name, { ...entry });
-				else container.logger?.alert(`Duplicate ${store.name} module "${entry.name}"; keeping the first registration.`);
+				else if (container.logger)
+					writeEvent(container.logger, 'alert', {
+						component: 'modules',
+						event: 'duplicate_registration',
+						message: 'Duplicate module; keeping the first registration.',
+						context: { store: store.name, module: entry.name }
+					});
 			}
 
 			this.#pendingManuallyRegisteredPieces.delete(store.name);

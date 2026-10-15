@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { randomUUIDv7 } from 'bun';
 import { container } from '../../core/Container';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { MemoryBackend } from './backends/MemoryBackend';
 import { RedisBackend } from './backends/RedisBackend';
 import type { TaskBackend } from './backends/TaskBackend';
@@ -258,7 +259,13 @@ export class TaskScheduler {
 		while (!this.closed && this.running.size < (this.options.concurrency ?? 1)) {
 			const job = await this.backend.claim(randomUUIDv7(), this.options.leaseDuration ?? 30000);
 			if (this.connectionFailed) {
-				container.logger?.notif('Scheduling storage recovered.');
+				if (container.logger)
+					writeEvent(container.logger, 'notif', {
+						component: 'tasks.storage',
+						event: 'recovered',
+						message: 'Scheduling storage recovered.',
+						context: { queue: this.queue, storage: this.storage }
+					});
 				this.connectionFailed = false;
 			}
 			if (!job) break;
@@ -331,6 +338,13 @@ export class TaskScheduler {
 	private report(message: string, cause: unknown): void {
 		const error = new Error(message, { cause });
 		container.client?.emit(TaskEvents.StorageError, error);
-		if (this.options.logErrors !== false) container.logger?.error(error);
+		if (this.options.logErrors !== false && container.logger)
+			writeEvent(container.logger, 'error', {
+				component: 'tasks.storage',
+				event: 'operation_failed',
+				message,
+				error: cause,
+				context: { queue: this.queue, storage: this.storage }
+			});
 	}
 }

@@ -1,3 +1,4 @@
+import { writeEvent } from '../../core/logging/diagnostics';
 import { container } from '../../core/modules/index';
 import { Events } from '../../events/events';
 import type { Command } from '../Command';
@@ -11,12 +12,13 @@ export function emitPerRegistryError(error: unknown, command: Command<any, any>)
 	if (client.listenerCount(Events.CommandApplicationCommandRegistryError)) {
 		client.emit(Events.CommandApplicationCommandRegistryError, error, command);
 	} else {
-		logger.error(
-			new Error(
-				`Encountered error while handling the command application command registry for command "${name}" at path "${location.full}"`,
-				{ cause: error }
-			)
-		);
+		writeEvent(logger, 'error', {
+			component: 'rest.registration',
+			event: 'command_registration_failed',
+			message: 'Application command registration failed.',
+			error,
+			context: { command: name, path: location.full }
+		});
 	}
 }
 

@@ -138,7 +138,8 @@ Use Bun **1.4.2** to match CI.
 | --- | --- |
 | `bun test` | Run Bun tests |
 | `bun run typecheck` | Check TypeScript without emitting files |
-| `bun run check` | Check formatting and lint rules with Biome |
+| `bun check` | Check TypeScript with Bun 1.4.3 |
+| `bun run lint:check` | Check formatting and lint rules with Biome |
 | `bun run format` | Apply formatting |
 
 Redis integration tests require `KAIRO_TEST_REDIS_URL` pointing to a disposable Redis instance; otherwise those tests are skipped locally.
@@ -146,6 +147,9 @@ Redis integration tests require `KAIRO_TEST_REDIS_URL` pointing to a disposable 
 Run `bun scripts/ci.ts` with that loopback Redis URL for complete validation, including zero skipped tests and the installed-package smoke check. On the Ubuntu x64 CI runner, `bash scripts/checkActions.sh` also checks the workflow with checksum-pinned actionlint.
 
 See [migration notes](BREAKING_CHANGES.md) when moving from an earlier KairoJS API.
+
+See [console logging](docs/console-logging.md) for readable text/JSON output,
+redaction, custom logger compatibility and the offline `bun scripts/logging-demo.ts` preview.
 
 Source lives in `src/`, tests in `tests/` and runnable examples in `examples/`. See [Repository Guidelines](AGENTS.md) for contribution conventions.
 

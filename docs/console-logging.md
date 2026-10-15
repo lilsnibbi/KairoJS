@@ -1,0 +1,191 @@
+# Console logging
+
+Framework-created loggers share a UTC timestamp, severity, component, event and
+optional context. They use the existing `@lilsnibbi/logger` formatting hooks and
+its stream selection and level filtering. There are no new dependencies, timers,
+log buffers, global console interception or changes to `Error.stackTraceLimit`
+by default.
+
+```text
+2026-10-14T12:30:45.123Z INFO  KairoJS.client ready | Discord client ready. | commands=7 shards=2
+2026-10-14T12:30:45.123Z ERROR KairoJS.tasks task_failed | Scheduled task failed. | task=fixture path=tasks/fixture.ts | error={"type":"TypeError","hint":"Inspect the failing operation and source locations."}
+```
+
+Debug/info use stdout; warnings/errors use stderr. Color is restrained and checks
+the destination stream's TTY status. Redirected output, ordinary Docker logs and
+JSON have no ANSI escapes by default. Multiline message text becomes literal
+`\n`; only bounded stack continuation rows occupy additional lines.
+
+## Configuration
+
+Namespaced settings avoid taking over an application's own `LOG_*` variables.
+Level, format, stacks and credential values are captured when the logger is created.
+Color environment switches are checked at each output call.
+
+| Variable | Values | Default |
+| --- | --- | --- |
+| `KAIRO_LOG_LEVEL` | `debug`, `info`, `warn`, `error`; legacy `notif`/`alert` also accepted, case insensitive | `info` |
+| `KAIRO_LOG_FORMAT` | `text`, `json` | `text` |
+| `KAIRO_LOG_STACKS` | `off`, `short`, `full` | `short` |
+| `NO_COLOR` | Any defined value disables color | Unset |
+| `FORCE_COLOR` | `0` disables; a nonempty value enables when permitted | Unset |
+| `TERM` | `dumb` disables color | Unset |
+
+Invalid environment settings fall back to defaults. `NO_COLOR`, `TERM=dumb`,
+`FORCE_COLOR=0` and `loggerOptions.colors=false` take precedence over color
+enabling. JSON always remains color free.
+
+```ts
+import { KairoClient, createConsoleLogger } from 'kairojs/client';
+
+const client = new KairoClient({
+	intents: [],
+	loggerOptions: { level: 'DEBUG', colors: false },
+	logging: { format: 'json', stacks: 'short', redact: ['fixture-credential'] }
+});
+
+const logger = createConsoleLogger('MyBot', { level: 'NOTIF' }, {
+	format: 'json',
+	stacks: 'off'
+});
+logger.notif('Bot initialized.');
+logger.error(new Error('Provider content is omitted from default diagnostics.'));
+await client.destroy();
+```
+
+`loggerOptions.level` overrides `KAIRO_LOG_LEVEL`; `logging.format` and
+`logging.stacks` override their environment settings. `logging.redact` adds exact
+credential values to the default scrubber, which also reads credential-like
+environment keys. Values shorter than six characters are ignored to avoid
+destroying normal words. Shard coordinators/managers use these environment
+defaults too; supply `logger: createConsoleLogger(...)` for explicit settings.
+The engine's existing `onError` callback remains its customization mechanism.
+
+## Compatibility and customization
+
+The public `Logger`, `LoggerOptions` and `LogLevel` exports still come directly
+from `@lilsnibbi/logger`. Framework defaults are instances of that same class;
+`name`, `level`, `silent`, raw rendering and `close()` remain available. Supplying
+`logger` preserves the exact instance, method binding and ownership, and ignores
+`loggerOptions`/`logging`. KairoJS never configures or closes a supplied logger.
+
+Custom loggers still need only `debug`, `notif`, `alert` and `error`. Framework
+notices arrive as a single string with component/event/context. Failures arrive
+as a single contextual `Error` whose `cause` is the original thrown value.
+Application error events, their arguments and error objects are unchanged.
+Framework log calls contain synchronous sink exceptions and attempt one safe fallback record;
+those exceptions cannot interrupt startup, retries or cleanup. Direct calls to a supplied
+logger keep that logger's behavior.
+
+Explicit output customization in `loggerOptions` retains the dependency's
+original behavior. This includes `format`, `serialize`, `layout`, `box`, `file`,
+`theme`, `timeformat`, `includeTimestamps`, `inspectDepth`, `relativePaths`,
+`symbols`, `dividerWidth`, `filter` and `transport`. Providing any of these
+selects the original dependency formatter; `logging` settings then do not apply.
+This preserves existing custom hooks, rotating files and JSON file envelopes.
+That custom output and supplied logger instances remain responsible for their
+own redaction, bounds and color policy. The default guarantees below apply to
+the KairoJS console formatter. Passing the public `new Logger(...)` directly
+continues to select the dependency's original behavior.
+
+## Operational events
+
+- Client readiness and command registration completion are info milestones.
+  Registration progress, identical definitions, module counts and per-module
+  traces are debug. `traceModules`, `logRegistrations` and `logErrors` keep their
+  existing controls.
+- REST registration failures carry command/guild context and recognized HTTP
+  status/Discord codes. Changed commands and bulk overwrites stay visible.
+  Difference diagnostics keep bounded field paths instead of dumping original
+  and expected command definitions. Successful REST requests are not logged
+  individually.
+- Engine fallback failures carry source, fatal state and shard ID. User `onError`
+  callbacks and gateway events retain their existing calls and arguments. Standalone
+  REST calls still return/throw through their existing API; logging stays at the
+  operation boundary so one failure is not printed at every retry.
+- Sharding includes coordinator listening, manager assignment, operation failures
+  and host/shard context. Child-process stdout/stderr remain inherited. IPC payloads,
+  tokens and identify messages are not dumped.
+- Extension failures carry extension and lifecycle phase. Module failures carry
+  store and source. Scheduled tasks carry task/module or queue/storage context;
+  storage recovery remains info. Routine job ticks and job data are omitted.
+- Localisation fallback and pagination failures use the same operational format.
+  Standalone localisation fallback now writes a warning record to stderr instead
+  of a process warning; custom `onDiagnostic` callbacks are unchanged.
+
+Severity and formatting do not change engine, permissions, rate-limit, retry,
+registration, sharding, scheduler or shutdown behavior. Existing errors still
+propagate through their existing APIs. Consumer-owned logs, Discord.js internals,
+CLI validation output and application example listeners are not intercepted.
+
+## Diagnostics, redaction and bounds
+
+Error records retain recognized type, code/status, an actionable hint, causes
+and aggregate counts. Arbitrary provider messages, response/request bodies,
+error properties, function labels and stack header lines are omitted. Unrecognized
+codes use a generic hint. Code-specific source locations and operation context
+are the way to investigate details; custom error callbacks still receive the
+original errors.
+
+`short` keeps up to three source locations outside dependencies; `full` keeps up to ten
+including dependencies; `off` omits them. Consumer modules outside `src` retain
+their locations, and files under the working directory use relative paths.
+Text continuation rows repeat timestamp,
+severity, component, event and request/trace/shard/host correlation. JSON stores
+locations inside the same record's `error.stack`. Cause depth is two; aggregates
+show at most three children at each level and keep the original child count.
+
+Private metadata keys are redacted recursively, including credentials, tokens,
+cookies, sessions, headers, bodies, payloads, prompts, arguments, content,
+responses, email addresses and usernames. Numeric token counts remain useful.
+Known credential values and encoded variants are scrubbed from text. HTTP/WS URLs
+retain only their origin; database/Redis URLs, webhook/interaction route secrets,
+query values, authorization values and email addresses are removed. Control
+characters and terminal escapes cannot inject extra rows.
+
+Messages and strings have a 320-character cap. Context has a shared 1,536-character
+budget, 80 nodes, at most 24 fields per object, three levels and eight array entries
+plus a truncation marker. Getters and `toJSON` are ignored; cycles and unavailable
+objects are marked. Records are bounded to 8 KiB in UTF-8, shedding optional
+details while retaining correlation. Redaction is a backstop: pass fixed
+developer-authored messages and diagnostic metadata, never arbitrary user text.
+
+JSON produces one parseable object per line:
+
+```json
+{"timestamp":"2026-10-14T12:30:45.123Z","level":"info","component":"KairoJS.client","event":"ready","message":"Discord client ready.","context":{"commands":7,"shards":2}}
+```
+
+## Synthetic before/after and local demo
+
+Previously routine registration progress and errors mixed free text, stacks and
+definition dumps:
+
+```text
+[Wed 12:30:45.123] NOTIF KairoJS > ApplicationCommandRegistries: Initializing...
+[Wed 12:30:45.123] NOTIF KairoJS > ApplicationCommandRegistries: Took 18ms to initialize.
+[kairo-engine] gateway recoverable provider-specific details ...
+Encountered error on scheduled task "fixture-task" at path "/app/tasks/fixture.ts"
+Error: provider-specific details ...
+    at ...
+```
+
+The replacement combines safe diagnostics with the operation and bounds stacks:
+
+```text
+2026-10-14T12:30:45.123Z INFO  KairoJS.rest.registration completed | Application command registries initialized. | durationMs=18
+2026-10-14T12:30:45.123Z INFO  KairoJS.client ready | Discord client ready. | commands=7 shards=2
+2026-10-14T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | Engine operation failed. | shard=1 fatal=false | error={"type":"Error","code":"ECONNREFUSED","hint":"Connection refused; check the endpoint and service availability."}
+2026-10-14T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | at src/engine/client/EngineClient.ts:42:3 | shard=1
+```
+
+Preview synthetic text or JSON without contacting Discord or Redis:
+
+```sh
+bun scripts/logging-demo.ts
+bun scripts/logging-demo.ts --json
+```
+
+The preview deliberately includes debug samples and fixed UTC timestamps. It
+uses stdout/stderr like the real logger; combine them with `2>&1` to collect all
+sample records. Logging tests run with `bun test tests/core/logging.test.ts`.

@@ -1,4 +1,4 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { Events, type InteractionHandlerError } from '../events';
 import { Listener } from '../listener';
 
@@ -9,11 +9,12 @@ export class InteractionErrorListener extends Listener<typeof Events.Interaction
 
 	public run(error: unknown, context: InteractionHandlerError) {
 		const { name, location } = context.handler;
-		writeLog(
-			this.container.logger,
-			'error',
-			`Encountered error while handling an interaction handler run method for interaction-handler "${name}" at path "${location.full}"`,
-			error
-		);
+		writeEvent(this.container.logger, 'error', {
+			component: 'interactions',
+			event: 'handler_failed',
+			message: 'Interaction handler failed.',
+			error,
+			context: { handler: name, path: location.full }
+		});
 	}
 }

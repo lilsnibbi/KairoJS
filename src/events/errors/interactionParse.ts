@@ -1,4 +1,4 @@
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { Events, type InteractionHandlerParseError as InteractionHandlerParseErrorPayload } from '../events';
 import { Listener } from '../listener';
 
@@ -9,11 +9,12 @@ export class InteractionParseErrorListener extends Listener<typeof Events.Intera
 
 	public run(error: unknown, context: InteractionHandlerParseErrorPayload) {
 		const { name, location } = context.handler;
-		writeLog(
-			this.container.logger,
-			'error',
-			`Encountered error while handling an interaction handler parse method for interaction-handler "${name}" at path "${location.full}"`,
-			error
-		);
+		writeEvent(this.container.logger, 'error', {
+			component: 'interactions',
+			event: 'parse_failed',
+			message: 'Interaction handler parsing failed.',
+			error,
+			context: { handler: name, path: location.full }
+		});
 	}
 }

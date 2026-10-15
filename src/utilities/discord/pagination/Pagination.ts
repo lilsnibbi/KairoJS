@@ -24,6 +24,8 @@ import {
 	TextInputStyle
 } from 'discord.js';
 import { container } from '../../../core/Container';
+import { fallbackLogger } from '../../../core/logging/console';
+import { writeEvent } from '../../../core/logging/diagnostics';
 
 const DATA: unique symbol = Symbol('paginationData');
 const BUTTONS: unique symbol = Symbol('paginationButtons');
@@ -366,10 +368,19 @@ export class Pagination {
 	}
 	private logError(error: unknown): void {
 		try {
-			if (container.logger) container.logger.error(new Error('Pagination interaction failed.', { cause: error }));
-			else console.error('Pagination interaction failed.', error);
+			writeEvent(container.logger ?? fallbackLogger(), 'error', {
+				component: 'pagination',
+				event: 'interaction_failed',
+				message: 'Pagination interaction failed.',
+				error
+			});
 		} catch (cause) {
-			console.error('Pagination error reporting failed.', error, cause);
+			writeEvent(fallbackLogger(), 'error', {
+				component: 'pagination',
+				event: 'error_reporting_failed',
+				message: 'Pagination error reporting failed.',
+				error: new AggregateError([error, cause])
+			});
 		}
 	}
 }

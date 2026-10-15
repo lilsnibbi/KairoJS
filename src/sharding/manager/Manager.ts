@@ -1,9 +1,11 @@
 // Modified host-supervision design from discord-sharding. Apache-2.0; see ../LICENSE.
+
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { Logger } from '@lilsnibbi/logger';
 import { type } from 'arktype';
-import { writeLog } from '../../core/logging/diagnostics';
-import { Logger } from '../../core/logging/index';
+import { createConsoleLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { ShardMessenger } from '../messaging';
 import { Pending } from '../transport/pending';
 import {
@@ -67,7 +69,7 @@ export class ShardManager extends ShardMessenger {
 	private readonly shutdownMs: number;
 	private readonly identifyMs: number;
 	private get logger() {
-		return this.options.logger ?? (this.ownedLogger ??= new Logger({ name: `Shards:${this.options.id}`, level: 'NOTIF' }));
+		return this.options.logger ?? (this.ownedLogger ??= createConsoleLogger());
 	}
 	public constructor(options: ShardManagerOptions) {
 		super();
@@ -138,7 +140,7 @@ export class ShardManager extends ShardMessenger {
 				void this.loop.catch((error) => {
 					this.closed = true;
 					rejectStart(error);
-					this.report('Supervisor stopped after a lifecycle failure.', error);
+					this.report('Supervisor stopped after a lifecycle failure.', error, 'supervisor_stopped');
 				});
 			});
 		}
@@ -161,7 +163,7 @@ export class ShardManager extends ShardMessenger {
 					rejectStart(error);
 					this.closed = true;
 				}
-				if (!this.closed) this.report('Coordinator connection lost.', error);
+				if (!this.closed) this.report('Coordinator connection lost.', error, 'connection_lost');
 			}
 			this.connected = false;
 			this.requests.close();
@@ -208,7 +210,12 @@ export class ShardManager extends ShardMessenger {
 					for (const child of this.children.values()) {
 						if (!child.ready || child.intentional) continue;
 						if (performance.now() - child.lastSeen > 15000) {
-							this.report(`Shard ${child.shard} stopped responding.`, new ShardError('TIMEOUT', 'Child heartbeat deadline exceeded.'));
+							this.report(
+								'Shard stopped responding.',
+								new ShardError('TIMEOUT', 'Child heartbeat deadline exceeded.'),
+								'heartbeat_timeout',
+								{ shard: child.shard }
+							);
 							child.process.kill(9);
 						} else this.sendChild(child, frame('ping'));
 					}
@@ -267,6 +274,12 @@ export class ShardManager extends ShardMessenger {
 							if (previous?.state === 'failed') continue;
 							this.spawn(shard, previous?.restarts ?? 0);
 						}
+						writeEvent(this.logger, 'notif', {
+							component: 'sharding.manager',
+							event: 'assigned',
+							message: 'Coordinator assigned local shards.',
+							context: { host: this.options.id, shards: d.shards, count: d.count }
+						});
 						onWelcome();
 						return;
 					}
@@ -317,7 +330,7 @@ export class ShardManager extends ShardMessenger {
 						try {
 							this.fromChild(child, decode(input, this.policy.maxBytes, ['boot', 'pong', 'call', 'result', 'identify', 'done', 'cancel']));
 						} catch (error) {
-							this.report(`Invalid IPC from shard ${shard}.`, error);
+							this.report('Invalid IPC from shard.', error, 'ipc_rejected', { shard });
 							child.process.kill(9);
 						}
 					}
@@ -336,7 +349,7 @@ export class ShardManager extends ShardMessenger {
 				requests: new Map(),
 				startup: setTimeout(() => {
 					if (child && !child.ready) {
-						this.report(`Shard ${shard} did not boot.`, new ShardError('STARTUP_TIMEOUT', 'Child startup timed out.'));
+						this.report('Shard did not boot.', new ShardError('STARTUP_TIMEOUT', 'Child startup timed out.'), 'startup_timeout', { shard });
 						child.process.kill(9);
 					}
 				}, this.startupMs)
@@ -346,13 +359,13 @@ export class ShardManager extends ShardMessenger {
 			void subprocess.exited.then(
 				(code) => this.exited(owned, code),
 				(error) => {
-					this.report(`Shard ${shard} exit failed.`, error);
+					this.report('Shard exit failed.', error, 'exit_failed', { shard });
 					this.exited(owned, -1);
 				}
 			);
 		} catch (error) {
 			status.state = 'failed';
-			this.report(`Could not spawn shard ${shard}.`, error);
+			this.report('Could not spawn shard.', error, 'spawn_failed', { shard });
 			this.recover(shard, restarts);
 		}
 	}
@@ -531,7 +544,11 @@ export class ShardManager extends ShardMessenger {
 		}
 		child.status.state = 'stopped';
 		if (child.intentional || this.closed || !this.connected) return;
-		this.report(`Shard ${child.shard} exited (${code}).`, new ShardError('CHILD_EXIT', 'Applying configured restart policy.'));
+		this.report('Shard process exited.', new ShardError('CHILD_EXIT', 'Applying configured restart policy.'), 'child_exited', {
+			shard: child.shard,
+			exitCode: code,
+			restarts: child.status.restarts
+		});
 		const attempts = performance.now() - child.started >= this.recovery.stableAfterMs ? 0 : child.status.restarts;
 		this.recover(child.shard, attempts);
 	}
@@ -600,7 +617,7 @@ export class ShardManager extends ShardMessenger {
 					this.send(message);
 					await ack;
 				} catch (error) {
-					this.report('Ownership release was not acknowledged; reservation retained.', error);
+					this.report('Ownership release was not acknowledged; reservation retained.', error, 'release_unconfirmed');
 				}
 			}
 		} finally {
@@ -612,7 +629,13 @@ export class ShardManager extends ShardMessenger {
 			await this.ownedLogger?.close();
 		}
 	}
-	private report(message: string, error: unknown): void {
-		writeLog(this.logger, 'error', message, error);
+	private report(message: string, error: unknown, event: string, context: Record<string, unknown> = {}): void {
+		writeEvent(this.logger, 'error', {
+			component: 'sharding.manager',
+			event,
+			message,
+			error,
+			context: { host: this.options.id, ...context }
+		});
 	}
 }

@@ -1,4 +1,4 @@
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Events } from '../../../events/events';
 import { Listener } from '../../../events/listener';
 
@@ -8,6 +8,10 @@ export class InitialisingListener extends Listener<typeof Events.ApplicationComm
 	}
 
 	public run() {
-		writeLog(this.container.logger, 'notif', 'ApplicationCommandRegistries: Initializing...');
+		writeEvent(this.container.logger, 'debug', {
+			component: 'rest.registration',
+			event: 'started',
+			message: 'Initializing application command registries.'
+		});
 	}
 }

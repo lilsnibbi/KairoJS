@@ -19,6 +19,7 @@ export const clientOptionsSchema = type({
 	'logErrors?': 'boolean',
 	'logRegistrations?': 'boolean',
 	'traceModules?': 'boolean',
+	'logging?': type({ 'format?': "'text' | 'json'", 'stacks?': "'off' | 'short' | 'full'", 'redact?': 'string[]' }),
 	'defaultCooldown?': cooldown,
 	'preventFailedToFetchLogForGuilds?': 'string[] | true'
 });

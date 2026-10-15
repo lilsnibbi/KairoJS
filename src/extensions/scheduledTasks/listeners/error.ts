@@ -1,4 +1,4 @@
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Listener } from '../../../events/listener';
 import { Task } from '../Task';
 import { TaskEvents } from '../types/TaskEvents';
@@ -13,6 +13,12 @@ export class ErrorListener extends Listener<typeof TaskEvents.ScheduledTaskError
 
 	public override run(error: unknown, task: Task) {
 		const { name, location } = task;
-		writeLog(this.container.logger, 'error', `Encountered error on scheduled task "${name}" at path "${location.full}"`, error);
+		writeEvent(this.container.logger, 'error', {
+			component: 'tasks',
+			event: 'task_failed',
+			message: 'Scheduled task failed.',
+			error,
+			context: { task: name, path: location.full }
+		});
 	}
 }

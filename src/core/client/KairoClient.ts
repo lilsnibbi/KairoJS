@@ -1,3 +1,4 @@
+import type { Logger, LoggerOptions } from '@lilsnibbi/logger';
 import { Client, type ClientOptions, type Message, type Snowflake } from 'discord.js';
 import { ArgumentStore } from '../../commands/arguments/ArgumentStore';
 // Load built-in pieces
@@ -21,9 +22,9 @@ import { type ExtensionOptions, resolveExtensions } from '../config/extensions';
 import { clientOptionsSchema } from '../config/options';
 import { Extension } from '../lifecycle/Extension';
 import { ModuleGlob, moduleRoot } from '../loading/ModuleGlob';
-import { writeLog } from '../logging/diagnostics';
-import type { LoggerOptions } from '../logging/index';
-import { Logger } from '../logging/index';
+import { createConsoleLogger } from '../logging/console';
+import { writeEvent } from '../logging/diagnostics';
+import type { ConsoleLogOptions } from '../logging/format';
 import type { LoggerLike } from '../logging/LoggerLike';
 import { container, ModuleRegistry, ModuleStore } from '../modules/index';
 import type { ModulePaths } from '../modules/ModuleRegistry';
@@ -70,6 +71,8 @@ export interface KairoClientOptions {
 	logger?: LoggerLike;
 	/** Used only when KairoJS creates its own logger. */
 	loggerOptions?: Partial<LoggerOptions>;
+	/** Formatting for the framework-created console logger. Supplied loggers are untouched. */
+	logging?: ConsoleLogOptions;
 
 	/** Log module discovery details through debug. Defaults to false. */
 	traceModules?: boolean;
@@ -175,10 +178,16 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 		if (activeClient) throw new Error('Only one KairoClient can be active. Await client.destroy() before creating another.');
 		super(options);
 		this.extensions = extensions;
-		this.logger = options.logger ?? (this.ownedLogger = new Logger({ name: 'KairoJS', level: 'NOTIF', ...options.loggerOptions }));
+		this.logger = options.logger ?? (this.ownedLogger = createConsoleLogger('KairoJS', options.loggerOptions, options.logging));
 		this.sharding = new ShardLink(managed, async (code, cause) => {
 			if (code !== 0)
-				writeLog(this.logger, 'error', 'Managed shard stopped: supervisor, protocol, or identify coordination failed.', cause);
+				writeEvent(this.logger, 'error', {
+					component: 'sharding.client',
+					event: 'managed_shard_stopped',
+					message: 'Managed shard stopped: supervisor, protocol, or identify coordination failed.',
+					error: cause,
+					context: { code }
+				});
 			await this.destroy();
 		});
 		if (managed) {
@@ -195,7 +204,9 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 		container.client = this;
 		container.modules = this.modules;
 		container.logger = this.logger;
-		ModuleStore.logger = options.traceModules ? (value) => this.logger.debug(value) : null;
+		ModuleStore.logger = options.traceModules
+			? (value) => writeEvent(this.logger, 'debug', { component: 'modules', event: 'module_trace', message: value })
+			: null;
 		try {
 			loadArguments();
 			registerEvents();
@@ -216,7 +227,14 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				this.assertOpen();
 			};
 		} catch (error) {
-			void this.destroy().catch((cleanup) => writeLog(this.logger, 'error', 'Client construction cleanup failed.', cleanup));
+			void this.destroy().catch((cleanup) =>
+				writeEvent(this.logger, 'error', {
+					component: 'client',
+					event: 'construction_cleanup_failed',
+					message: 'Client construction cleanup failed.',
+					error: cleanup
+				})
+			);
 			throw error;
 		}
 	}
@@ -294,7 +312,13 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				});
 		}
 		if (failed) {
-			writeLog(this.logger, 'error', `Skipping extension ${extension.name}: setup failed.`, failure);
+			writeEvent(this.logger, 'error', {
+				component: 'extensions',
+				event: 'setup_failed',
+				message: 'Skipping extension: setup failed.',
+				error: failure,
+				context: { extension: extension.name, critical: !!extension.critical }
+			});
 			const cleanup = this.disableFeature(state);
 			this.pendingCleanup.push(cleanup);
 			void cleanup.catch(() => {});
@@ -312,7 +336,13 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				await this.phase;
 				this.emit(Events.ExtensionLoaded, phase, state.extension.name);
 			} catch (cause) {
-				writeLog(this.logger, 'error', `Extension ${state.extension.name} failed during ${phase}.`, cause);
+				writeEvent(this.logger, 'error', {
+					component: 'extensions',
+					event: 'hook_failed',
+					message: 'Extension lifecycle hook failed.',
+					error: cause,
+					context: { extension: state.extension.name, phase, critical: !!state.extension.critical }
+				});
 				await this.disableFeature(state);
 				if (state.extension.critical) throw new Error(`Required extension ${state.extension.name} failed during ${phase}.`, { cause });
 			} finally {

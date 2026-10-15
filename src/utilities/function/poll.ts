@@ -1,3 +1,5 @@
+import { fallbackLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import type { Awaitable } from '../types';
 import { sleep } from './sleep';
 
@@ -43,7 +45,13 @@ export async function poll<T>(
 		signal?.throwIfAborted();
 
 		if (waitBetweenRetries > 0) {
-			if (options.verbose) console.log(`Waiting ${waitBetweenRetries}ms before polling again...`);
+			if (options.verbose)
+				writeEvent(fallbackLogger(), 'notif', {
+					component: 'utilities.poll',
+					event: 'waiting',
+					message: 'Waiting before polling again.',
+					context: { delayMs: waitBetweenRetries, attempt: retries + 1 }
+				});
 			await sleep(waitBetweenRetries, undefined, { signal });
 		}
 

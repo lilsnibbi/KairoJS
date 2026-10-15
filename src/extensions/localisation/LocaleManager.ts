@@ -16,6 +16,8 @@ import i18next, {
 	type TOptions
 } from 'i18next';
 import { moduleRoot } from '../../core/loading/ModuleGlob';
+import { fallbackLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { container } from '../../core/modules/index';
 import { type Awaitable, isFunction } from '../../utilities/index';
 import { discordLocales, localizeCommand } from './commands';
@@ -134,10 +136,19 @@ export class LocaleManager {
 			this.options.onDiagnostic(diagnostic);
 			return;
 		}
-		const context = [diagnostic.path, diagnostic.locale, diagnostic.namespace, diagnostic.key].filter(Boolean).join(' / ');
-		const error = new Error(`Localisation: ${diagnostic.message}${context ? ` [${context}]` : ''}`, { cause: diagnostic.cause });
-		if (container.logger) container.logger.alert(error);
-		else process.emitWarning(error);
+		writeEvent(container.logger ?? fallbackLogger(), 'alert', {
+			component: 'localisation',
+			event: 'diagnostic',
+			message: 'Localisation resource or translation issue; check files and keys.',
+			error: diagnostic.cause,
+			context: {
+				code: diagnostic.code,
+				path: diagnostic.path,
+				locale: diagnostic.locale,
+				namespace: diagnostic.namespace,
+				key: diagnostic.key
+			}
+		});
 	}
 
 	/** Localizes a content given one or more keys and i18next options. */

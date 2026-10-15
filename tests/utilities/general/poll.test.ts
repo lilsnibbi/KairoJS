@@ -167,23 +167,26 @@ describe('poll', () => {
 	});
 
 	describe('verbose', () => {
-		test('GIVEN verbose but no waitBetweenRetries THEN does not call console.log', async () => {
+		test('GIVEN verbose but no waitBetweenRetries THEN does not log', async () => {
 			const cb = jest.fn<() => string>().mockReturnValueOnce(fail).mockReturnValueOnce(pass);
-			const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+			const output = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 			const result = poll(cb, cbConditionRaw, { verbose: true });
 
 			await expect(result).resolves.toBe(pass);
-			expect(consoleLog).toHaveBeenCalledTimes(0);
+			expect(output).toHaveBeenCalledTimes(0);
 		});
 
-		test('GIVEN verbose and waitBetweenRetries THEN calls console.log on retry', async () => {
+		test('GIVEN verbose and waitBetweenRetries THEN logs retry context to stdout', async () => {
 			const cb = jest.fn<() => string>().mockReturnValueOnce(fail).mockReturnValueOnce(pass);
-			const consoleLog = jest.spyOn(console, 'log').mockImplementation(() => undefined);
+			const output = jest.spyOn(process.stdout, 'write').mockImplementation(() => true);
 			const result = poll(cb, cbConditionRaw, { verbose: true, waitBetweenRetries: 5 });
 
 			await expect(result).resolves.toBe(pass);
-			expect(consoleLog).toHaveBeenCalledTimes(1);
-			expect(consoleLog).toHaveBeenCalledWith('Waiting 5ms before polling again...');
+			expect(output).toHaveBeenCalledTimes(1);
+			const line = String(output.mock.calls[0]?.[0]);
+			expect(line).toContain('KairoJS.utilities.poll');
+			expect(line).toContain('waiting');
+			expect(line).toContain('delayMs=5 attempt=1');
 		});
 	});
 });

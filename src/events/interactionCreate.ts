@@ -1,5 +1,5 @@
 import type { Interaction } from 'discord.js';
-import { writeLog } from '../core/logging/diagnostics';
+import { writeEvent } from '../core/logging/diagnostics';
 import { Events } from './events';
 import { Listener } from './listener';
 
@@ -18,11 +18,12 @@ export class InteractionCreateListener extends Listener<typeof Events.Interactio
 		} else if (interaction.isMessageComponent() || interaction.isModalSubmit()) {
 			await this.container.modules.require('interactions').run(interaction);
 		} else {
-			writeLog(
-				this.container.logger,
-				'alert',
-				`[KairoJS ${this.location.name}] Unhandled interaction type: ${(interaction as any).constructor.name}`
-			);
+			writeEvent(this.container.logger, 'alert', {
+				component: 'interactions',
+				event: 'unhandled_type',
+				message: 'Unhandled interaction type.',
+				context: { type: interaction.type }
+			});
 		}
 	}
 }

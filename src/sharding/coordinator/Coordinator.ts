@@ -1,9 +1,9 @@
 // Adapted architecture from discord-sharding, with fixed assignments and named RPC.
 // Apache-2.0; see ../LICENSE and ../../../docs/source-retention.md. This is a new incompatible protocol.
 
-import { writeLog } from '../../core/logging/diagnostics';
-import type { Logger } from '../../core/logging/index';
-import { Logger as DefaultLogger } from '../../core/logging/index';
+import type { Logger } from '@lilsnibbi/logger';
+import { createConsoleLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import {
 	decode,
 	encode,
@@ -68,7 +68,7 @@ export class ShardCoordinator {
 	private refreshPromise?: Promise<void>;
 	private ownedLogger?: Logger;
 	private get logger() {
-		return this.options.logger ?? (this.ownedLogger ??= new DefaultLogger({ name: 'Sharding', level: 'NOTIF' }));
+		return this.options.logger ?? (this.ownedLogger ??= createConsoleLogger());
 	}
 
 	public constructor(options: ShardCoordinatorOptions) {
@@ -149,7 +149,7 @@ export class ShardCoordinator {
 						try {
 							this.receive(socket.data, decode(input, this.policy.maxBytes, inbound));
 						} catch (error) {
-							this.report('Rejected sharding protocol message.', error);
+							this.report('Rejected sharding protocol message.', error, 'protocol_rejected', { host: socket.data.host.id });
 							this.disconnect(socket.data);
 							socket.close(1008, 'Invalid protocol');
 						}
@@ -167,6 +167,12 @@ export class ShardCoordinator {
 				if (this.state?.expired && this.options.botToken && !this.refreshing && Date.now() >= this.refreshAt)
 					this.refreshPromise = this.refresh();
 			}, 250);
+			writeEvent(this.logger, 'notif', {
+				component: 'sharding.coordinator',
+				event: 'listening',
+				message: 'Shard coordinator listening.',
+				context: { port: this.server.port, hosts: this.hosts.size, shards: this.options.shardCount }
+			});
 		} catch (error) {
 			this.state?.close();
 			this.state = undefined;
@@ -334,7 +340,11 @@ export class ShardCoordinator {
 				if (this.state.grant(pending.session.host.id, d.shard, d.generation)) this.finishIdentify(id);
 			} catch (error) {
 				this.finishIdentify(id, error);
-				this.report('Could not persist identify grant.', error);
+				this.report('Could not persist identify grant.', error, 'identify_persistence_failed', {
+					host: pending.session.host.id,
+					shard: d.shard,
+					requestId: pending.message.id
+				});
 				void this.close();
 				return;
 			}
@@ -416,7 +426,8 @@ export class ShardCoordinator {
 			if (!this.closed) this.updateSessionLimit(value);
 		} catch (error) {
 			this.refreshAt = Date.now() + 30000;
-			if (!this.closed) this.report('Gateway metadata refresh failed; identifies remain blocked.', error);
+			if (!this.closed)
+				this.report('Gateway metadata refresh failed; identifies remain blocked.', error, 'gateway_metadata_refresh_failed');
 		} finally {
 			this.refreshing = false;
 		}
@@ -440,7 +451,7 @@ export class ShardCoordinator {
 		this.state = undefined;
 		await this.ownedLogger?.close();
 	}
-	private report(message: string, error: unknown): void {
-		writeLog(this.logger, 'error', message, error);
+	private report(message: string, error: unknown, event: string, context?: Record<string, unknown>): void {
+		writeEvent(this.logger, 'error', { component: 'sharding.coordinator', event, message, error, context });
 	}
 }

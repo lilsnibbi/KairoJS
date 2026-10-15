@@ -1,4 +1,4 @@
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Events } from '../../../events/events';
 import { Listener } from '../../../events/listener';
 import type { ApplicationCommandRegistry } from '../Registry';
@@ -9,6 +9,11 @@ export class RegisteredListener extends Listener<typeof Events.ApplicationComman
 	}
 
 	public run(_registries: Map<string, ApplicationCommandRegistry>, timeTaken: number) {
-		writeLog(this.container.logger, 'notif', `ApplicationCommandRegistries: Took ${timeTaken.toLocaleString()}ms to initialize.`);
+		writeEvent(this.container.logger, 'notif', {
+			component: 'rest.registration',
+			event: 'completed',
+			message: 'Application command registries initialized.',
+			context: { durationMs: timeTaken }
+		});
 	}
 }

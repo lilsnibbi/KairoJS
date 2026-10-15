@@ -6,7 +6,7 @@ import { ModuleLoadError, ModuleLoadErrorType } from '../errors/ModuleLoadError'
 import { RegisteredModules, VirtualPath } from '../loading/constants';
 import type { HydratedModuleData, ILoaderResultEntry, ModuleLoaderHooks } from '../loading/contracts';
 import { ModuleLoader } from '../loading/ModuleLoader';
-import { writeLog } from '../logging/diagnostics';
+import { writeEvent } from '../logging/diagnostics';
 import type { Module } from './Module';
 import { type ModuleKind, ModuleRegistry, type ModuleStores } from './ModuleRegistry';
 
@@ -128,11 +128,24 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 	}
 
 	private report(source: string, cause: unknown): void {
-		if (container.logger) writeLog(container.logger, 'error', `Skipping ${this.name} module from "${source}".`, cause);
+		if (container.logger)
+			writeEvent(container.logger, 'error', {
+				component: 'modules',
+				event: 'module_skipped',
+				message: 'Skipping module after a load failure.',
+				context: { store: this.name, source },
+				error: cause
+			});
 	}
 
 	private warnDuplicate(name: string, source: string): void {
-		container.logger?.alert(`Duplicate ${this.name} module "${name}" from ${source}; keeping the first accepted module.`);
+		if (container.logger)
+			writeEvent(container.logger, 'alert', {
+				component: 'modules',
+				event: 'duplicate_module',
+				message: 'Duplicate module; keeping the first accepted module.',
+				context: { store: this.name, module: name, source }
+			});
 	}
 
 	async unload(name: string | T): Promise<T> {

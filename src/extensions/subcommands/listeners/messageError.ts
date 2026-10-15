@@ -1,4 +1,4 @@
-import { writeLog } from '../../../core/logging/diagnostics';
+import { writeEvent } from '../../../core/logging/diagnostics';
 import { Listener } from '../../../events/listener';
 import { type MessageSubcommandErrorPayload, SubcommandEvents } from '../types/Events';
 
@@ -9,6 +9,12 @@ export class MessageErrorListener extends Listener<typeof SubcommandEvents.Messa
 
 	public override run(error: unknown, context: MessageSubcommandErrorPayload) {
 		const { name, location } = context.command;
-		writeLog(this.container.logger, 'error', `Encountered error on message subcommand "${name}" at path "${location.full}"`, error);
+		writeEvent(this.container.logger, 'error', {
+			component: 'subcommands',
+			event: 'message_command_failed',
+			message: 'Message subcommand failed.',
+			error,
+			context: { command: name, path: location.full }
+		});
 	}
 }

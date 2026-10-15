@@ -1,7 +1,9 @@
 import type { APIChannel, APIGuildMember, APIMessage } from 'discord-api-types/v10';
 import { GatewayDispatchEvents as E } from 'discord-api-types/v10';
+import { fallbackLogger } from '../../core/logging/console';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { EngineCache } from '../cache/EngineCache';
-import { errorOf, systemClock } from '../common';
+import { systemClock } from '../common';
 import type { $GatewayState } from '../gateway/GatewayShard';
 import { GatewayShard } from '../gateway/GatewayShard';
 import { IdentifyGate } from '../gateway/IdentifyGate';
@@ -163,9 +165,21 @@ export class EngineClient {
 		this.reporting = true;
 		try {
 			if (this.#options.onError) this.#options.onError(failure);
-			else console.error('[kairo-engine]', failure.source, failure.fatal ? 'fatal' : 'recoverable', failure.error.message);
+			else
+				writeEvent(fallbackLogger(), 'error', {
+					component: `engine.${failure.source}`,
+					event: 'operation_failed',
+					message: 'Engine operation failed.',
+					error: failure.error,
+					context: { fatal: failure.fatal, shard: this.#options.gateway?.shard?.[0] ?? 0 }
+				});
 		} catch (error) {
-			console.error('[kairo-engine] Error callback failed:', errorOf(error).message);
+			writeEvent(fallbackLogger(), 'error', {
+				component: 'engine.client',
+				event: 'error_callback_failed',
+				message: 'Engine error callback failed.',
+				error
+			});
 		} finally {
 			this.reporting = false;
 		}

@@ -1,5 +1,5 @@
 import type { ApplicationCommand, ApplicationCommandManager, Collection } from 'discord.js';
-import { writeLog } from '../../core/logging/diagnostics';
+import { writeEvent } from '../../core/logging/diagnostics';
 import { container } from '../../core/modules/index';
 
 export async function getNeededRegistryParameters(guildIds: Set<string> = new Set()) {
@@ -23,19 +23,19 @@ async function fetchGuildCommands(commands: ApplicationCommandManager, guildIds:
 		try {
 			const guildCommands = await commands.fetch({ guildId, withLocalizations: true });
 			map.set(guildId, guildCommands);
-		} catch (_err) {
+		} catch (error) {
 			const { preventFailedToFetchLogForGuilds } = container.client.options;
 
 			if (preventFailedToFetchLogForGuilds === true) continue;
 
 			if (Array.isArray(preventFailedToFetchLogForGuilds) && !preventFailedToFetchLogForGuilds?.includes(guildId)) {
-				const guild = container.client.guilds.resolve(guildId) ?? { name: 'Guild not in cache' };
-				writeLog(
-					container.logger,
-					'alert',
-					`ApplicationCommandRegistries: Failed to fetch guild commands for guild "${guild.name}" (${guildId}).`,
-					'Make sure to authorize your application with the "applications.commands" scope in that guild.'
-				);
+				writeEvent(container.logger, 'alert', {
+					component: 'rest.registration',
+					event: 'guild_fetch_failed',
+					message: 'Guild command fetch failed; check the applications.commands authorization scope.',
+					context: { guildId },
+					error
+				});
 			}
 		}
 	}
