@@ -1,14 +1,16 @@
 import './contracts';
 import { GatewayIntentBits } from 'discord.js';
-import { KairoClient } from 'kairojs/client';
+import { KairoClient, type LoggerLike } from 'kairojs/client';
 import { ApplicationCommandRegistries } from 'kairojs/commands';
 import { developmentGuild } from './config';
+import { exampleLogger } from './logging';
 
-export function createBot(): KairoClient {
+export function createBot(logger: LoggerLike = exampleLogger): KairoClient {
 	const guildId = developmentGuild();
 	ApplicationCommandRegistries.setDefaultGuildIds(guildId ? [guildId] : undefined);
 	const client = new KairoClient({
 		intents: [GatewayIntentBits.Guilds],
+		logger,
 		root: import.meta.dir,
 		modules: { commands: 'commands/**/*.ts', listeners: 'listeners/**/*.ts' },
 		extensions: { localisation: false, scheduledtasks: false, patternCommands: false, subcommands: false, services: false }

@@ -1,4 +1,5 @@
 import { MessageFlags } from 'discord.js';
+import { logEvent } from 'kairojs/client';
 import { Command } from 'kairojs/commands';
 import { registerCommand } from '../registration';
 
@@ -28,7 +29,13 @@ export default class ShardCommand extends Command {
 				`Shard ${stats.shard}: ${stats.guilds} servers, ${stats.memoryMb} MB, up ${stats.uptimeSeconds}s. Discord ${stats.ready ? 'ready' : 'not connected'}.`
 			);
 		} catch (error) {
-			this.container.logger.error(error);
+			logEvent(this.container.logger, 'error', {
+				component: 'bot.commands',
+				event: 'shard_stats_failed',
+				message: "The requested shard did not return statistics; inspect that shard's host connection and process state.",
+				context: { command: this.name, shard: id, requestId: interaction.id },
+				error
+			});
 			await interaction.editReply(`Shard ${id} did not respond. Check its host's logs.`);
 		}
 	}

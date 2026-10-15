@@ -1,6 +1,19 @@
 import type { ShardResult } from 'kairojs/sharding';
 import type { ExampleShardStats } from './contracts';
 
+/** Console diagnostics stay separate from the Discord reply copy below. */
+export function summarizeStats(results: ShardResult<ExampleShardStats>[]) {
+	const responding = results.filter((result) => result.ok);
+	return {
+		shards: results.length,
+		responding: responding.length,
+		unavailable: results.length - responding.length,
+		ready: responding.filter((result) => result.value.ready).length,
+		guilds: responding.reduce((count, result) => count + result.value.guilds, 0),
+		commands: [...new Set(responding.flatMap((result) => result.value.commands))].sort()
+	};
+}
+
 export function formatStats(results: ShardResult<ExampleShardStats>[]): string {
 	let guilds = 0;
 	let responding = 0;

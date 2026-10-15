@@ -1,3 +1,4 @@
+import { logEvent } from 'kairojs/client';
 import { Events, Listener } from 'kairojs/events';
 
 export default class ReadyListener extends Listener<typeof Events.ClientReady> {
@@ -5,6 +6,12 @@ export default class ReadyListener extends Listener<typeof Events.ClientReady> {
 
 	override run(): void {
 		const client = this.container.client;
-		this.container.logger.notif(`Shard ${client.sharding.id} ready as ${client.user?.tag}; ${client.guilds.cache.size} servers.`);
+		// The framework emits the info readiness milestone after its registration pass.
+		logEvent(this.container.logger, 'debug', {
+			component: 'bot',
+			event: 'cache_ready',
+			message: 'Shard gateway cache is available to example handlers.',
+			context: { shard: client.sharding.id, guilds: client.guilds.cache.size }
+		});
 	}
 }

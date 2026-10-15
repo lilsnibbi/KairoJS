@@ -19,7 +19,8 @@ The default setup runs two shards on one machine. A small bot doesn't need two s
 
 ## Get it running
 
-Run these commands from the **repository root**, using Bun 1.4.2 or newer.
+Run these commands from the **repository root**, using the pinned development
+version, Bun 1.4.3. The framework runtime minimum is Bun 1.4.2.
 
 1. Install dependencies:
 
@@ -49,7 +50,8 @@ Run these commands from the **repository root**, using Bun 1.4.2 or newer.
    bun --env-file=examples/.env examples/coordinator.ts
    ```
 
-6. Once it prints its listening URL, start the host in terminal two:
+6. Once it reports `Coordinator is accepting authenticated host connections.`
+   with the configured port and shard count, start the host in terminal two:
 
    ```sh
    bun --env-file=examples/.env examples/host.ts
@@ -72,11 +74,13 @@ Every shard loads the commands. `registration.ts` lets only shard 0 write comman
 ## Where to change things
 
 - `commands/`: add another command by extending `Command`. The filename supplies its name.
-- `listeners/ready.ts`: logs when the Discord connection is ready.
+- `listeners/ready.ts`: a debug example of inspecting the gateway cache; the framework emits the info readiness message.
 - `client.ts`: intents, module paths and the `exampleStats` request handler.
 - `contracts.ts`: the input/output types for messages between shards. Payloads must be plain JSON.
-- `stats.ts`: turns shard results into a readable reply.
-- `config.ts`: reads and checks configuration.
+- `stats.ts`: turns shard results into a readable Discord reply and separate console counts.
+- `logging.ts`: the shared per-process logger and safe startup-failure reporting.
+- `shutdown.ts`: signal handling and cleanup diagnostics.
+- `config.ts`: reads and checks configuration; failures name the setting without printing its value.
 
 For example, to ask shard 1 for its stats from another command:
 
@@ -89,6 +93,32 @@ const stats = await this.container.client.sharding.request(
 Use `broadcast('exampleStats', null)` to ask every shard. Each result has an `ok` flag: successful entries contain `value`; failed entries contain `error`. Check it before using the response.
 
 Restart the host after editing bot code. Stop the host first, then the coordinator, with Ctrl+C. A normal host shutdown stops its children and releases its assignment. Child crashes are retried with backoff; repeated crashes eventually stop that shard, so check the logs.
+
+## Console messages
+
+The framework and example code share one `createConsoleLogger('Example')` per
+process. Coordinator listening and host assignment come from the framework.
+Each live bot emits one info readiness message after the registration pass,
+with its shard, command and guild counts. The ready listener adds a debug cache
+record. It no longer repeats readiness with the bot's account tag.
+
+Example commands use `logEvent(this.container.logger, level, entry)` so supplied
+loggers still work. A failed `/shard` request names the requested shard and
+interaction ID. A partial `/stats` broadcast logs the number of responding
+shards and the failed shard IDs/codes while keeping the Discord reply unchanged.
+Errors retain their original cause for custom loggers; default output omits
+arbitrary provider messages and bounds the stack.
+
+Missing configuration reports a setting such as `SHARD_HOST_TOKEN` and how to
+set it. Startup failures release any constructed resources. Ctrl+C/SIGTERM
+reports shutdown requested, then completion or a cleanup failure; a failed
+startup or cleanup sets a nonzero exit status.
+
+Use `KAIRO_LOG_LEVEL=debug` for module and routing details,
+`KAIRO_LOG_FORMAT=json` for one record per line, and `KAIRO_LOG_STACKS=off` to omit
+source locations. See [console logging](../docs/console-logging.md) for all
+options and synthetic old-versus-new samples. To supply your own logger, pass
+it to `createBot(logger)` in `client.ts`; KairoJS keeps that instance.
 
 ## Environment settings
 
@@ -140,4 +170,17 @@ If a host crashes hard, its assignment can stay reserved. Confirm its old bot pr
 bun examples/offline.ts
 ```
 
-This starts a temporary coordinator, a host and two copies of the same bot with `--offline`. It checks that all three commands load, broadcasts stats, asks one shard directly and cleans up the processes and temporary database. It doesn't log into Discord or register commands, so `not logged in` is expected. It checks the local wiring; a Discord login is still needed to verify live slash commands.
+This starts a temporary coordinator, a host and two copies of the same bot with `--offline`. It checks distinct child processes, all three commands, broadcast stats and direct shard routing, then cleans up the processes and temporary database. Each shard reports that Discord login is disabled; the final record reports which checks passed and the responding shard/module counts. It checks the local wiring; a Discord login is still needed to verify live slash commands.
+
+The independent engine example also runs locally:
+
+```sh
+bun examples/engine/offline.ts
+```
+
+It checks a mock gateway connection, a REST reply and session resume, then logs
+the reply/connection counts. `examples/engine/live.ts` requires an explicit
+`--live` flag and a configured `DISCORD_TOKEN`; without the flag it only logs
+instructions. Its error callback uses safe event logging, readiness comes from
+the engine's `ready` event, and interaction responses use the canonical
+`respond({ type, data })` API.
