@@ -1,0 +1,94 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+	"files": {
+		"includes": ["src/**", "tests/**", "examples/**", "scripts/**", "*.json"],
+		"ignoreUnknown": true
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab",
+		"lineWidth": 140
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single",
+			"trailingCommas": "none"
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"complexity": {
+				"noBannedTypes": "off",
+				"noStaticOnlyClass": "off",
+				"noThisInStatic": "off"
+			},
+			"style": {
+				"noNamespace": "off",
+				"noNonNullAssertion": "off",
+				"useImportType": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off",
+				"noEmptyInterface": "off",
+				"noAssignInExpressions": "off"
+			},
+			"preset": "recommended"
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["tests/**"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"useYield": "off"
+					},
+					"suspicious": {
+						"noThenProperty": "off"
+					},
+					"complexity": {
+						"useLiteralKeys": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/core/modules/ModuleRegistry.ts", "src/utilities/discord/pagination/PaginatedMessage.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noUnsafeDeclarationMerging": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": [
+				"src/utilities/async/queue/_AsyncQueueEntry.ts",
+				"src/commands/Command.ts",
+				"src/commands/CommandStore.ts",
+				"src/commands/registration/registries.ts",
+				"src/commands/registration/normalizeInputs.ts",
+				"src/events/listenerModuleLoader.ts"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"useLiteralKeys": "off"
+					}
+				}
+			}
+		},
+		{
+			"includes": ["src/engine/**", "tests/engine/**", "examples/engine/**", "scripts/engine*.ts"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "error"
+					}
+				}
+			}
+		}
+	]
+}
