@@ -14,7 +14,7 @@ export class MissingMessageHandlerListener extends Listener<typeof SubcommandEve
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'message_handler_missing',
-			message: 'Message subcommand mapping has no handler.',
+			message: 'Subcommand mapping references a missing messageRun handler; implement the mapped method.',
 			context: { command: name, subcommand: subcommand.name, path: location.full }
 		});
 	}

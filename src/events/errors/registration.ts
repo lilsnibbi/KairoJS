@@ -13,7 +13,7 @@ export class RegistrationErrorListener extends Listener<typeof Events.CommandApp
 		writeEvent(this.container.logger, 'error', {
 			component: 'rest.registration',
 			event: 'command_registration_failed',
-			message: 'Application command registration failed.',
+			message: 'Command registration could not complete; inspect this command definition and its API error.',
 			error,
 			context: { command: name, path: location.full }
 		});

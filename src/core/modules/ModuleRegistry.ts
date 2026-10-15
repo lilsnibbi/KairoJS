@@ -60,7 +60,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 							writeEvent(container.logger, 'error', {
 								component: 'modules',
 								event: 'path_discovery_failed',
-								message: 'Cannot discover modules; skipping this path.',
+								message: 'Module path could not be read; check its location and permissions. Other configured paths will still load.',
 								context: { store: store.name, path },
 								error: cause
 							});
@@ -70,7 +70,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 							writeEvent(container.logger, 'error', {
 								component: 'modules',
 								event: 'discovery_failed',
-								message: 'Cannot discover files; continuing with registered modules.',
+								message: 'Module discovery failed for this store; explicitly registered modules will still load.',
 								context: { store: store.name },
 								error: cause
 							});
@@ -82,7 +82,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 				writeEvent(container.logger, 'debug', {
 					component: 'modules',
 					event: 'loaded',
-					message: 'Configured modules loaded.',
+					message: 'Module loading finished; valid handlers are registered.',
 					context: { stores: this.size, modules: [...this.values()].reduce((count, store) => count + store.size, 0) }
 				});
 		});
@@ -136,7 +136,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 					writeEvent(container.logger, 'alert', {
 						component: 'modules',
 						event: 'duplicate_registration',
-						message: 'Duplicate module; keeping the first registration.',
+						message: 'Ignored a duplicate registration; the first module keeps this name.',
 						context: { store: store.name, module: entry.name }
 					});
 			}

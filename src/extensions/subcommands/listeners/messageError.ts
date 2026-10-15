@@ -12,9 +12,15 @@ export class MessageErrorListener extends Listener<typeof SubcommandEvents.Messa
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'message_command_failed',
-			message: 'Message subcommand failed.',
+			message: 'Message subcommand execution failed; inspect its mapped messageRun handler.',
 			error,
-			context: { command: name, path: location.full }
+			context: {
+				command: name,
+				path: location.full,
+				subcommand: context.matchedSubcommandMapping?.name,
+				requestId: context.message?.id,
+				guildId: context.message?.guildId
+			}
 		});
 	}
 }

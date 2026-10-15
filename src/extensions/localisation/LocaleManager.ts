@@ -136,17 +136,25 @@ export class LocaleManager {
 			this.options.onDiagnostic(diagnostic);
 			return;
 		}
+		const messages: Record<LocalisationDiagnostic['code'], string> = {
+			resource: 'Translation resource could not load; check its path, JSON syntax and file permissions.',
+			duplicate: 'Ignored a duplicate translation resource; the first locale/namespace definition wins.',
+			unsupportedLocale: 'Skipped a locale that Discord does not support; configure a Discord locale code.',
+			missing: 'Command translation is missing; add the named key or check the configured fallback locale.',
+			invalid: 'Command translation is invalid; check field length, static text and option-name uniqueness.'
+		};
 		writeEvent(container.logger ?? fallbackLogger(), 'alert', {
 			component: 'localisation',
 			event: 'diagnostic',
-			message: 'Localisation resource or translation issue; check files and keys.',
+			message: messages[diagnostic.code],
 			error: diagnostic.cause,
 			context: {
 				code: diagnostic.code,
 				path: diagnostic.path,
 				locale: diagnostic.locale,
 				namespace: diagnostic.namespace,
-				key: diagnostic.key
+				key: diagnostic.key,
+				strict: this.options.discord?.strict ?? false
 			}
 		});
 	}

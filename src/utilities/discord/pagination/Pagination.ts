@@ -371,14 +371,14 @@ export class Pagination {
 			writeEvent(container.logger ?? fallbackLogger(), 'error', {
 				component: 'pagination',
 				event: 'interaction_failed',
-				message: 'Pagination interaction failed.',
+				message: 'Paginator action could not complete; inspect the interaction and its error cause.',
 				error
 			});
 		} catch (cause) {
 			writeEvent(fallbackLogger(), 'error', {
 				component: 'pagination',
 				event: 'error_reporting_failed',
-				message: 'Pagination error reporting failed.',
+				message: 'Paginator error callback failed while reporting another failure; inspect both error causes.',
 				error: new AggregateError([error, cause])
 			});
 		}

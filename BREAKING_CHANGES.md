@@ -8,6 +8,22 @@ Framework-created loggers now emit UTC ISO timestamp/severity/component/event/co
 
 The four-method `LoggerLike` contract, public `Logger` class, supplied logger identity/ownership, custom formatter settings and original error event arguments remain compatible. New optional `logging` client options and `createConsoleLogger` configure framework console output. Custom loggers receive a contextual string or an `Error` with the original cause. The Biome package script is now `lint:check` so `bun check` invokes Bun's native type checker; `typecheck` delegates to `bun check`. Development and CI pin Bun 1.4.3, which provides that checker; the runtime minimum stays unchanged.
 
+Console message content now identifies the outcome and useful next step.
+Registration messages distinguish report-only differences from completed
+updates; updates are visible at info. Required and optional extension failures,
+gateway and event-handler failures, and task claim/settlement failures have
+distinct wording. Redundant command-comparison timings and example readiness
+messages are removed. Some diagnostic event names changed, including task
+storage `claim_failed`/`settlement_failed` and more specific command-registration
+events; update collectors that match those names or free text. These changes do
+not alter registration, engine, permission, rate-limit or retry behavior.
+
+The additive `logEvent` helper and `ConsoleLogEntry` type are available from
+`kairojs`, `kairojs/client` and `kairojs/engine`. They use the existing formatter
+and custom-logger compatibility path. The examples use these helpers for safe
+startup/shutdown errors and shard diagnostics. The engine example uses
+`interaction.respond({ type, data })`; its Discord reply content is unchanged.
+
 ## Client and module startup
 
 - Supply `root` and explicit glob patterns through `modules`, for example `modules: { commands: 'commands/**/*.ts' }`. There is no implicit directory scan or `baseUserDirectory` option.

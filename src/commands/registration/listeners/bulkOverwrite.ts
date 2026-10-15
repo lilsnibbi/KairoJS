@@ -12,7 +12,7 @@ export class BulkOverwriteListener extends Listener<typeof Events.ApplicationCom
 		writeEvent(this.container.logger, 'notif', {
 			component: 'rest.registration',
 			event: 'overwritten',
-			message: 'Application commands overwritten.',
+			message: 'Replaced the Discord command list for this scope.',
 			context: { scope: guildId ? 'guild' : 'global', guildId, commands: result.size }
 		});
 	}

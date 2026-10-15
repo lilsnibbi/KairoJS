@@ -16,7 +16,7 @@ export class ErrorListener extends Listener<typeof TaskEvents.ScheduledTaskError
 		writeEvent(this.container.logger, 'error', {
 			component: 'tasks',
 			event: 'task_failed',
-			message: 'Scheduled task failed.',
+			message: "Scheduled task execution failed; inspect this task's run handler.",
 			error,
 			context: { task: name, path: location.full }
 		});

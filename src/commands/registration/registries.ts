@@ -132,7 +132,7 @@ async function handleBulkOverwriteGlobalCommands(
 	foundGlobalCommands: BulkOverwriteData[]
 ) {
 	try {
-		bulkOverwriteDebug(`Overwriting global application commands, now at ${foundGlobalCommands.length} commands`);
+		bulkOverwriteDebug(foundGlobalCommands.length);
 		const result = await retry(() => applicationCommands.set(foundGlobalCommands.map((x) => x.data)), bulkOVerwriteRetries);
 
 		// Go through each registered command, find its module and alias it
@@ -160,9 +160,7 @@ async function handleBulkOverwriteGlobalCommands(
 				// That said, this might be an issue, so we might need to do it like `handleAppendOrUpdate`
 				commandStore.aliases.set(id, module);
 			} else {
-				bulkOverwriteWarn(
-					`Registered global command "${globalCommand.name}" (${id}) but failed to find the module in the command store. This should not happen`
-				);
+				bulkOverwriteWarn(globalCommand.name, id);
 			}
 		}
 
@@ -181,7 +179,7 @@ async function handleBulkOverwriteGuildCommands(
 	guildCommands: BulkOverwriteData[]
 ) {
 	try {
-		bulkOverwriteDebug(`Overwriting guild application commands for guild ${guildId}, now at ${guildCommands.length} commands`);
+		bulkOverwriteDebug(guildCommands.length, guildId);
 		const result = await retry(
 			() =>
 				applicationCommands.set(
@@ -216,9 +214,7 @@ async function handleBulkOverwriteGuildCommands(
 				// That said, this might be an issue, so we might need to do it like `handleAppendOrUpdate`
 				commandStore.aliases.set(id, module);
 			} else {
-				bulkOverwriteWarn(
-					`Registered guild command "${guildCommand.name}" (${id}) but failed to find the module in the command store. This should not happen`
-				);
+				bulkOverwriteWarn(guildCommand.name, id, guildId);
 			}
 		}
 

@@ -12,9 +12,9 @@ export class AutocompleteErrorListener extends Listener<typeof Events.CommandAut
 		writeEvent(this.container.logger, 'error', {
 			component: 'commands',
 			event: 'autocomplete_failed',
-			message: 'Command autocomplete failed.',
+			message: "Autocomplete could not produce suggestions; inspect this command's autocomplete handler.",
 			error,
-			context: { command: name, path: location.full }
+			context: { command: name, path: location.full, requestId: context.interaction?.id, guildId: context.interaction?.guildId }
 		});
 	}
 }

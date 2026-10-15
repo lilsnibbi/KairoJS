@@ -12,9 +12,9 @@ export class InteractionErrorListener extends Listener<typeof Events.Interaction
 		writeEvent(this.container.logger, 'error', {
 			component: 'interactions',
 			event: 'handler_failed',
-			message: 'Interaction handler failed.',
+			message: "Button or modal handling failed; inspect this interaction handler's run method.",
 			error,
-			context: { handler: name, path: location.full }
+			context: { handler: name, path: location.full, requestId: context.interaction?.id, guildId: context.interaction?.guildId }
 		});
 	}
 }

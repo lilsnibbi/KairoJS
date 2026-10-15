@@ -12,9 +12,9 @@ export class ChatInputErrorListener extends Listener<typeof Events.ChatInputComm
 		writeEvent(this.container.logger, 'error', {
 			component: 'commands',
 			event: 'chat_input_failed',
-			message: 'Chat input command failed.',
+			message: "Slash command execution failed; inspect this command's chatInputRun handler.",
 			error,
-			context: { command: name, path: location.full }
+			context: { command: name, path: location.full, requestId: context.interaction?.id, guildId: context.interaction?.guildId }
 		});
 	}
 }

@@ -12,9 +12,15 @@ export class ChatInputErrorListener extends Listener<typeof SubcommandEvents.Cha
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'chat_input_failed',
-			message: 'Chat input subcommand failed.',
+			message: 'Slash subcommand execution failed; inspect its mapped chatInputRun handler.',
 			error,
-			context: { command: name, path: location.full }
+			context: {
+				command: name,
+				path: location.full,
+				subcommand: context.matchedSubcommandMapping?.name,
+				requestId: context.interaction?.id,
+				guildId: context.interaction?.guildId
+			}
 		});
 	}
 }

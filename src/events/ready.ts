@@ -15,8 +15,13 @@ export class ReadyListener extends Listener {
 		writeEvent(this.container.logger, 'notif', {
 			component: 'client',
 			event: 'ready',
-			message: 'Discord client ready.',
-			context: { commands: this.container.modules.require('commands').size, shards: this.container.client.ws.shards.size }
+			message: 'Discord connected; this client can now handle events.',
+			context: {
+				shard: this.container.client.sharding.id,
+				commands: this.container.modules.require('commands').size,
+				guilds: this.container.client.guilds.cache.size,
+				shards: this.container.client.ws.shards.size
+			}
 		});
 	}
 }

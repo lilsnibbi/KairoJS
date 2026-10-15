@@ -169,15 +169,29 @@ export class EngineClient {
 				writeEvent(fallbackLogger(), 'error', {
 					component: `engine.${failure.source}`,
 					event: 'operation_failed',
-					message: 'Engine operation failed.',
+					message:
+						failure.source === 'gateway'
+							? failure.fatal
+								? 'Gateway session cannot continue; the engine connection is closing.'
+								: 'Gateway connection interrupted; inspect transport diagnostics while recovery proceeds.'
+							: failure.source === 'handler'
+								? failure.fatal
+									? 'Pending event handlers exceeded capacity; closing the engine to bound unfinished work.'
+									: 'An event handler failed; other handlers can continue. Inspect the failing callback.'
+								: 'Engine client operation failed; inspect its lifecycle state and diagnostic cause.',
 					error: failure.error,
-					context: { fatal: failure.fatal, shard: this.#options.gateway?.shard?.[0] ?? 0 }
+					context: {
+						fatal: failure.fatal,
+						shard: this.#options.gateway?.shard?.[0] ?? 0,
+						state: this.state,
+						pendingHandlers: this.pendingHandlers
+					}
 				});
 		} catch (error) {
 			writeEvent(fallbackLogger(), 'error', {
 				component: 'engine.client',
 				event: 'error_callback_failed',
-				message: 'Engine error callback failed.',
+				message: 'Engine onError callback threw while reporting a failure; inspect the callback itself.',
 				error
 			});
 		} finally {

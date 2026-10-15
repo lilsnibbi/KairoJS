@@ -12,9 +12,9 @@ export class ContextMenuErrorListener extends Listener<typeof Events.ContextMenu
 		writeEvent(this.container.logger, 'error', {
 			component: 'commands',
 			event: 'context_menu_failed',
-			message: 'Context menu command failed.',
+			message: 'Context menu command execution failed; inspect its contextMenuRun handler.',
 			error,
-			context: { command: name, path: location.full }
+			context: { command: name, path: location.full, requestId: context.interaction?.id, guildId: context.interaction?.guildId }
 		});
 	}
 }

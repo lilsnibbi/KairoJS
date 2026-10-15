@@ -12,9 +12,9 @@ export class InteractionParseErrorListener extends Listener<typeof Events.Intera
 		writeEvent(this.container.logger, 'error', {
 			component: 'interactions',
 			event: 'parse_failed',
-			message: 'Interaction handler parsing failed.',
+			message: "Interaction matching failed before execution; inspect this handler's parse method.",
 			error,
-			context: { handler: name, path: location.full }
+			context: { handler: name, path: location.full, requestId: context.interaction?.id, guildId: context.interaction?.guildId }
 		});
 	}
 }

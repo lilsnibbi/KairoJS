@@ -247,7 +247,8 @@ export class TaskScheduler {
 	private pump(): Promise<void> {
 		this.pumping ??= this.claimWork()
 			.catch((error) => {
-				if (!this.connectionFailed) this.report('Task storage is unavailable; claims will retry without changing backends.', error);
+				if (!this.connectionFailed)
+					this.report('Task storage is unavailable; claims will retry without changing backends.', error, 'claim');
 				this.connectionFailed = true;
 			})
 			.finally(() => {
@@ -263,7 +264,7 @@ export class TaskScheduler {
 					writeEvent(container.logger, 'notif', {
 						component: 'tasks.storage',
 						event: 'recovered',
-						message: 'Scheduling storage recovered.',
+						message: 'Task storage is responding again; queued work can be claimed.',
 						context: { queue: this.queue, storage: this.storage }
 					});
 				this.connectionFailed = false;
@@ -274,7 +275,10 @@ export class TaskScheduler {
 				break;
 			}
 			const work = this.execute(job).catch((error) =>
-				this.report(`Could not settle task "${job.name}" (${job.id}); its lease can be reclaimed.`, error)
+				this.report(`Could not settle task "${job.name}" (${job.id}); its lease can be reclaimed.`, error, 'settle', {
+					task: job.name,
+					jobId: job.id
+				})
 			);
 			this.running.add(work);
 			void work.finally(() => this.running.delete(work)).catch(() => {});
@@ -335,16 +339,19 @@ export class TaskScheduler {
 			await renewal;
 		}
 	}
-	private report(message: string, cause: unknown): void {
+	private report(message: string, cause: unknown, operation: 'claim' | 'settle', context: Record<string, unknown> = {}): void {
 		const error = new Error(message, { cause });
 		container.client?.emit(TaskEvents.StorageError, error);
 		if (this.options.logErrors !== false && container.logger)
 			writeEvent(container.logger, 'error', {
 				component: 'tasks.storage',
-				event: 'operation_failed',
-				message,
+				event: operation === 'claim' ? 'claim_failed' : 'settlement_failed',
+				message:
+					operation === 'claim'
+						? 'Cannot claim queued work; check storage connectivity. The configured backend will be retried.'
+						: 'Task result could not be saved; an expired lease can allow another execution. Check storage before retrying manually.',
 				error: cause,
-				context: { queue: this.queue, storage: this.storage }
+				context: { queue: this.queue, storage: this.storage, ...context }
 			});
 	}
 }

@@ -149,7 +149,12 @@ export class ShardCoordinator {
 						try {
 							this.receive(socket.data, decode(input, this.policy.maxBytes, inbound));
 						} catch (error) {
-							this.report('Rejected sharding protocol message.', error, 'protocol_rejected', { host: socket.data.host.id });
+							this.report(
+								'Host sent an invalid control-plane frame; disconnecting it to protect coordinator state.',
+								error,
+								'protocol_rejected',
+								{ host: socket.data.host.id }
+							);
 							this.disconnect(socket.data);
 							socket.close(1008, 'Invalid protocol');
 						}
@@ -170,7 +175,7 @@ export class ShardCoordinator {
 			writeEvent(this.logger, 'notif', {
 				component: 'sharding.coordinator',
 				event: 'listening',
-				message: 'Shard coordinator listening.',
+				message: 'Coordinator is accepting authenticated host connections.',
 				context: { port: this.server.port, hosts: this.hosts.size, shards: this.options.shardCount }
 			});
 		} catch (error) {
@@ -340,11 +345,16 @@ export class ShardCoordinator {
 				if (this.state.grant(pending.session.host.id, d.shard, d.generation)) this.finishIdentify(id);
 			} catch (error) {
 				this.finishIdentify(id, error);
-				this.report('Could not persist identify grant.', error, 'identify_persistence_failed', {
-					host: pending.session.host.id,
-					shard: d.shard,
-					requestId: pending.message.id
-				});
+				this.report(
+					'Could not save a shard login reservation; stopping the coordinator to prevent unsafe login retries.',
+					error,
+					'identify_persistence_failed',
+					{
+						host: pending.session.host.id,
+						shard: d.shard,
+						requestId: pending.message.id
+					}
+				);
 				void this.close();
 				return;
 			}
@@ -427,7 +437,7 @@ export class ShardCoordinator {
 		} catch (error) {
 			this.refreshAt = Date.now() + 30000;
 			if (!this.closed)
-				this.report('Gateway metadata refresh failed; identifies remain blocked.', error, 'gateway_metadata_refresh_failed');
+				this.report('Could not refresh Discord session limits; new shard logins remain blocked.', error, 'gateway_metadata_refresh_failed');
 		} finally {
 			this.refreshing = false;
 		}

@@ -132,7 +132,7 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 			writeEvent(container.logger, 'error', {
 				component: 'modules',
 				event: 'module_skipped',
-				message: 'Skipping module after a load failure.',
+				message: 'Module was not activated; fix its source before loading it again.',
 				context: { store: this.name, source },
 				error: cause
 			});
@@ -143,7 +143,7 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 			writeEvent(container.logger, 'alert', {
 				component: 'modules',
 				event: 'duplicate_module',
-				message: 'Duplicate module; keeping the first accepted module.',
+				message: 'Ignored a duplicate module; the accepted module keeps this name.',
 				context: { store: this.name, module: name, source }
 			});
 	}
@@ -238,7 +238,7 @@ export class ModuleStore<T extends Module, StoreName extends ModuleKind = Module
 			}
 			this.set(module.name, module);
 			if (Object.is(container.modules.get(this.name), this)) container.client?.emit('moduleLoaded', this, module);
-			ModuleStore.logger?.(`Loaded ${this.name}/${module.name}`);
+			ModuleStore.logger?.(`Activated ${this.name} module "${module.name}".`);
 			return module;
 		} catch (cause) {
 			const errors: unknown[] = [cause];

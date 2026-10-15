@@ -4,12 +4,12 @@
 
 ## Run it
 
-Use the pinned Bun 1.4.2 and `bun install --frozen-lockfile`.
+Use the pinned development version, Bun 1.4.3, and `bun install --frozen-lockfile`.
 
 ```sh
 bun run engine:test
-bun run typecheck
-bun run check
+bun check
+bun run lint:check
 bun run engine:build
 bun examples/engine/offline.ts
 bun run smoke
@@ -18,17 +18,26 @@ bun run engine:bench
 
 The offline example creates a loopback HTTP/WebSocket server, receives a message, replies using the engine's REST layer, then reconnects and resumes. It uses a literal fake token. The package smoke test also runs this example from an installed tarball.
 
-`bun examples/engine/live.ts` only prints instructions. To opt into Discord yourself, set `DISCORD_TOKEN` and add `--live`. The example requires Guilds, GuildMessages and MessageContent intents, plus permission to read and send in the channel. It replies to `!engine-ping`. Its interaction branch handles an already registered `engine-ping` command; it does not register commands. No live Discord validation was performed.
+`bun examples/engine/live.ts` only logs instructions. To opt into Discord yourself, set `DISCORD_TOKEN` and add `--live`. The example requires Guilds, GuildMessages and MessageContent intents, plus permission to read and send in the channel. It replies to `!engine-ping`. Its interaction branch handles an already registered `engine-ping` command; it does not register commands. No live Discord validation was performed.
 
 ```ts
-import { EngineClient } from 'kairojs/engine';
-import { GatewayIntentBits } from 'discord-api-types/v10';
+import { createConsoleLogger, EngineClient, logEvent } from 'kairojs/engine';
+import { GatewayIntentBits, InteractionResponseType } from 'discord-api-types/v10';
 
+const logger = createConsoleLogger('MyBot');
 const client = new EngineClient({
 	token: suppliedToken,
 	intents: GatewayIntentBits.Guilds | GatewayIntentBits.GuildMessages,
 	cache: { membersPerGuild: 1000, messagesPerChannel: 0 },
-	onError: ({ source, error, fatal }) => console.error(source, fatal, error.message)
+	onError: ({ source, error, fatal }) => logEvent(logger, fatal ? 'error' : 'alert', {
+		component: `engine.${source}`,
+		event: 'diagnostic',
+		message: fatal
+			? 'Engine cannot continue; inspect the diagnostic cause before restarting.'
+			: 'Engine reported a recoverable failure; inspect the diagnostic cause.',
+		context: { fatal },
+		error
+	})
 });
 client.on('messageCreate', async (message) => {
 	if (message.data.author.bot) return;
@@ -36,13 +45,21 @@ client.on('messageCreate', async (message) => {
 });
 client.on('interactionCreate', async (interaction) => {
 	if (interaction.data.type === 2)
-		await interaction.reply({ content: 'Hello', allowed_mentions: { parse: [] } });
+		await interaction.respond({
+			type: InteractionResponseType.ChannelMessageWithSource,
+			data: { content: 'Hello', allowed_mentions: { parse: [] } }
+		});
 });
 await client.connect();
 // client.close() aborts transport work and clears the session and caches.
 ```
 
 Construction and imports open no connections. The engine never reads a token from the environment. Request bodies preserve snake_case fields and native discord-api-types/v10 types. `message.data` is an APIMessage; `interaction.data` is an APIInteraction. `message.reply` supplies a message_reference while preserving native reference options. `interaction.respond` accepts a complete native callback body.
+
+The logging helpers share the framework's level, JSON/text, redaction and stack
+settings; see [console logging](console-logging.md). The supplied `onError`
+callback still receives the original error. Add fixed operation wording to the
+record rather than printing arbitrary provider messages.
 
 ## Cache contract
 
@@ -85,7 +102,7 @@ Validated on 2026-10-11 with Bun 1.4.2 on Windows x64 and a disposable Redis 7.4
 - `bun install --frozen-lockfile --ignore-scripts`: succeeded without lock changes.
 - `bun run engine:test`: 76 passing tests across four files, 279 assertions.
 - `bun scripts/ci.ts` with `KAIRO_TEST_REDIS_URL`: 2,361 passing tests across 226 files, 4,943 assertions, zero failures and zero skipped tests.
-- The same CI run passed `bun run typecheck`, `bun run check` (838 files), the existing offline framework example, `bun run engine:build`, the engine offline example and `bun run smoke`.
+- The same CI run passed `bun run typecheck`, `bun run check` (838 files; that package script is now `lint:check`), the existing offline framework example, `bun run engine:build`, the engine offline example and `bun run smoke`.
 - The engine bundle was 224,418 bytes with no discord.js, @discordjs or Ovencord runtime dependency in its graph. This is a bundle validation result; the package still ships source TypeScript.
 - The smoke test packed and installed the package in a temporary consumer, audited public exports/notices, loaded a framework command and ran the native engine connect/reply/resume example.
 

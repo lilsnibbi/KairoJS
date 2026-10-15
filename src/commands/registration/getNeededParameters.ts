@@ -32,7 +32,7 @@ async function fetchGuildCommands(commands: ApplicationCommandManager, guildIds:
 				writeEvent(container.logger, 'alert', {
 					component: 'rest.registration',
 					event: 'guild_fetch_failed',
-					message: 'Guild command fetch failed; check the applications.commands authorization scope.',
+					message: "Could not read this guild's Discord commands; verify the application is installed with applications.commands access.",
 					context: { guildId },
 					error
 				});

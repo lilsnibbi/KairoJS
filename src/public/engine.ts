@@ -1,5 +1,10 @@
 import '../core/runtime';
 
+export { createConsoleLogger } from '../core/logging/console';
+export { writeEvent as logEvent } from '../core/logging/diagnostics';
+export type { ConsoleLogOptions, LogEntry as ConsoleLogEntry } from '../core/logging/format';
+export type { LoggerLike } from '../core/logging/LoggerLike';
+
 export { CacheStore } from '../engine/cache/CacheStore';
 export { EngineCache } from '../engine/cache/EngineCache';
 export { ScopedCache } from '../engine/cache/ScopedCache';

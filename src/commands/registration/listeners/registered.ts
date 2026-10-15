@@ -8,12 +8,12 @@ export class RegisteredListener extends Listener<typeof Events.ApplicationComman
 		super(context, { event: Events.ApplicationCommandRegistriesRegistered, once: true });
 	}
 
-	public run(_registries: Map<string, ApplicationCommandRegistry>, timeTaken: number) {
+	public run(registries: Map<string, ApplicationCommandRegistry>, timeTaken: number) {
 		writeEvent(this.container.logger, 'notif', {
 			component: 'rest.registration',
 			event: 'completed',
-			message: 'Application command registries initialized.',
-			context: { durationMs: timeTaken }
+			message: 'Command registration pass finished.',
+			context: { registries: registries.size, durationMs: timeTaken }
 		});
 	}
 }

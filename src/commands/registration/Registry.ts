@@ -157,10 +157,11 @@ export class ApplicationCommandRegistry {
 		const flattened = names.flat(Infinity) as string[];
 
 		for (const command of flattened) {
-			this.debug(`Registering name "${command}" to internal chat input map`);
-			this.warn(
-				`Registering the chat input command "${command}" using a name is not recommended.`,
-				'Please use the "addChatInputCommandIds" method instead with a command id.'
+			this.log(
+				'alert',
+				'name_alias_added',
+				'Command routing uses a name alias; use addChatInputCommandIds with a numeric Discord command ID for stable routing.',
+				{ alias: command, kind: 'chat input' }
 			);
 			this.chatInputCommands.add(command);
 		}
@@ -172,10 +173,11 @@ export class ApplicationCommandRegistry {
 		const flattened = names.flat(Infinity) as string[];
 
 		for (const command of flattened) {
-			this.debug(`Registering name "${command}" to internal context menu map`);
-			this.warn(
-				`Registering the context menu command "${command}" using a name is not recommended.`,
-				'Please use the "addContextMenuCommandIds" method instead with a command id.'
+			this.log(
+				'alert',
+				'name_alias_added',
+				'Command routing uses a name alias; use addContextMenuCommandIds with a numeric Discord command ID for stable routing.',
+				{ alias: command, kind: 'context menu' }
 			);
 			this.contextMenuCommands.add(command);
 		}
@@ -189,13 +191,13 @@ export class ApplicationCommandRegistry {
 		for (const entry of flattened) {
 			try {
 				BigInt(entry);
-				this.debug(`Registering id "${entry}" to internal chat input map`);
+				this.log('debug', 'id_alias_added', 'Command ID added to local routing.', { commandId: entry, kind: 'chat input' });
 			} catch {
-				// Don't be silly, save yourself the headaches and do as we say
-				this.debug(`Registering name "${entry}" to internal chat input map`);
-				this.warn(
-					`Registering the chat input command "${entry}" using a name *and* trying to bypass this warning by calling "addChatInputCommandIds" is not recommended.`,
-					'Please use the "addChatInputCommandIds" method with a valid command id instead.'
+				this.log(
+					'alert',
+					'name_alias_added',
+					'Expected a numeric Discord command ID; accepted this value as a name alias. Use addChatInputCommandIds with a real command ID.',
+					{ alias: entry, kind: 'chat input' }
 				);
 			}
 			this.chatInputCommands.add(entry);
@@ -210,13 +212,13 @@ export class ApplicationCommandRegistry {
 		for (const entry of flattened) {
 			try {
 				BigInt(entry);
-				this.debug(`Registering id "${entry}" to internal context menu map`);
+				this.log('debug', 'id_alias_added', 'Command ID added to local routing.', { commandId: entry, kind: 'context menu' });
 			} catch {
-				this.debug(`Registering name "${entry}" to internal context menu map`);
-				// Don't be silly, save yourself the headaches and do as we say
-				this.warn(
-					`Registering the context menu command "${entry}" using a name *and* trying to bypass this warning by calling "addContextMenuCommandIds" is not recommended.`,
-					'Please use the "addContextMenuCommandIds" method with a valid command id instead.'
+				this.log(
+					'alert',
+					'name_alias_added',
+					'Expected a numeric Discord command ID; accepted this value as a name alias. Use addContextMenuCommandIds with a real command ID.',
+					{ alias: entry, kind: 'context menu' }
 				);
 			}
 			this.contextMenuCommands.add(entry);
@@ -233,8 +235,6 @@ export class ApplicationCommandRegistry {
 		// Early return for no API calls
 		if (this.apiCalls.length === 0) {
 			// If we have no API calls to do then we simply return (can happen if the registry is used directly)
-			this.trace('No API calls to run, and no command to register');
-
 			return;
 		}
 
@@ -244,7 +244,7 @@ export class ApplicationCommandRegistry {
 			);
 		}
 
-		this.debug(`Preparing to process ${this.apiCalls.length} possible command registrations / updates...`);
+		this.log('debug', 'checking', 'Comparing local registrations with Discord commands.', { registrations: this.apiCalls.length });
 
 		const results = await Promise.allSettled(
 			this.apiCalls.map((call) => this.handleAPICall(applicationCommands, globalCommands, guildCommands, call))
@@ -253,7 +253,13 @@ export class ApplicationCommandRegistry {
 		const errored = results.filter((result) => result.status === 'rejected') as PromiseRejectedResult[];
 
 		if (errored.length) {
-			this.error('Application command registrations failed.', new AggregateError(errored.map((error) => error.reason)));
+			this.log(
+				'error',
+				'command_registration_failed',
+				'Some command registrations could not complete; inspect the individual causes before retrying.',
+				{ failures: errored.length },
+				new AggregateError(errored.map((error) => error.reason))
+			);
 		}
 	}
 
@@ -371,14 +377,16 @@ export class ApplicationCommandRegistry {
 			const globalCommand = globalCommands.find(findCallback);
 
 			if (globalCommand) {
-				this.debug(`Checking if command "${commandName}" is identical with global ${type} command with id "${globalCommand.id}"`);
 				this.handleIdAddition(apiCall.type, globalCommand.id);
 				await this.handleCommandPresent(globalCommand, builtData, behaviorIfNotEqual, null);
 			} else if (registerOptions.registerCommandIfMissing ?? true) {
-				this.debug(`Creating new global ${type} command with name "${commandName}"`);
 				await this.createMissingCommand(commandsManager, builtData, type);
 			} else {
-				this.debug(`Doing nothing about missing global ${type} command with name "${commandName}"`);
+				this.log('debug', 'creation_disabled', 'Discord command is absent; automatic creation is disabled for this registration.', {
+					registeredName: commandName,
+					type,
+					scope: 'global'
+				});
 			}
 
 			return;
@@ -388,7 +396,6 @@ export class ApplicationCommandRegistry {
 			const guildCommands = allGuildsCommands.get(guildId);
 
 			if (!guildCommands) {
-				this.debug(`There are no commands for guild with id "${guildId}". Will create ${type} command "${commandName}".`);
 				await this.createMissingCommand(commandsManager, builtData, type, guildId);
 				continue;
 			}
@@ -396,14 +403,17 @@ export class ApplicationCommandRegistry {
 			const existingGuildCommand = guildCommands.find(findCallback);
 
 			if (existingGuildCommand) {
-				this.debug(`Checking if guild ${type} command "${commandName}" is identical to command "${existingGuildCommand.id}"`);
 				this.handleIdAddition(apiCall.type, existingGuildCommand.id, guildId);
 				await this.handleCommandPresent(existingGuildCommand, builtData, behaviorIfNotEqual, guildId);
 			} else if (registerOptions.registerCommandIfMissing ?? true) {
-				this.debug(`Creating new guild ${type} command with name "${commandName}" for guild "${guildId}"`);
 				await this.createMissingCommand(commandsManager, builtData, type, guildId);
 			} else {
-				this.debug(`Doing nothing about missing guild ${type} command with name "${commandName}" for guild "${guildId}"`);
+				this.log('debug', 'creation_disabled', 'Discord command is absent; automatic creation is disabled for this registration.', {
+					registeredName: commandName,
+					type,
+					scope: 'guild',
+					guildId
+				});
 			}
 		}
 	}
@@ -415,8 +425,10 @@ export class ApplicationCommandRegistry {
 		guildId: string | null
 	) {
 		if (behaviorIfNotEqual === RegisterBehavior.BulkOverwrite) {
-			this.debug(
-				`Command "${this.commandName}" has the behaviorIfNotEqual set to "BulkOverwrite" which is invalid. Using defaultBehaviorWhenNotIdentical instead`
+			this.log(
+				'alert',
+				'invalid_overwrite_behavior',
+				'BulkOverwrite is not valid for one command; using the configured default registration behavior.'
 			);
 
 			behaviorIfNotEqual = getDefaultBehaviorWhenNotIdentical();
@@ -431,29 +443,22 @@ export class ApplicationCommandRegistry {
 		let differences: CommandDifference[] = [];
 
 		if (behaviorIfNotEqual === RegisterBehavior.VerboseOverwrite) {
-			const now = Date.now();
-
 			// Step 0: compute differences
 			differences = [...getCommandDifferences(convertApplicationCommandToApiData(applicationCommand), apiData, guildId !== null)];
 
-			const later = Date.now() - now;
-			this.debug(`Took ${later}ms to process differences via computing differences`);
-
 			// Step 1: if there are no differences, return
 			if (!differences.length) {
-				this.debug(
-					`${guildId ? 'Guild command' : 'Command'} "${apiData.name}" is identical to command "${applicationCommand.name}" (${
-						applicationCommand.id
-					})`
-				);
+				this.log('debug', 'unchanged', 'Discord command already matches its local definition; no update sent.', {
+					commandId: applicationCommand.id,
+					scope: guildId ? 'guild' : 'global',
+					guildId
+				});
 				return;
 			}
 		}
 
 		// Run the fast path even if the user wants to just log if the command has a difference
 		if (behaviorIfNotEqual === RegisterBehavior.Overwrite || behaviorIfNotEqual === RegisterBehavior.LogToConsole) {
-			const now = Date.now();
-
 			// Step 0: compute differences
 			const areThereDifferences = getCommandDifferencesFast(
 				convertApplicationCommandToApiData(applicationCommand),
@@ -461,16 +466,13 @@ export class ApplicationCommandRegistry {
 				guildId !== null
 			);
 
-			const later = Date.now() - now;
-			this.debug(`Took ${later}ms to process differences via fast compute differences`);
-
 			// Step 1: if there are no differences, return
 			if (!areThereDifferences) {
-				this.debug(
-					`${guildId ? 'Guild command' : 'Command'} "${apiData.name}" is identical to command "${applicationCommand.name}" (${
-						applicationCommand.id
-					})`
-				);
+				this.log('debug', 'unchanged', 'Discord command already matches its local definition; no update sent.', {
+					commandId: applicationCommand.id,
+					scope: guildId ? 'guild' : 'global',
+					guildId
+				});
 				return;
 			}
 		}
@@ -485,9 +487,19 @@ export class ApplicationCommandRegistry {
 		// Step 3: if the behavior is to update, update the command
 		try {
 			await applicationCommand.edit(apiData as ChatInputApplicationCommandData);
-			this.debug(`Updated command ${applicationCommand.name} (${applicationCommand.id}) with new api data`);
+			this.log('notif', 'command_updated', 'Updated a Discord command to match its local definition.', {
+				commandId: applicationCommand.id,
+				scope: guildId ? 'guild' : 'global',
+				guildId
+			});
 		} catch (error) {
-			this.error(`Failed to update command ${applicationCommand.name} (${applicationCommand.id})`, error);
+			this.log(
+				'error',
+				'command_update_failed',
+				'Discord command update failed; inspect API access and the command definition.',
+				{ commandId: applicationCommand.id, scope: guildId ? 'guild' : 'global', guildId },
+				error
+			);
 		}
 	}
 
@@ -495,7 +507,9 @@ export class ApplicationCommandRegistry {
 		writeEvent(container.logger, logAsWarn ? 'alert' : 'debug', {
 			component: 'rest.registration',
 			event: 'differences_found',
-			message: 'Command definition differs; review its definition and overwrite behavior.',
+			message: logAsWarn
+				? 'Discord command differs from local code; this registration is configured to report differences without updating Discord.'
+				: 'Discord command differs from local code; preparing an update.',
 			context: {
 				command: this.commandName,
 				commandId: applicationCommand.id,
@@ -517,7 +531,7 @@ export class ApplicationCommandRegistry {
 			writeEvent(container.logger, 'notif', {
 				component: 'rest.registration',
 				event: 'command_created',
-				message: 'Application command created; retain its ID in idHints for stable routing.',
+				message: 'Published a new Discord command; keep commandId in idHints if its name may change.',
 				context: { command: this.commandName, registeredName: apiData.name, commandId: result.id, type, guildId }
 			});
 
@@ -534,45 +548,30 @@ export class ApplicationCommandRegistry {
 				}
 			}
 		} catch (err) {
-			this.error(
-				`Failed to register${guildId ? ' guild' : ''} application command with name "${apiData.name}"${
-					guildId ? ` for guild "${guildId}"` : ''
-				}`,
+			this.log(
+				'error',
+				'command_creation_failed',
+				'Discord command could not be created; inspect API access, guild scope and command validation.',
+				{ registeredName: apiData.name, type, scope: guildId ? 'guild' : 'global', guildId },
 				err
 			);
 		}
 	}
 
-	private error(message: string, ...other: unknown[]) {
-		writeEvent(container.logger, 'error', {
+	private log(
+		level: 'debug' | 'notif' | 'alert' | 'error',
+		event: string,
+		message: string,
+		context: Record<string, unknown> = {},
+		error?: unknown
+	): void {
+		writeEvent(container.logger, level, {
 			component: 'rest.registration',
-			event: 'command_registration_failed',
+			event,
 			message,
-			context: { command: this.commandName },
-			error: other.length === 1 ? other[0] : other.length ? new AggregateError(other) : undefined
+			context: { command: this.commandName, ...context },
+			error
 		});
-	}
-
-	private warn(message: string, ...other: unknown[]) {
-		writeEvent(container.logger, 'alert', {
-			component: 'rest.registration',
-			event: 'command_registration_warning',
-			message,
-			context: { command: this.commandName, detailCount: other.length }
-		});
-	}
-
-	private debug(message: string, ...other: unknown[]) {
-		writeEvent(container.logger, 'debug', {
-			component: 'rest.registration',
-			event: 'command_registration_detail',
-			message,
-			context: { command: this.commandName, detailCount: other.length }
-		});
-	}
-
-	private trace(message: string, ...other: unknown[]) {
-		this.debug(message, ...other);
 	}
 }
 

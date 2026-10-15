@@ -14,7 +14,7 @@ export class MissingChatInputHandlerListener extends Listener<typeof SubcommandE
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'chat_input_handler_missing',
-			message: 'Chat input subcommand mapping has no handler.',
+			message: 'Subcommand mapping references a missing chatInputRun handler; implement the mapped method.',
 			context: { command: name, subcommand: subcommand.name, path: location.full }
 		});
 	}

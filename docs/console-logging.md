@@ -7,8 +7,8 @@ log buffers, global console interception or changes to `Error.stackTraceLimit`
 by default.
 
 ```text
-2026-10-14T12:30:45.123Z INFO  KairoJS.client ready | Discord client ready. | commands=7 shards=2
-2026-10-14T12:30:45.123Z ERROR KairoJS.tasks task_failed | Scheduled task failed. | task=fixture path=tasks/fixture.ts | error={"type":"TypeError","hint":"Inspect the failing operation and source locations."}
+2026-10-15T12:30:45.123Z INFO  KairoJS.client ready | Discord connected; this client can now handle events. | shard=0 commands=7 guilds=12 shards=1
+2026-10-15T12:30:45.123Z ERROR KairoJS.tasks task_failed | Scheduled task execution failed; inspect this task's run handler. | task=fixture path=tasks/fixture.ts | error={"type":"TypeError","hint":"Inspect the failing operation and source locations."}
 ```
 
 Debug/info use stdout; warnings/errors use stderr. Color is restrained and checks
@@ -48,10 +48,31 @@ const logger = createConsoleLogger('MyBot', { level: 'NOTIF' }, {
 	format: 'json',
 	stacks: 'off'
 });
-logger.notif('Bot initialized.');
+logger.notif('Application initialized.');
 logger.error(new Error('Provider content is omitted from default diagnostics.'));
 await client.destroy();
 ```
+
+For application events, use the same records as the framework:
+
+```ts
+import { createConsoleLogger, logEvent } from 'kairojs/client';
+
+const logger = createConsoleLogger('MyBot');
+logEvent(logger, 'notif', {
+	component: 'jobs',
+	event: 'batch_finished',
+	message: 'Queued notifications have been processed.',
+	context: { processed: 12, failed: 0 }
+});
+```
+
+`logEvent(logger, level, entry)` accepts `debug`, `notif`, `alert` or `error` and a
+`ConsoleLogEntry` with `component`, `event`, `message`, optional `context` and
+`error`. Use `error` for the original thrown value; write the operation and next
+step in `message`. The helper and `ConsoleLogEntry` type are exported from
+`kairojs`, `kairojs/client` and `kairojs/engine`. The engine subpath keeps its
+independent runtime and does not load Discord.js just to write a log record.
 
 `loggerOptions.level` overrides `KAIRO_LOG_LEVEL`; `logging.format` and
 `logging.stacks` override their environment settings. `logging.redact` adds exact
@@ -75,7 +96,8 @@ as a single contextual `Error` whose `cause` is the original thrown value.
 Application error events, their arguments and error objects are unchanged.
 Framework log calls contain synchronous sink exceptions and attempt one safe fallback record;
 those exceptions cannot interrupt startup, retries or cleanup. Direct calls to a supplied
-logger keep that logger's behavior.
+logger keep that logger's behavior. The public `logEvent` helper uses this same
+compatibility path, including the original error cause and sink-failure guard.
 
 Explicit output customization in `loggerOptions` retains the dependency's
 original behavior. This includes `format`, `serialize`, `layout`, `box`, `file`,
@@ -93,22 +115,31 @@ continues to select the dependency's original behavior.
 - Client readiness and command registration completion are info milestones.
   Registration progress, identical definitions, module counts and per-module
   traces are debug. `traceModules`, `logRegistrations` and `logErrors` keep their
-  existing controls.
+  existing controls. Command comparison timings and repeated pre-operation
+  notices are omitted.
 - REST registration failures carry command/guild context and recognized HTTP
   status/Discord codes. Changed commands and bulk overwrites stay visible.
   Difference diagnostics keep bounded field paths instead of dumping original
-  and expected command definitions. Successful REST requests are not logged
-  individually.
+  and expected command definitions when verbose differences are available.
+  `LogToConsole` explicitly says that it will leave Discord unchanged; overwrite
+  reports the completed update with its command ID and scope. Names accepted in
+  ID-routing helpers produce advice without implying bad intent. There is no
+  per-request REST tracing.
 - Engine fallback failures carry source, fatal state and shard ID. User `onError`
   callbacks and gateway events retain their existing calls and arguments. Standalone
   REST calls still return/throw through their existing API; logging stays at the
-  operation boundary so one failure is not printed at every retry.
+  operation boundary so one failure is not printed at every retry. Gateway
+  recovery, fatal closure, event-handler failure and handler-capacity exhaustion
+  have different messages, with engine state and pending-handler counts.
 - Sharding includes coordinator listening, manager assignment, operation failures
   and host/shard context. Child-process stdout/stderr remain inherited. IPC payloads,
   tokens and identify messages are not dumped.
 - Extension failures carry extension and lifecycle phase. Module failures carry
   store and source. Scheduled tasks carry task/module or queue/storage context;
-  storage recovery remains info. Routine job ticks and job data are omitted.
+  storage recovery remains info. Required extension failures explain why startup
+  stops; optional failures explain that the extension is disabled. Task-storage
+  messages distinguish claiming work from saving its result, where an expired
+  lease can allow another execution. Routine job ticks and job data are omitted.
 - Localisation fallback and pagination failures use the same operational format.
   Standalone localisation fallback now writes a warning record to stderr instead
   of a process warning; custom `onDiagnostic` callbacks are unchanged.
@@ -116,7 +147,8 @@ continues to select the dependency's original behavior.
 Severity and formatting do not change engine, permissions, rate-limit, retry,
 registration, sharding, scheduler or shutdown behavior. Existing errors still
 propagate through their existing APIs. Consumer-owned logs, Discord.js internals,
-CLI validation output and application example listeners are not intercepted.
+CLI validation output and application logs are not intercepted. The supplied
+[examples](../examples/README.md#console-messages) use `logEvent` explicitly.
 
 ## Diagnostics, redaction and bounds
 
@@ -153,7 +185,7 @@ developer-authored messages and diagnostic metadata, never arbitrary user text.
 JSON produces one parseable object per line:
 
 ```json
-{"timestamp":"2026-10-14T12:30:45.123Z","level":"info","component":"KairoJS.client","event":"ready","message":"Discord client ready.","context":{"commands":7,"shards":2}}
+{"timestamp":"2026-10-15T12:30:45.123Z","level":"info","component":"KairoJS.client","event":"ready","message":"Discord connected; this client can now handle events.","context":{"shard":0,"commands":7,"guilds":12,"shards":1}}
 ```
 
 ## Synthetic before/after and local demo
@@ -173,11 +205,32 @@ Error: provider-specific details ...
 The replacement combines safe diagnostics with the operation and bounds stacks:
 
 ```text
-2026-10-14T12:30:45.123Z INFO  KairoJS.rest.registration completed | Application command registries initialized. | durationMs=18
-2026-10-14T12:30:45.123Z INFO  KairoJS.client ready | Discord client ready. | commands=7 shards=2
-2026-10-14T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | Engine operation failed. | shard=1 fatal=false | error={"type":"Error","code":"ECONNREFUSED","hint":"Connection refused; check the endpoint and service availability."}
-2026-10-14T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | at src/engine/client/EngineClient.ts:42:3 | shard=1
+2026-10-15T12:30:45.123Z INFO  KairoJS.rest.registration completed | Command registration pass finished. | registries=7 durationMs=18
+2026-10-15T12:30:45.123Z INFO  KairoJS.client ready | Discord connected; this client can now handle events. | shard=0 commands=7 guilds=12 shards=1
+2026-10-15T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | Gateway connection interrupted; inspect transport diagnostics while recovery proceeds. | shard=1 fatal=false state=reconnecting pendingHandlers=0 | error={"type":"Error","code":"ECONNREFUSED","hint":"Connection refused; check the endpoint and service availability."}
+2026-10-15T12:30:45.123Z ERROR KairoJS.engine.gateway operation_failed | at src/engine/client/EngineClient.ts:42:3 | shard=1
 ```
+
+The message content itself also changes from the first console-format redesign
+(`ea9951b`); these are synthetic examples of the same operations:
+
+| Previously logged | Now logged |
+| --- | --- |
+| `Discord client ready.` | `Discord connected; this client can now handle events.` with shard, command and guild counts |
+| `Application command registries initialized.` | `Command registration pass finished.` with registry count and elapsed time; this does not claim every operation succeeded |
+| `Command definition differs; review its definition and overwrite behavior.` | `Discord command differs from local code; this registration is configured to report differences without updating Discord.` for report-only registrations |
+| `Updated command fixture (...) with new api data` at debug | `Updated a Discord command to match its local definition.` at info, with command ID and scope |
+| A name was used while `trying to bypass this warning` | `Expected a numeric Discord command ID; accepted this value as a name alias. Use addChatInputCommandIds with a real command ID.` |
+| `Skipping extension: setup failed.` | `Required extension setup failed; client startup cannot continue.` or a separate optional-extension cleanup message |
+| `Engine operation failed.` | `Gateway connection interrupted; inspect transport diagnostics while recovery proceeds.` for recoverable gateway failures |
+| `Scheduled task failed.` | `Scheduled task execution failed; inspect this task's run handler.` |
+| `Shard process exited.` | `Shard process ended unexpectedly; applying the configured restart policy.` with exit code and restart settings |
+| Example `Shard 0 ready as ...` plus framework readiness | One info readiness record; the example cache listener is debug and omits the account tag |
+
+Messages, severity choices and some diagnostic event names have changed. Use
+`component` and `event` in structured collectors, and update filters for the
+specific operation names in the demo rather than matching free text. Application
+error callbacks still receive the original error objects.
 
 Preview synthetic text or JSON without contacting Discord or Redis:
 
@@ -188,4 +241,8 @@ bun scripts/logging-demo.ts --json
 
 The preview deliberately includes debug samples and fixed UTC timestamps. It
 uses stdout/stderr like the real logger; combine them with `2>&1` to collect all
-sample records. Logging tests run with `bun test tests/core/logging.test.ts`.
+sample records. Logging and message-content checks run with:
+
+```sh
+bun test tests/core/logging.test.ts tests/integration/consoleMessages.test.ts
+```

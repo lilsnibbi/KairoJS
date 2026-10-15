@@ -15,7 +15,7 @@ export function emitPerRegistryError(error: unknown, command: Command<any, any>)
 		writeEvent(logger, 'error', {
 			component: 'rest.registration',
 			event: 'command_registration_failed',
-			message: 'Application command registration failed.',
+			message: 'Command registration could not complete; inspect this command definition and its API error.',
 			error,
 			context: { command: name, path: location.full }
 		});
@@ -28,9 +28,7 @@ export function emitBulkOverwriteError(error: unknown, guildId: string | null) {
 
 	if (client.listenerCount(Events.ApplicationCommandRegistriesBulkOverwriteError)) {
 		client.emit(Events.ApplicationCommandRegistriesBulkOverwriteError, error, guildId);
-	} else if (guildId) {
-		bulkOverwriteError(`Failed to overwrite guild application commands for guild ${guildId}`, error);
 	} else {
-		bulkOverwriteError(`Failed to overwrite global application commands`, error);
+		bulkOverwriteError(error, guildId);
 	}
 }

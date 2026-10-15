@@ -40,7 +40,7 @@ export function pollSync<T>(cb: () => T, cbCondition: (value: T) => boolean, opt
 				writeEvent(fallbackLogger(), 'notif', {
 					component: 'utilities.poll',
 					event: 'waiting',
-					message: 'Waiting before polling again.',
+					message: 'Poll condition is not satisfied; waiting for the next attempt.',
 					context: { delayMs: waitBetweenRetries, attempt: retries + 1, synchronous: true }
 				});
 			sleepSync(waitBetweenRetries);

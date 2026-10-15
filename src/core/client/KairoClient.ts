@@ -184,7 +184,7 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				writeEvent(this.logger, 'error', {
 					component: 'sharding.client',
 					event: 'managed_shard_stopped',
-					message: 'Managed shard stopped: supervisor, protocol, or identify coordination failed.',
+					message: 'Stopping this shard after a supervisor or coordination failure; inspect the host logs.',
 					error: cause,
 					context: { code }
 				});
@@ -231,7 +231,7 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				writeEvent(this.logger, 'error', {
 					component: 'client',
 					event: 'construction_cleanup_failed',
-					message: 'Client construction cleanup failed.',
+					message: 'Startup rollback could not release all client resources; inspect the cleanup cause.',
 					error: cleanup
 				})
 			);
@@ -315,7 +315,9 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 			writeEvent(this.logger, 'error', {
 				component: 'extensions',
 				event: 'setup_failed',
-				message: 'Skipping extension: setup failed.',
+				message: extension.critical
+					? 'Required extension setup failed; client startup cannot continue.'
+					: 'Optional extension setup failed; disabling it and removing its registrations.',
 				error: failure,
 				context: { extension: extension.name, critical: !!extension.critical }
 			});
@@ -339,7 +341,9 @@ export class KairoClient<Ready extends boolean = boolean> extends Client<Ready> 
 				writeEvent(this.logger, 'error', {
 					component: 'extensions',
 					event: 'hook_failed',
-					message: 'Extension lifecycle hook failed.',
+					message: state.extension.critical
+						? 'Required extension login hook failed; client startup cannot continue.'
+						: 'Optional extension login hook failed; disabling it and releasing its resources.',
 					error: cause,
 					context: { extension: state.extension.name, phase, critical: !!state.extension.critical }
 				});

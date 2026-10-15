@@ -11,7 +11,7 @@ export class InitialisingListener extends Listener<typeof Events.ApplicationComm
 		writeEvent(this.container.logger, 'debug', {
 			component: 'rest.registration',
 			event: 'started',
-			message: 'Initializing application command registries.'
+			message: 'Checking which Discord commands need to be created or updated.'
 		});
 	}
 }

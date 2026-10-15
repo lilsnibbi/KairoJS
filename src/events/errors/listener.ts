@@ -12,7 +12,7 @@ export class ListenerErrorListener extends Listener<typeof Events.ListenerError>
 		writeEvent(this.container.logger, 'error', {
 			component: 'events',
 			event: 'listener_failed',
-			message: 'Event listener failed.',
+			message: 'Event listener execution failed; inspect the named listener and its error cause.',
 			error,
 			context: { listener: name, event: String(event), path: location.full }
 		});

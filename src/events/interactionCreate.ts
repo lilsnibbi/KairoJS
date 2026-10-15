@@ -21,7 +21,7 @@ export class InteractionCreateListener extends Listener<typeof Events.Interactio
 			writeEvent(this.container.logger, 'alert', {
 				component: 'interactions',
 				event: 'unhandled_type',
-				message: 'Unhandled interaction type.',
+				message: 'No framework route handles this Discord interaction type; add an appropriate interaction handler.',
 				context: { type: interaction.type }
 			});
 		}

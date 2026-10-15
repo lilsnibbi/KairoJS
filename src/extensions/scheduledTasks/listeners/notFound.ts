@@ -14,7 +14,7 @@ export class NotFoundListener extends Listener<typeof TaskEvents.ScheduledTaskNo
 		writeEvent(this.container.logger, 'error', {
 			component: 'tasks',
 			event: 'task_not_found',
-			message: 'Scheduled task module not found; check registered task names.',
+			message: 'Cannot run this scheduled job: its task module is not registered. Check task names and module patterns.',
 			context: { task }
 		});
 	}

@@ -12,7 +12,7 @@ export class ChatInputNoMatchListener extends Listener<typeof SubcommandEvents.C
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'chat_input_no_match',
-			message: 'No matching chat input subcommand.',
+			message: 'No slash subcommand route matched; check the configured subcommand names and defaults.',
 			context: { command: context.command.name }
 		});
 	}

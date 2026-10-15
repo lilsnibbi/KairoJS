@@ -13,7 +13,7 @@ export class MessageNoMatchListener extends Listener<typeof SubcommandEvents.Mes
 		writeEvent(this.container.logger, 'error', {
 			component: 'subcommands',
 			event: 'message_no_match',
-			message: 'No matching message subcommand.',
+			message: 'No message subcommand route matched; check the configured subcommand names and defaults.',
 			context: { command: context.command.name }
 		});
 	}
