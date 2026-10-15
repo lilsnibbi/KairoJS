@@ -4,16 +4,14 @@
 
 ## Run it
 
-Use the pinned development version, Bun 1.4.3, and `bun install --frozen-lockfile`.
+Use Bun 1.4.3 and `bun install --frozen-lockfile`.
 
 ```sh
 bun run engine:test
-bun check
+bun run typecheck
 bun run lint:check
-bun run engine:build
 bun examples/engine/offline.ts
 bun run smoke
-bun run engine:bench
 ```
 
 The offline example creates a loopback HTTP/WebSocket server, receives a message, replies using the engine's REST layer, then reconnects and resumes. It uses a literal fake token. The package smoke test also runs this example from an installed tarball.
@@ -97,13 +95,12 @@ REST admits up to 8 concurrent attempts. Identical normalized routes and learned
 
 ## Validation results
 
-Validated on 2026-10-11 with Bun 1.4.2 on Windows x64 and a disposable Redis 7.4.11 container:
+Historical validation on 2026-10-11 used Bun 1.4.2 on Windows x64 and a disposable Redis 7.4.11 container:
 
 - `bun install --frozen-lockfile --ignore-scripts`: succeeded without lock changes.
 - `bun run engine:test`: 76 passing tests across four files, 279 assertions.
 - `bun scripts/ci.ts` with `KAIRO_TEST_REDIS_URL`: 2,361 passing tests across 226 files, 4,943 assertions, zero failures and zero skipped tests.
-- The same CI run passed `bun run typecheck`, `bun run check` (838 files; that package script is now `lint:check`), the existing offline framework example, `bun run engine:build`, the engine offline example and `bun run smoke`.
-- The engine bundle was 224,418 bytes with no discord.js, @discordjs or Ovencord runtime dependency in its graph. This is a bundle validation result; the package still ships source TypeScript.
+- The same CI run passed `bun run typecheck`, Biome, the existing offline framework example, the engine offline example and `bun run smoke`.
 - The smoke test packed and installed the package in a temporary consumer, audited public exports/notices, loaded a framework command and ran the native engine connect/reply/resume example.
 
 Engine coverage comprises 14 cache tests, 11 client/event/helper tests, 28 gateway/protocol/identify tests and 23 REST tests. They exercise partial/null updates, resident identity, LRU boundaries and recency, deletion ordering, concurrent handlers, fetch/delete races, heartbeat debt, disconnect/resume/session invalidation, malformed/premature frames, stale sockets, cleanup, rate limits, bounded retries, cancellation and request limits.
@@ -124,23 +121,6 @@ Reviewed on 2026-10-11:
 
 The Ovencord checkout was read only. Package boundaries, WebSocketShard/identify strategies, REST SequentialHandler's bucket/major/global separation, and CachedManager's resident patching boundary informed the review. Its source, Collection abstraction, compatibility API and benchmark claims were not copied. Kairo uses its own Map/Set stores, scheduler, lifecycle and helpers.
 
-## Measurements
-
-See [the benchmark](../scripts/engineBench.ts) and [raw results](engine-benchmark.json). It inserts 1,100 synthetic members into each of 100 guild scopes and retains exactly 100,000 members under the default limits. It measures insertion, targeted lookup, iteration, partial merge and gateway activity, with five timed samples after warmup. Each 100,000-operation lookup/merge pass visits every resident guild/member pair once; the activity pass visits 10,000 distinct pairs.
-
-Recorded on 2026-10-11T08:52:59.216Z with an Intel Core i7-13620H:
-
-| Synthetic operation | Measured result |
-| --- | --- |
-| Insert 110,000; retain 100,000 members | 276.667 ms (one pass) |
-| 100,000 targeted lookups | 44.501 ms median |
-| Iterate 100,000 members | 4.728 ms median |
-| 100,000 partial merges | 65.886 ms median |
-| 10,000 message activity updates | 44.121 ms median |
-| Heap increase after GC | 49.99 MiB |
-| RSS increase | 85.76 MiB |
-
-These are local synthetic measurements on Bun 1.4.2/Windows x64, not live Discord throughput or a cross-library comparison. Heap/RSS deltas include runtime allocation and JIT effects; shared strings affect memory. Approximate heap bytes per retained member are not an exact object size. Network, compression and user handlers are excluded.
 
 ## Production gaps
 

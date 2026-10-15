@@ -64,6 +64,28 @@ describe('durable shard ownership and identify budget', () => {
 			f.remove();
 		}
 	});
+	test('accepts a zero reset interval without dropping or replenishing the reported allowance', () => {
+		const f = fixture();
+		const state = new CoordinatorState(f.path, 'topology');
+		try {
+			setSystemTime(new Date('2026-01-01T00:00:00Z'));
+			state.update({ ...limit, reset_after: 0 });
+			expect(state.remaining).toBe(10);
+			expect(state.grant('a', 0, 'one')).toBe(true);
+			state.update({ ...limit, reset_after: 0 });
+			expect(state.remaining).toBe(9);
+			setSystemTime(new Date('2026-01-01T00:00:59.999Z'));
+			expect(state.expired).toBe(false);
+			setSystemTime(new Date('2026-01-01T00:01:00Z'));
+			expect(state.expired).toBe(true);
+			expect(state.grant('b', 1, 'two')).toBe(false);
+			state.update({ ...limit, remaining: 8, reset_after: 0 });
+			expect(state.remaining).toBe(8);
+		} finally {
+			state.close();
+			f.remove();
+		}
+	});
 	test('rejects duplicate coordinators, incompatible topology, and competing host incarnations', () => {
 		const f = fixture();
 		let state = new CoordinatorState(f.path, 'topology');
@@ -89,7 +111,7 @@ describe('durable shard ownership and identify budget', () => {
 		try {
 			for (const value of [
 				{ ...limit, remaining: 11 },
-				{ ...limit, reset_after: 0 },
+				{ ...limit, reset_after: -1 },
 				{ ...limit, max_concurrency: 0 }
 			])
 				expect(() => state.update(value)).toThrow();

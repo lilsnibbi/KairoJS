@@ -1,4 +1,4 @@
-import { parseExpression } from 'cron-parser';
+import { CronExpressionParser } from 'cron-parser';
 import type { TaskJobOptions, TaskRepeat, TaskSchedulerOptions } from './types/TaskTypes';
 
 export function positiveInteger(name: string, value: number): void {
@@ -53,7 +53,7 @@ export function validateRepeat(repeat: TaskRepeat): void {
 
 export function nextOccurrence(repeat: TaskRepeat, previous: number, now: number): number {
 	if (repeat.interval) return previous + Math.max(1, Math.floor((now - previous) / repeat.interval) + 1) * repeat.interval;
-	return parseExpression(repeat.pattern!, { currentDate: new Date(now), tz: repeat.timezone ?? 'UTC' })
+	return CronExpressionParser.parse(repeat.pattern!, { currentDate: new Date(now), tz: repeat.timezone ?? 'UTC' })
 		.next()
 		.getTime();
 }

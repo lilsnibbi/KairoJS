@@ -19,8 +19,7 @@ The default setup runs two shards on one machine. A small bot doesn't need two s
 
 ## Get it running
 
-Run these commands from the **repository root**, using the pinned development
-version, Bun 1.4.3. The framework runtime minimum is Bun 1.4.2.
+Run these commands from the **repository root**, using Bun 1.4.3 or newer.
 
 1. Install dependencies:
 
@@ -70,6 +69,14 @@ The host starts `bot.ts` for each assigned shard. Don't run `bot.ts` directly or
 Replies are only visible to the person who ran the command. A failed shard appears as unavailable in `/stats`; totals cover the shards that responded. Requests time out after five seconds.
 
 Every shard loads the commands. `registration.ts` lets only shard 0 write command registrations, so the processes don't race to update the same commands. Commands still run on every shard. Changing `DEV_GUILD_ID` doesn't delete registrations from the old scope, so switching between server and global commands can leave old entries behind.
+
+To delete all global commands and all commands in `DEV_GUILD_ID`, stop the host and run:
+
+```sh
+bun --env-file=examples/.env examples/unregisterCommands.ts
+```
+
+The script uses `DISCORD_TOKEN` to find the application. If `DEV_GUILD_ID` is blank, it clears only global commands. Starting the host again registers the example commands.
 
 ## Where to change things
 

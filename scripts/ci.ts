@@ -31,7 +31,6 @@ try {
 	await run('run', 'typecheck');
 	await run('run', 'lint:check');
 	await run('examples/offline.ts');
-	await run('run', 'engine:build');
 	await run('examples/engine/offline.ts');
 	await run('run', 'smoke');
 	console.log('Complete validation passed: no skipped tests, types, Biome, offline example bot and package smoke test.');

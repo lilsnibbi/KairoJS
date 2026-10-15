@@ -85,27 +85,25 @@
 		"lint:check": "bun run --bun biome check .",
 		"format": "bun run --bun biome format --write .",
 		"smoke": "bun scripts/smoke.ts",
-		"engine:test": "bun test tests/engine",
-		"engine:build": "bun scripts/engineBuild.ts",
-		"engine:bench": "bun scripts/engineBench.ts"
+		"engine:test": "bun test tests/engine"
 	},
 	"dependencies": {
 		"@discordjs/builders": "^1.13.0",
 		"@discordjs/collection": "^2.1.1",
 		"@lilsnibbi/logger": "1.2.0",
 		"arktype": "^2.2.8",
-		"cron-parser": "4.9.0",
+		"cron-parser": "5.10.2",
 		"discord-api-types": "0.38.56",
 		"discord.js": "^14.27.0",
-		"i18next": "^25.8.18"
+		"i18next": "^26.4.5"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.15",
-		"@types/bun": "1.4.2",
+		"@types/bun": "1.4.3",
 		"@types/lodash": "^4.17.24",
 		"@types/ws": "^8.18.1",
 		"expect-type": "^1.3.0",
 		"lodash": "^4.18.1",
-		"typescript": "~5.9.3"
+		"typescript": "~7.0.2"
 	}
 }

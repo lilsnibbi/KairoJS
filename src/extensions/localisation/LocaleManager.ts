@@ -93,7 +93,6 @@ export class LocaleManager {
 		const namespaces = [...new Set([...foundNamespaces, ...Object.values(resources).flatMap((language) => Object.keys(language))])];
 		const languages = [...new Set([...Object.keys(resources), this.options.defaultName ?? 'en-US'])];
 		await this.instance.init({
-			showSupportNotice: false,
 			fallbackLng: this.options.defaultName ?? 'en-US',
 			load: 'all',
 			defaultNS: this.options.defaultNS ?? 'default',
@@ -102,8 +101,7 @@ export class LocaleManager {
 			interpolation: { escapeValue: false, ...user.interpolation, skipOnVariables: user.interpolation?.skipOnVariables ?? false },
 			ignoreJSONStructure: user.ignoreJSONStructure ?? false,
 			resources: resources as Resource,
-			initAsync: false,
-			initImmediate: false
+			initAsync: false
 		});
 		for (const formatter of this.options.formatters ?? []) {
 			if (formatter.cached) this.instance.services.formatter!.addCached(formatter.name, formatter.format);

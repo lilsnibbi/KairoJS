@@ -7,10 +7,11 @@ import { ShardError, type ShardSessionLimit } from '../types';
 const limitSchema = type({
 	total: 'number.integer > 0',
 	remaining: 'number.integer >= 0',
-	reset_after: 'number.integer > 0',
+	reset_after: 'number.integer >= 0',
 	max_concurrency: 'number.integer > 0',
 	'+': 'reject'
 });
+const zeroResetRefreshMs = 60_000;
 interface Budget {
 	total: number;
 	remaining: number;
@@ -110,10 +111,12 @@ export class CoordinatorState {
 				[...this.deadlines.values()].some((deadline) => deadline > this.now()))
 		)
 			throw new ShardError('SESSION_LIMIT', 'max_concurrency changed while the previous session window or identify buckets are active.');
+		// Discord can report zero with an available allowance. Refresh soon without expiring it immediately.
+		const resetAfter = value.reset_after || zeroResetRefreshMs;
 		this.budget = {
 			total: value.total,
 			remaining: old && old.resetAt > now ? Math.min(old.remaining, value.remaining) : value.remaining,
-			resetAt: old && old.resetAt > now ? Math.max(old.resetAt, now + value.reset_after) : now + value.reset_after,
+			resetAt: old && old.resetAt > now ? Math.max(old.resetAt, now + resetAfter) : now + resetAfter,
 			concurrency: value.max_concurrency
 		};
 		this.write('budget', this.budget);

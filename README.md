@@ -17,7 +17,7 @@ The experimental [native Discord engine](docs/engine.md) is available through `k
 
 ## Getting started
 
-Use **Bun 1.4.2 or newer**. KairoJS runs TypeScript directly; no compilation step is required.
+Use **Bun 1.4.3 or newer**. KairoJS runs TypeScript directly; no compilation step is required.
 
 From this repository, install dependencies:
 
@@ -132,13 +132,12 @@ Try `bun examples/offline.ts` without a Discord token.
 
 ## Development
 
-Use Bun **1.4.2** to match CI.
+Use Bun **1.4.3**.
 
 | Command | Purpose |
 | --- | --- |
 | `bun test` | Run Bun tests |
 | `bun run typecheck` | Check TypeScript without emitting files |
-| `bun check` | Check TypeScript with Bun 1.4.3 |
 | `bun run lint:check` | Check formatting and lint rules with Biome |
 | `bun run format` | Apply formatting |
 
