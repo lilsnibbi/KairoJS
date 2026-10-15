@@ -16,7 +16,7 @@ defaults:
 jobs:
   validate:
     name: Validate
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 25
     permissions:
       contents: read
@@ -83,7 +83,7 @@ jobs:
     name: Required checks
     needs: [validate]
     if: ${{ always() }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 2
     steps:
       - name: Require complete validation of this commit
@@ -104,7 +104,7 @@ jobs:
           github.event_name == 'push' && github.ref_type == 'branch' &&
           github.ref_name == github.event.repository.default_branch &&
           vars.KAIRO_RELEASES == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     concurrency:
       group: release-please
