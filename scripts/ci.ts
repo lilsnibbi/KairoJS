@@ -49,7 +49,20 @@ try {
 	assertCompleteTests(readFileSync(report, "utf8"));
 	await run("check");
 	await run("lint");
-	await run("fmt", "--check");
+	const trackedFiles = Bun.spawnSync(["git", "ls-files", "-z"]);
+	if (trackedFiles.exitCode !== 0)
+		throw new Error("Could not list tracked files for formatting.");
+	// Release Please regenerates these outputs using its own formatting.
+	const formatFiles = trackedFiles.stdout
+		.toString()
+		.split("\0")
+		.filter(
+			(file) =>
+				file &&
+				file !== "CHANGELOG.md" &&
+				file !== ".release-please-manifest.json",
+		);
+	await run("fmt", "--check", ...formatFiles);
 	await run("examples/offline.ts");
 	await run("examples/engine/offline.ts");
 	console.log(
