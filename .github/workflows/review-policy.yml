@@ -1,0 +1,104 @@
+name: Review policy
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  review-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      checks: write
+      pull-requests: read
+    steps:
+      - name: Set the required review status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          default_branch=$(gh api "repos/$GH_REPO" --jq '.default_branch')
+          if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            candidates=$(gh api --paginate \
+              "repos/$GH_REPO/pulls?state=open&per_page=100" \
+              --jq --arg base "$default_branch" \
+              '.[] | select(.base.ref == $base) | .number')
+          else
+            [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
+            candidates=$PR_NUMBER
+          fi
+
+          while IFS= read -r pr_number; do
+            [[ -n "$pr_number" ]] || continue
+            pr_json=$(gh api "repos/$GH_REPO/pulls/$pr_number")
+            state=$(jq -r '.state' <<< "$pr_json")
+            base=$(jq -r '.base.ref' <<< "$pr_json")
+            author=$(jq -r '.user.login' <<< "$pr_json")
+            head_sha=$(jq -r '.head.sha' <<< "$pr_json")
+
+            [[ "$state" == "open" && "$base" == "$default_branch" ]] || continue
+
+            if [[ "$author" == "lilsnibbi" ]]; then
+              conclusion=success
+              title="Owner-authored pull request"
+              summary="Self-approval is skipped for lilsnibbi-authored pull requests. Required CI checks still apply."
+            else
+              reviews=$(gh api --paginate --slurp \
+                "repos/$GH_REPO/pulls/$pr_number/reviews?per_page=100")
+              review_state=$(jq -r --arg head "$head_sha" '
+                add
+                | map(select(.user.login == "lilsnibbi" and
+                  .commit_id == $head and .submitted_at != null))
+                | sort_by(.submitted_at)
+                | last
+                | .state // "NONE"
+              ' <<< "$reviews")
+
+              if [[ "$review_state" == "APPROVED" ]]; then
+                conclusion=success
+                title="Approved by lilsnibbi"
+                summary="lilsnibbi approved the current pull request commit."
+              else
+                conclusion=failure
+                title="Waiting for lilsnibbi approval"
+                summary="An approval from lilsnibbi on the current commit is required before this pull request can merge."
+              fi
+            fi
+
+            check_id=$(gh api \
+              "repos/$GH_REPO/commits/$head_sha/check-runs?per_page=100" \
+              --jq '[.check_runs[] | select(.name == "Review policy" and
+                .app.id == 15368)] | sort_by(.started_at) |
+                if length == 0 then empty else last.id end')
+            completed_at=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+            payload=$(jq -n \
+              --arg name "Review policy" \
+              --arg head_sha "$head_sha" \
+              --arg conclusion "$conclusion" \
+              --arg title "$title" \
+              --arg summary "$summary" \
+              --arg completed_at "$completed_at" \
+              '{name:$name, head_sha:$head_sha, status:"completed",
+                conclusion:$conclusion, started_at:$completed_at,
+                completed_at:$completed_at,
+                output:{title:$title, summary:$summary}}')
+
+            if [[ -n "$check_id" ]]; then
+              patch_payload=$(jq 'del(.head_sha)' <<< "$payload")
+              gh api --method PATCH \
+                "repos/$GH_REPO/check-runs/$check_id" \
+                --input - <<< "$patch_payload"
+            else
+              gh api --method POST "repos/$GH_REPO/check-runs" \
+                --input - <<< "$payload"
+            fi
+          done <<< "$candidates"
