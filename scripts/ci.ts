@@ -53,15 +53,37 @@ try {
 	if (trackedFiles.exitCode !== 0)
 		throw new Error("Could not list tracked files for formatting.");
 	// Release Please regenerates these outputs using its own formatting.
+	const formatterExtensions = new Set([
+		".css",
+		".html",
+		".js",
+		".jsx",
+		".json",
+		".json5",
+		".jsonc",
+		".md",
+		".mdx",
+		".mjs",
+		".cjs",
+		".mts",
+		".cts",
+		".toml",
+		".ts",
+		".tsx",
+		".yaml",
+		".yml",
+	]);
 	const formatFiles = trackedFiles.stdout
 		.toString()
 		.split("\0")
-		.filter(
-			(file) =>
-				file &&
+		.filter((file) => {
+			const extension = file.slice(file.lastIndexOf(".")).toLowerCase();
+			return (
+				formatterExtensions.has(extension) &&
 				file !== "CHANGELOG.md" &&
-				file !== ".release-please-manifest.json",
-		);
+				file !== ".release-please-manifest.json"
+			);
+		});
 	await run("fmt", "--check", ...formatFiles);
 	await run("examples/offline.ts");
 	await run("examples/engine/offline.ts");
