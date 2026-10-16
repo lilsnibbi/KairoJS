@@ -730,6 +730,16 @@ describe("Option", () => {
 		});
 
 		describe("eq", () => {
+			test("preserves strict equality for objects, NaN and nullish values", () => {
+				const value = {};
+				expect(some(value).eq(some(value))).toBe(true);
+				expect(some(value).eq(some({}))).toBe(false);
+				expect(some(Number.NaN).eq(some(Number.NaN))).toBe(false);
+				expect(some(null).eq(some(null))).toBe(true);
+				expect(some(null).eq(none)).toBe(false);
+				expect(some(undefined).eq(none)).toBe(false);
+			});
+
 			test("GIVEN x=some(s), y=some(s) THEN returns true", () => {
 				const x = some(3);
 				const y = some(3);
@@ -977,6 +987,32 @@ describe("Option", () => {
 	});
 
 	describe("types", () => {
+		test("match retains branch return types and callback receivers", () => {
+			const receivers: unknown[] = [];
+			const branches = {
+				some(this: Some<number>, value: number) {
+					receivers.push(this);
+					return value + 1;
+				},
+				none(this: None) {
+					receivers.push(this);
+					return "empty";
+				},
+			};
+			const present = some(4);
+			const maybe: Option<number> = Option.from(4);
+			const someValue = present.match(branches);
+			const noneValue = none.match(branches);
+			const maybeValue = maybe.match(branches);
+			expectTypeOf(someValue).toEqualTypeOf<number>();
+			expectTypeOf(noneValue).toEqualTypeOf<string>();
+			expectTypeOf(maybeValue).toEqualTypeOf<number | string>();
+			expect([someValue, noneValue, maybeValue]).toEqual([5, "empty", 5]);
+			expect(receivers[0]).toBe(present);
+			expect(receivers[1]).toBe(none);
+			expect(receivers[2]).toBe(maybe);
+		});
+
 		test("GIVEN Some<T> THEN assigns to Option<T>", () => {
 			expect<Option<string>>(some("foo")).toEqual(some("foo"));
 		});

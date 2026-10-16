@@ -764,6 +764,17 @@ describe("Result", () => {
 		});
 
 		describe("eq", () => {
+			test("preserves strict equality for objects, NaN and matching payloads in different branches", () => {
+				const value = {};
+				expect(ok(value).eq(ok(value))).toBe(true);
+				expect(ok(value).eq(ok({}))).toBe(false);
+				expect(ok(Number.NaN).eq(ok(Number.NaN))).toBe(false);
+				expect(err(value).eq(err(value))).toBe(true);
+				expect(err(value).eq(err({}))).toBe(false);
+				expect(err(Number.NaN).eq(err(Number.NaN))).toBe(false);
+				expect(ok(null).eq(err(null))).toBe(false);
+			});
+
 			test("GIVEN x=ok(s), y=ok(s) THEN returns true", () => {
 				const x = ok(3);
 				const y = ok(3);
@@ -1138,6 +1149,33 @@ describe("Result", () => {
 	});
 
 	describe("types", () => {
+		test("match retains branch return types and callback receivers", () => {
+			const receivers: unknown[] = [];
+			const branches = {
+				ok(this: Ok<number>, value: number) {
+					receivers.push(this);
+					return value + 1;
+				},
+				err(this: Err<string>, error: string) {
+					receivers.push(this);
+					return error;
+				},
+			};
+			const success = ok(4);
+			const failure = err("failed");
+			const maybe: Result<number, string> = Result.from(4);
+			const okValue = success.match(branches);
+			const errValue = failure.match(branches);
+			const maybeValue = maybe.match(branches);
+			expectTypeOf(okValue).toEqualTypeOf<number>();
+			expectTypeOf(errValue).toEqualTypeOf<string>();
+			expectTypeOf(maybeValue).toEqualTypeOf<number | string>();
+			expect([okValue, errValue, maybeValue]).toEqual([5, "failed", 5]);
+			expect(receivers[0]).toBe(success);
+			expect(receivers[1]).toBe(failure);
+			expect(receivers[2]).toBe(maybe);
+		});
+
 		test("GIVEN Ok<T> THEN assigns to Result<T, E>", () => {
 			expect<Result<number, string>>(ok(4)).toEqual(ok(4));
 		});

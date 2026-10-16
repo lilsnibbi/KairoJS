@@ -234,10 +234,11 @@ export class Option<T, Exists extends boolean = boolean> {
 	/** Return Some([left, right]) when both Options are Some; otherwise return None. */
 	public zip<OtherValue, OtherExists extends boolean>(
 		other: Option<OtherValue, OtherExists>,
-	): Option<[T, OtherValue], If<Exists, OtherExists, false>> {
-		// @ts-expect-error Complex types
+	): Option<[T, OtherValue], If<Exists, OtherExists, false>>;
+	/** Return Some([left, right]) when both Options are Some; otherwise return None. */
+	public zip<OtherValue>(other: Option<OtherValue>): Option<[T, OtherValue]> {
 		return this.isSome() && other.isSome()
-			? some([this[ValueProperty], other[ValueProperty]] as [T, OtherValue])
+			? some<[T, OtherValue]>([this[ValueProperty], other[ValueProperty]])
 			: none;
 	}
 
@@ -245,8 +246,12 @@ export class Option<T, Exists extends boolean = boolean> {
 	public zipWith<OtherValue, OtherExists extends boolean, ReturnValue>(
 		other: Option<OtherValue, OtherExists>,
 		f: (value0: T, value1: OtherValue) => ReturnValue,
-	): Option<ReturnValue, If<Exists, OtherExists, false>> {
-		// @ts-expect-error Complex types
+	): Option<ReturnValue, If<Exists, OtherExists, false>>;
+	/** Combine two Some values with f and wrap its result in Some; otherwise return None. */
+	public zipWith<OtherValue, ReturnValue>(
+		other: Option<OtherValue>,
+		f: (value0: T, value1: OtherValue) => ReturnValue,
+	): Option<ReturnValue> {
 		return this.isSome() && other.isSome()
 			? some(f(this[ValueProperty], other[ValueProperty]))
 			: none;
@@ -305,11 +310,8 @@ export class Option<T, Exists extends boolean = boolean> {
 	public eq<OtherValue extends T, OtherExists extends boolean>(
 		other: Option<OtherValue, OtherExists>,
 	): this is Option<OtherValue, OtherExists> {
-		// @ts-expect-error Complex types
-		return (
-			this.isSome() === other.isSome() &&
-			this[ValueProperty] === other[ValueProperty]
-		);
+		const value: unknown = this[ValueProperty];
+		return this.isSome() === other.isSome() && value === other[ValueProperty];
 	}
 
 	/** Return the opposite of eq. */
@@ -323,8 +325,15 @@ export class Option<T, Exists extends boolean = boolean> {
 		some(this: Some<T>, value: T): SomeValue;
 		/** Called for None with the None Option as this. */
 		none(this: None): NoneValue;
-	}): If<Exists, SomeValue, NoneValue> {
-		// @ts-expect-error Complex types
+	}): If<Exists, SomeValue, NoneValue>;
+	/** Call the matching callback with this Option as its this value and return its result. */
+	public match<SomeValue, NoneValue>(
+		this: Some<T> | None,
+		branches: {
+			some(this: Some<T>, value: T): SomeValue;
+			none(this: None): NoneValue;
+		},
+	): SomeValue | NoneValue {
 		return this.isSome()
 			? branches.some.call(this, this[ValueProperty])
 			: branches.none.call(this);

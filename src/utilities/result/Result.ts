@@ -315,11 +315,8 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	>(
 		other: Result<OtherValue, OtherError, OtherSuccess>,
 	): this is Result<OtherValue, OtherError, OtherSuccess> {
-		// @ts-expect-error Complex types
-		return (
-			this.isOk() === other.isOk() &&
-			this[ValueProperty] === other[ValueProperty]
-		);
+		const value: unknown = this[ValueProperty];
+		return this.isOk() === other.isOk() && value === other[ValueProperty];
 	}
 
 	/** Return the opposite of eq. */
@@ -333,11 +330,18 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		ok(this: Ok<T>, value: If<Success, T, never>): OkValue;
 		/** Called for Err with its error and the Err Result as this. */
 		err(this: Err<E>, error: If<Success, never, E>): ErrValue;
-	}): If<Success, OkValue, ErrValue> {
-		// @ts-expect-error Complex types
+	}): If<Success, OkValue, ErrValue>;
+	/** Call the matching callback with its stored value and this Result as its this value. */
+	public match<OkValue, ErrValue>(
+		this: Ok<T, E> | Err<E, T>,
+		branches: {
+			ok(this: Ok<T>, value: T): OkValue;
+			err(this: Err<E>, error: E): ErrValue;
+		},
+	): OkValue | ErrValue {
 		return this.isOk()
 			? branches.ok.call(this, this[ValueProperty])
-			: branches.err.call(this, this[ValueProperty] as E);
+			: branches.err.call(this, this[ValueProperty]);
 	}
 
 	/** Yield the Ok value once, or yield nothing for Err. */
