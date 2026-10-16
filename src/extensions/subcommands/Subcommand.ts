@@ -487,7 +487,7 @@ export class Subcommand<
 			const localSubcommandResult = await preconditionsForSubcommand.messageRun(
 				message,
 				this,
-				preconditionPayload as any,
+				preconditionPayload,
 			);
 			if (localSubcommandResult.isErr()) {
 				this.container.client.emit(
@@ -518,7 +518,7 @@ export class Subcommand<
 						throw new UserError({
 							identifier: SubcommandErrors.SubcommandNotFound,
 							message: `The method configured at "messageRun" for the subcommand ${subcommand.name} was not implemented in the class.`,
-							context: { ...payload },
+							context: payload,
 						});
 					}
 
@@ -582,7 +582,7 @@ export class Subcommand<
 				await preconditionsForSubcommand.chatInputRun(
 					interaction,
 					this,
-					payload as any,
+					payload,
 				);
 			if (localSubcommandResult.isErr()) {
 				this.container.client.emit(
@@ -612,7 +612,7 @@ export class Subcommand<
 						throw new UserError({
 							identifier: SubcommandErrors.SubcommandNotFound,
 							message: `The method configured at "chatInputRun" for the subcommand ${subcommand.name} was not implemented in the class.`,
-							context: { ...payload },
+							context: payload,
 						});
 					}
 
@@ -690,7 +690,7 @@ export interface SubcommandOptions extends Command.Options {
 }
 
 /** Types and helpers for {@link Subcommand}. */
-export namespace Subcommand {
+export declare namespace Subcommand {
 	/** Shorthand for {@link SubcommandOptions}. */
 	export type Options = SubcommandOptions;
 	/** Shorthand for {@link Command.JSON}. */

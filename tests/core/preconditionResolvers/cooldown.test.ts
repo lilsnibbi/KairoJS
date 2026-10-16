@@ -27,7 +27,9 @@ describe("parseConstructorPreConditionsCooldown", () => {
 		const preconditionContainerArray = new PreconditionContainerArray();
 
 		parseConstructorPreConditionsCooldown(
-			{ name: "test" } as any,
+			{ name: "test" } as Parameters<
+				typeof parseConstructorPreConditionsCooldown
+			>[0],
 			undefined,
 			undefined,
 			undefined,
@@ -54,7 +56,9 @@ describe("parseConstructorPreConditionsCooldown", () => {
 	test("when limit and delay are defined, sets limit to passed limit and delay to passed delay", () => {
 		const preconditionContainerArray = new PreconditionContainerArray();
 		parseConstructorPreConditionsCooldown(
-			{ name: "test" } as any,
+			{ name: "test" } as Parameters<
+				typeof parseConstructorPreConditionsCooldown
+			>[0],
 			5,
 			10,
 			undefined,
@@ -81,7 +85,9 @@ describe("parseConstructorPreConditionsCooldown", () => {
 	test("when scope, filteredUsers, limit, and delay are defined, sets all values to passed values", () => {
 		const preconditionContainerArray = new PreconditionContainerArray();
 		parseConstructorPreConditionsCooldown(
-			{ name: "test" } as any,
+			{ name: "test" } as Parameters<
+				typeof parseConstructorPreConditionsCooldown
+			>[0],
 			5,
 			10,
 			BucketScope.Guild,

@@ -3,11 +3,14 @@ import type { LocaleManager } from "../../../src/extensions/localisation/LocaleM
 
 declare module "../../../src/core/modules/index" {
 	interface Container {
-		client: any; // Client type doesn't really matter for tests but needs to be there for the type checker
+		client: import("../../../src/core/client/KairoClient").KairoClient;
 		i18n: LocaleManager;
 	}
 }
 
 declare module "discord.js" {
-	export interface ClientOptions extends InternationalizationClientOptions {}
+	export interface ClientOptions extends InternationalizationClientOptions {
+		/** Localisation options used by test clients. */
+		internationalization?: InternationalizationClientOptions["internationalization"];
+	}
 }

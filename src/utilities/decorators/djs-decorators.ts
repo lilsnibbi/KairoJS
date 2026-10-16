@@ -140,7 +140,8 @@ export const RequiresUserPermissions = (
 
 /** Requires the message to be run in a guild context, this decorator requires the first argument to be a {@link Message} or {@link BaseInteraction} instance which includes all interaction types */
 export function RequiresGuildContext(
-	fallback: FunctionFallback = (): void => undefined,
+	fallback: FunctionFallback<[Message | BaseInteraction]> = (): void =>
+		undefined,
 ): MethodDecorator {
 	return createFunctionPrecondition(
 		(context: Message | BaseInteraction) => context.guild !== null,
@@ -150,7 +151,8 @@ export function RequiresGuildContext(
 
 /** Requires the message to be run in a dm context, this decorator requires the first argument to be a {@link Message} or {@link BaseInteraction} instance which includes all interaction types */
 export function RequiresDMContext(
-	fallback: FunctionFallback = (): void => undefined,
+	fallback: FunctionFallback<[Message | BaseInteraction]> = (): void =>
+		undefined,
 ): MethodDecorator {
 	return createFunctionPrecondition(
 		(context: Message | BaseInteraction) => context.guild === null,

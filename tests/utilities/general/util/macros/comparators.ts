@@ -14,7 +14,7 @@ export function IdenticalError(expected: _Error, actual: _Error) {
 	}
 }
 
-export async function expectError<T = any>(
+export async function expectError<T = unknown>(
 	cb: () => T,
 	expected: Error & { code?: string },
 ) {

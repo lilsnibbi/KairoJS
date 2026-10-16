@@ -532,7 +532,10 @@ export class ShardManager extends ShardMessenger {
 			if (this.closed) finish();
 		});
 	}
-	private reassign(message: Frame, socket: NativeSocket): void {
+	private reassign(
+		message: Frame<"drain" | "assignment">,
+		socket: NativeSocket,
+	): void {
 		if (message.op === "drain") {
 			if (this.draining)
 				throw new ShardError("PROTOCOL", "A drain is already in progress.");

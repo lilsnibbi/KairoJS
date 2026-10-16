@@ -17,7 +17,7 @@ export class BeforeRunListener extends Listener<
 		// Run global preconditions:
 		const globalResult = await this.container.modules
 			.require("preconditions")
-			.chatInputRun(interaction, command, payload as any);
+			.chatInputRun(interaction, command, payload);
 		if (globalResult.isErr()) {
 			this.container.client.emit(
 				Events.ChatInputCommandDenied,
@@ -31,7 +31,7 @@ export class BeforeRunListener extends Listener<
 		const localResult = await command.preconditions.chatInputRun(
 			interaction,
 			command,
-			payload as any,
+			payload,
 		);
 		if (localResult.isErr()) {
 			this.container.client.emit(

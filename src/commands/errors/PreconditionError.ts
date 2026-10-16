@@ -25,7 +25,7 @@ export class PreconditionError extends UserError {
 }
 
 /** Types and helpers for {@link PreconditionError}. */
-export namespace PreconditionError {
+export declare namespace PreconditionError {
 	/** The options for {@link PreconditionError}. */
 	export interface Options extends Omit<UserError.Options, "identifier"> {
 		/** The precondition that caused the error. */

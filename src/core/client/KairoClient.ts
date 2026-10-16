@@ -125,7 +125,7 @@ interface FeatureState {
 	restoreProperties: () => void;
 	active: boolean;
 }
-let activeClient: KairoClient | undefined;
+const clientState: { active?: KairoClient } = {};
 
 /** One active Discord client owns the shared services. */
 export class KairoClient<
@@ -236,7 +236,7 @@ export class KairoClient<
 			throw new TypeError(
 				"logger must provide debug, notif, alert and error methods. Pass an existing instance directly.",
 			);
-		if (activeClient)
+		if (clientState.active)
 			throw new Error(
 				"Only one KairoClient can be active. Await client.destroy() before creating another.",
 			);
@@ -300,7 +300,7 @@ export class KairoClient<
 			options.fetchPrefix ?? (() => this.options.defaultPrefix ?? null);
 		this.disableMentionPrefix = options.disableMentionPrefix;
 		this.id = options.id ?? null;
-		activeClient = this;
+		clientState.active = this;
 		container.client = this;
 		container.modules = this.modules;
 		container.logger = this.logger;
@@ -388,7 +388,11 @@ export class KairoClient<
 			try {
 				await this.destroy();
 			} catch (cleanup) {
-				throw new AggregateError([error, cleanup], "Login and cleanup failed.");
+				throw new AggregateError(
+					[error, cleanup],
+					"Login and cleanup failed.",
+					{ cause: cleanup },
+				);
 			}
 			throw error;
 		}
@@ -588,7 +592,7 @@ export class KairoClient<
 				Reflect.deleteProperty(container, key);
 			ModuleStore.logger = null;
 		}
-		if (activeClient === this) activeClient = undefined;
+		if (clientState.active === this) clientState.active = undefined;
 		if (errors.length)
 			throw new AggregateError(
 				errors,
@@ -630,5 +634,8 @@ declare module "discord.js" {
 	}
 
 	/** Discord client options with KairoJS configuration. */
-	interface ClientOptions extends KairoClientOptions {}
+	interface ClientOptions extends KairoClientOptions {
+		/** Configure built-in features and custom extensions. */
+		extensions?: ExtensionOptions;
+	}
 }

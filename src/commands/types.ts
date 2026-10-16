@@ -10,10 +10,7 @@ import { AliasModule, type AliasModuleJSON } from "../core/modules/index";
 import type { Nullish } from "../utilities/index";
 import { type FlagStrategyOptions } from "../utilities/parsing/strategies/FlagUnorderedStrategy";
 import type { Command } from "./Command";
-import {
-	PreconditionContainerArray,
-	type PreconditionEntryResolvable,
-} from "./checks/containers/Group";
+import { type PreconditionEntryResolvable } from "./checks/containers/Group";
 import { BucketScope, CommandOptionsRunTypeEnum } from "./enums";
 import type { ApplicationCommandRegistry } from "./registration/Registry";
 
@@ -171,7 +168,7 @@ export type AutocompleteCommand = Command &
 	Required<Pick<Command, "autocompleteRun">>;
 
 /** Types and helpers for {@link AutocompleteCommand}. */
-export namespace AutocompleteCommand {
+export declare namespace AutocompleteCommand {
 	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
 	/** Shorthand for {@link Command.JSON}. */
@@ -196,7 +193,7 @@ export type ContextMenuCommand = Command &
 	Required<Pick<Command, "contextMenuRun">>;
 
 /** Types and helpers for {@link ContextMenuCommand}. */
-export namespace ContextMenuCommand {
+export declare namespace ContextMenuCommand {
 	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
 	/** Shorthand for {@link Command.JSON}. */
@@ -220,7 +217,7 @@ export namespace ContextMenuCommand {
 export type MessageCommand = Command & Required<Pick<Command, "messageRun">>;
 
 /** Types and helpers for {@link MessageCommand}. */
-export namespace MessageCommand {
+export declare namespace MessageCommand {
 	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
 	/** Shorthand for {@link Command.JSON}. */
@@ -238,7 +235,7 @@ export type ChatInputCommand = Command &
 	Required<Pick<Command, "chatInputRun">>;
 
 /** Types and helpers for {@link ChatInputCommand}. */
-export namespace ChatInputCommand {
+export declare namespace ChatInputCommand {
 	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
 	/** Shorthand for {@link Command.JSON}. */

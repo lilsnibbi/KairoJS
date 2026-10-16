@@ -207,12 +207,12 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	 * Delegate with yield* inside safeTry. Ok returns its value; Err yields itself to stop the generator early.
 	 * @throws ResultError if an Err generator is resumed outside safeTry.
 	 */
-	public *unwrapSafe(): Generator<Err<E, T>, T> {
+	public *unwrapSafe(): Generator<Err<E>, T> {
 		if (this.isOk()) {
 			return this[ValueProperty];
 		}
 
-		yield this as Err<E, T>;
+		yield this as unknown as Err<E>;
 		throw new ResultError(
 			"Should not be used outside of a safe try generator",
 			this[ValueProperty],
@@ -250,25 +250,25 @@ export class Result<T, E, const Success extends boolean = boolean> {
 
 	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
 	public contains<const Value extends T>(
-		this: Ok<T>,
+		this: Ok<T, E>,
 		value: Value,
 	): this is Ok<Value>;
 	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
-	public contains(this: Err<E>, value: T): false;
+	public contains(this: Err<E, T>, value: unknown): false;
 	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
-	public contains(value: T): boolean {
+	public contains(value: unknown): boolean {
 		return this.isOkAnd((inner) => inner === value);
 	}
 
 	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
-	public containsErr(this: Ok<T>, error: E): false;
+	public containsErr(this: Ok<T, E>, error: unknown): false;
 	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
 	public containsErr<const Value extends E>(
-		this: Err<E>,
+		this: Err<E, T>,
 		error: Value,
 	): this is Err<Value>;
 	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
-	public containsErr(error: E): boolean {
+	public containsErr(error: unknown): boolean {
 		return this.isErrAnd((inner) => inner === error);
 	}
 
@@ -308,19 +308,15 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	}
 
 	/** Check branch equality and strict equality of the stored values. Objects compare by identity. */
-	public eq<
-		OtherValue extends T,
-		OtherError extends E,
-		OtherSuccess extends boolean,
-	>(
+	public eq<OtherValue, OtherError, OtherSuccess extends boolean>(
 		other: Result<OtherValue, OtherError, OtherSuccess>,
-	): this is Result<OtherValue, OtherError, OtherSuccess> {
+	): this is this & Result<OtherValue, OtherError, OtherSuccess> {
 		const value: unknown = this[ValueProperty];
 		return this.isOk() === other.isOk() && value === other[ValueProperty];
 	}
 
 	/** Return the opposite of eq. */
-	public ne(other: Result<T, E>): boolean {
+	public ne(other: AnyResult): boolean {
 		return !this.eq(other);
 	}
 
@@ -339,9 +335,10 @@ export class Result<T, E, const Success extends boolean = boolean> {
 			err(this: Err<E>, error: E): ErrValue;
 		},
 	): OkValue | ErrValue {
+		// The absent branch has no stored value; erase only that branch's type.
 		return this.isOk()
-			? branches.ok.call(this, this[ValueProperty])
-			: branches.err.call(this, this[ValueProperty]);
+			? branches.ok.call(this as unknown as Ok<T>, this[ValueProperty])
+			: branches.err.call(this as unknown as Err<E>, this[ValueProperty]);
 	}
 
 	/** Yield the Ok value once, or yield nothing for Err. */
@@ -355,21 +352,21 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	}
 
 	/** This function, in combination with `[$]`, is intended to emulate Rust's ? operator. */
-	public get [UnwrapSafeProperty](): Generator<Err<E, T>, T> {
+	public get [UnwrapSafeProperty](): Generator<Err<E>, T> {
 		return this.unwrapSafe();
 	}
 
 	/** Create Ok(value). Omitting value stores undefined. */
-	public static ok<T = undefined, E = any>(this: void, value?: T): Ok<T, E>;
+	public static ok<T = undefined, E = never>(this: void, value?: T): Ok<T, E>;
 	/** Create Ok(value). Omitting value stores undefined. */
-	public static ok<T, E = any>(this: void, value: T): Ok<T, E> {
+	public static ok<T, E = never>(this: void, value: T): Ok<T, E> {
 		return new Result<T, E, true>(value, true);
 	}
 
 	/** Create Err(value). Omitting value stores undefined. */
-	public static err<E = undefined, T = any>(this: void, value?: E): Err<E, T>;
+	public static err<E = undefined, T = never>(this: void, value?: E): Err<E, T>;
 	/** Create Err(value). Omitting value stores undefined. */
-	public static err<E, T = any>(this: void, value: E): Err<E, T> {
+	public static err<E, T = never>(this: void, value: E): Err<E, T> {
 		return new Result<T, E, false>(value, false);
 	}
 
@@ -427,7 +424,8 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	): Result<UnwrapOkArray<Entries>, UnwrapErrArray<Entries>[number]> {
 		const values: unknown[] = [];
 		for (const result of results) {
-			if (result.isErr()) return result;
+			if (result.isErr())
+				return result as unknown as Err<UnwrapErrArray<Entries>[number]>;
 
 			values.push(result[ValueProperty]);
 		}
@@ -442,7 +440,8 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	): Result<UnwrapOk<Entries[number]>, UnwrapErrArray<Entries>> {
 		const errors: unknown[] = [];
 		for (const result of results) {
-			if (result.isOk()) return result;
+			if (result.isOk())
+				return result as unknown as Ok<UnwrapOk<Entries[number]>>;
 
 			errors.push(result[ValueProperty]);
 		}
@@ -490,21 +489,22 @@ export class Result<T, E, const Success extends boolean = boolean> {
 }
 
 /** Types and helpers for {@link Result}. */
-export namespace Result {
+export declare namespace Result {
 	/** Result whose branch is known to hold a successful value. */
-	export type Ok<T, E = any> = Result<T, E, true>;
+	export type Ok<T, E = never> = Result<T, E, true>;
 	/** Result whose branch is known to hold an error. */
-	export type Err<E, T = any> = Result<T, E, false>;
+	export type Err<E, T = never> = Result<T, E, false>;
 	/** Result with unrestricted value and error types. */
-	export type Any = Result<any, any>;
+	export type Any = Result<unknown, unknown>;
 	/** Value or existing Result accepted by Result.from. */
-	export type Resolvable<T, E = any, Success extends boolean = boolean> =
+	export type Resolvable<T, E = never, Success extends boolean = boolean> =
 		T | Result<T, E, Success>;
 	/** Extract the Ok value type, or never when no Ok branch exists. */
-	export type UnwrapOk<T extends AnyResult> = T extends Ok<infer S> ? S : never;
+	export type UnwrapOk<T extends AnyResult> =
+		T extends Ok<infer S, unknown> ? S : never;
 	/** Extract the Err error type, or never when no Err branch exists. */
 	export type UnwrapErr<T extends AnyResult> =
-		T extends Err<infer S> ? S : never;
+		T extends Err<infer S, unknown> ? S : never;
 
 	/** Map a Result tuple or array to its Ok value types. */
 	export type UnwrapOkArray<T extends readonly AnyResult[] | []> = {
@@ -532,14 +532,14 @@ async function* unwrapSafeAsync<T, E>(
 /** Value or existing Result accepted by Result.from. */
 export type ResultResolvable<
 	T,
-	E = any,
+	E = never,
 	Success extends boolean = boolean,
 > = Result.Resolvable<T, E, Success>;
 
 /** Result whose branch is known to be successful. */
-export type Ok<T, E = any> = Result.Ok<T, E>;
+export type Ok<T, E = never> = Result.Ok<T, E>;
 /** Result whose branch is known to be an error. */
-export type Err<E, T = any> = Result.Err<E, T>;
+export type Err<E, T = never> = Result.Err<E, T>;
 /** Result with unrestricted value and error types. */
 export type AnyResult = Result.Any;
 

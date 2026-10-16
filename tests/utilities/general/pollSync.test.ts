@@ -108,7 +108,7 @@ describe("pollSync", () => {
 				const cbCondition = jest.fn(cbConditionRaw);
 				const callback = () =>
 					pollSync(cb, cbCondition, {
-						waitBetweenRetries: waitBetweenRetries as any,
+						waitBetweenRetries: waitBetweenRetries as unknown as number,
 					});
 
 				expect(callback).toThrowError(

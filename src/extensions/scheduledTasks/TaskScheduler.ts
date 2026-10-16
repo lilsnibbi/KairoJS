@@ -92,6 +92,7 @@ export class TaskScheduler {
 					throw new AggregateError(
 						[cause, cleanup],
 						"Scheduler startup and cleanup failed.",
+						{ cause: cleanup },
 					);
 				}
 				throw cause;

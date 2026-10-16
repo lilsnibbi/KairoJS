@@ -50,7 +50,7 @@ describe("partition", () => {
 
 	test("GIVEN iterable and invalid predicate THEN throws TypeError", () => {
 		const iterable = [1, 2, 3, 4, 5];
-		const predicate = "invalid" as any;
+		const predicate = "invalid" as unknown as Parameters<typeof partition>[1];
 		expect(() => partition(iterable, predicate)).toThrow(
 			new TypeError("invalid must be a function"),
 		);

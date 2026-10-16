@@ -238,7 +238,7 @@ export interface PreconditionContext extends Record<PropertyKey, unknown> {
 }
 
 /** Types and helpers for {@link Precondition}. */
-export namespace Precondition {
+export declare namespace Precondition {
 	/** Shorthand for {@link PreconditionOptions}. */
 	export type Options = PreconditionOptions;
 	/** Shorthand for {@link Module.Context}. */
@@ -252,7 +252,7 @@ export namespace Precondition {
 }
 
 /** Types and helpers for {@link AllFlowsPrecondition}. */
-export namespace AllFlowsPrecondition {
+export declare namespace AllFlowsPrecondition {
 	/** Shorthand for {@link PreconditionOptions}. */
 	export type Options = PreconditionOptions;
 	/** Shorthand for {@link Module.Context}. */

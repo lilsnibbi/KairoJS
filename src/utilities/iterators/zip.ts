@@ -5,12 +5,12 @@ import { from, type IterableResolvable } from "./from";
  * final tuple may already have advanced.
  */
 export function* zip<
-	const Iterables extends readonly IterableResolvable<any>[],
+	const Iterables extends readonly IterableResolvable<unknown>[],
 >(...iterables: Iterables): ZipIterators<Iterables> {
 	const resolvedIterables = iterables.map((iterable) => from(iterable));
 	if (!resolvedIterables.length) return;
 	while (true) {
-		const results = [] as any[];
+		const results = [] as unknown[];
 		for (const resolvedIterable of resolvedIterables) {
 			const result = resolvedIterable.next();
 			if (result.done) return;
@@ -18,16 +18,19 @@ export function* zip<
 			results.push(result.value);
 		}
 
-		yield results as any;
+		yield results as ZipValues<Iterables>;
 	}
 }
 
 /** Iterator of tuples containing one value from each supplied source. */
-export type ZipIterators<Iterators extends readonly IterableResolvable<any>[]> =
-	IterableIterator<{
-		-readonly [P in keyof Iterators]: Iterators[P] extends IterableResolvable<
-			infer T
-		>
-			? T
-			: never;
-	}>;
+export type ZipIterators<
+	Iterators extends readonly IterableResolvable<unknown>[],
+> = IterableIterator<ZipValues<Iterators>>;
+
+type ZipValues<Iterators extends readonly IterableResolvable<unknown>[]> = {
+	-readonly [P in keyof Iterators]: Iterators[P] extends IterableResolvable<
+		infer T
+	>
+		? T
+		: never;
+};

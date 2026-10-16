@@ -5,9 +5,8 @@ import { EventIterator } from "../../../../src/utilities/async/events/index";
 describe("EventIterator cleanup", () => {
 	test("ignores an event captured before another listener ended the iterator", async () => {
 		const emitter = new EventEmitter();
-		let iterator: EventIterator<[number]>;
 		emitter.on("value", () => iterator.end());
-		iterator = new EventIterator<[number]>(emitter, "value");
+		const iterator = new EventIterator<[number]>(emitter, "value");
 		const pending = iterator.next();
 		emitter.emit("value", 7);
 		expect(await pending).toEqual({ done: true, value: undefined });

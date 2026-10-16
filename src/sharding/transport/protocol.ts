@@ -85,12 +85,14 @@ const schemas = {
 	cancel: type({}),
 };
 export type Op = keyof typeof schemas;
-export interface Frame {
-	v: 1;
-	op: Op;
-	id: string;
-	data: any;
-}
+export type Frame<K extends Op = Op> = K extends Op
+	? {
+			v: 1;
+			op: K;
+			id: string;
+			data: (typeof schemas)[K]["infer"];
+		}
+	: never;
 const envelope = type({
 	v: "1",
 	op: identifier,
@@ -123,12 +125,12 @@ export function timeout(value: number): number {
 		throw new ShardError("CONFIG", "Deadline must be 1..300000ms.");
 	return value;
 }
-export function frame(
-	op: Op,
+export function frame<K extends Op>(
+	op: K,
 	id: string = crypto.randomUUID(),
-	data: any = {},
-): Frame {
-	return { v: 1, op, id, data };
+	data: object = {},
+): Frame<K> {
+	return { v: 1, op, id, data } as Frame<K>;
 }
 /** Refuse lossy JSON (undefined, cycles, accessors, classes, non-finite numbers) and bound depth/nodes. */
 export function encode(value: unknown, maxBytes: number): string {
@@ -193,16 +195,16 @@ export function encode(value: unknown, maxBytes: number): string {
 		throw new ShardError("PAYLOAD", "Message exceeds maxBytes.");
 	return encoded;
 }
-export function decode(
+export function decode<K extends Op>(
 	value: unknown,
 	maxBytes: number,
-	allowed: readonly Op[],
-): Frame {
+	allowed: readonly K[],
+): Frame<K> {
 	if (typeof value !== "string" || Buffer.byteLength(value) > maxBytes)
 		throw new ShardError("PROTOCOL", "Expected bounded JSON text.");
 	const parsed = envelope.assert(JSON.parse(value));
 	const op = parsed.op as Op;
-	if (!allowed.includes(op) || !Object.hasOwn(schemas, op))
+	if (!allowed.includes(op as K) || !Object.hasOwn(schemas, op))
 		throw new ShardError("PROTOCOL", "Unexpected message operation.");
 	encode(parsed, maxBytes);
 	const schema = schemas[op];
@@ -238,7 +240,7 @@ export function decode(
 	};
 	if (Object.keys(data).some((key) => !keys[op].includes(key)))
 		throw new ShardError("PROTOCOL", "Unexpected message fields.");
-	return parsed as Frame;
+	return parsed as Frame<K>;
 }
 export function failure(error: unknown): {
 	ok: false;
@@ -286,7 +288,12 @@ export function loopback(host: string): boolean {
 	return ["127.0.0.1", "localhost", "::1", "[::1]"].includes(host);
 }
 export function sendSocket(
-	socket: WebSocket | Bun.ServerWebSocket<any>,
+	socket:
+		| Pick<WebSocket, "readyState" | "bufferedAmount" | "send">
+		| Pick<
+				Bun.ServerWebSocket<unknown>,
+				"readyState" | "getBufferedAmount" | "send"
+		  >,
 	message: Frame,
 	policy: Limits,
 ): void {

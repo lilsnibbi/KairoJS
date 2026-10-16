@@ -52,10 +52,15 @@ export class PaginatedFieldMessageEmbed<T> extends PaginatedMessage {
 		return this;
 	}
 
-	/** Set a format callback that will be mapped to each embed field in the array of items when the embed is paginated. This should convert each item to a format that is either text itself or can be serialized as text. */
-	public formatItems(formatter: (item: T, index: number, array: T[]) => any) {
-		this.items = this.items.map(formatter);
-		return this;
+	/** Transform the stored items in place. Use the returned instance to retain the new item type when chaining calls. */
+	public formatItems<R>(
+		formatter: (item: T, index: number, array: T[]) => R,
+	): PaginatedFieldMessageEmbed<R> {
+		const items = this.items.map(formatter);
+		// The fluent result carries the item type after this in-place transformation.
+		const formatted = this as unknown as PaginatedFieldMessageEmbed<R>;
+		formatted.items = items;
+		return formatted;
 	}
 
 	/** Build the pages of the given array.  You must call the {@link PaginatedFieldMessageEmbed.make} and {@link PaginatedFieldMessageEmbed.run} methods last, in that order, for the pagination to work. */

@@ -23,7 +23,7 @@ export class UserError extends Error {
 }
 
 /** Types and helpers for {@link UserError}. */
-export namespace UserError {
+export declare namespace UserError {
 	/** The options for {@link UserError}. */
 	export interface Options {
 		/** The identifier for this error. */

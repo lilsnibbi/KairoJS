@@ -391,7 +391,7 @@ export class Command<
 }
 
 /** Types and helpers for {@link Command}. */
-export namespace Command {
+export declare namespace Command {
 	/** Shorthand for {@link CommandOptions}. */
 	export type Options = CommandOptions;
 	/** Shorthand for {@link CommandJSON}. */

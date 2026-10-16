@@ -38,7 +38,10 @@ describe("BitField", () => {
 		test.each([true, 42, 10n, "foo", undefined])(
 			"GIVEN a non-object THEN throws TypeError",
 			(value) => {
-				const given = () => new BitField(value as any);
+				const given = () =>
+					new BitField(
+						value as unknown as ConstructorParameters<typeof BitField>[0],
+					);
 				const expected = "flags must be a non-null object";
 
 				expect(given).toThrowError(expected);
@@ -46,7 +49,10 @@ describe("BitField", () => {
 		);
 
 		test("GIVEN a null object THEN throws TypeError", () => {
-			const given = () => new BitField(null as any);
+			const given = () =>
+				new BitField(
+					null as unknown as ConstructorParameters<typeof BitField>[0],
+				);
 			const expected = "flags must be a non-null object";
 
 			expect(given).toThrowError(expected);
@@ -62,7 +68,10 @@ describe("BitField", () => {
 		test.each([true, {}, undefined, null, "foo"])(
 			"GIVEN a null object THEN throws TypeError",
 			(value) => {
-				const given = () => new BitField({ Read: value } as any);
+				const given = () =>
+					new BitField({ Read: value } as unknown as ConstructorParameters<
+						typeof BitField
+					>[0]);
 				const expected =
 					"A bitfield can only use numbers or bigints for its values";
 
@@ -74,7 +83,11 @@ describe("BitField", () => {
 			test.each([true, {}, 42n, undefined, null, "foo"])(
 				"GIVEN a null object THEN throws TypeError",
 				(value) => {
-					const given = () => new BitField({ Read: 1, Write: value } as any);
+					const given = () =>
+						new BitField({
+							Read: 1,
+							Write: value,
+						} as unknown as ConstructorParameters<typeof BitField>[0]);
 					const expected = 'The property "Write" does not resolve to a number';
 
 					expect(given).toThrowError(expected);
@@ -108,7 +121,11 @@ describe("BitField", () => {
 			test.each([true, {}, 42, undefined, null, "foo"])(
 				"GIVEN a null object THEN throws TypeError",
 				(value) => {
-					const given = () => new BitField({ Read: 1n, Write: value } as any);
+					const given = () =>
+						new BitField({
+							Read: 1n,
+							Write: value,
+						} as unknown as ConstructorParameters<typeof BitField>[0]);
 					const expected = 'The property "Write" does not resolve to a bigint';
 
 					expect(given).toThrowError(expected);
@@ -170,7 +187,10 @@ describe("BitField", () => {
 			test.each([4n, undefined, true])(
 				"GIVEN %s THEN throws TypeError",
 				(value) => {
-					const given = () => bitfield.resolve(value as any);
+					const given = () =>
+						bitfield.resolve(
+							value as unknown as Parameters<typeof bitfield.resolve>[0],
+						);
 					const expected =
 						'Received a value that is not either type "string", type "number", or an Array';
 
@@ -181,7 +201,10 @@ describe("BitField", () => {
 			test.each(["Execute", "Foo"])(
 				"GIVEN %s THEN throws RangeError",
 				(value) => {
-					const given = () => bitfield.resolve(value as any);
+					const given = () =>
+						bitfield.resolve(
+							value as unknown as Parameters<typeof bitfield.resolve>[0],
+						);
 					const expected =
 						"Received a name that could not be resolved to a property of flags";
 
@@ -192,7 +215,10 @@ describe("BitField", () => {
 			test.each([null, {}])(
 				"GIVEN non-Array object THEN throws TypeError",
 				(value) => {
-					const given = () => bitfield.resolve(value as any);
+					const given = () =>
+						bitfield.resolve(
+							value as unknown as Parameters<typeof bitfield.resolve>[0],
+						);
 					const expected = "Received an object value that is not an Array";
 
 					expect(given).toThrowError(expected);

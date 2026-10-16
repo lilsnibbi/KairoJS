@@ -25,7 +25,7 @@ describe("map", () => {
 
 	test("GIVEN iterable and invalid callback function THEN throws TypeError", () => {
 		const iterable = [1, 2, 3];
-		const callbackFn = "invalid" as any;
+		const callbackFn = "invalid" as unknown as Parameters<typeof map>[1];
 		expect(() => [...map(iterable, callbackFn)]).toThrow(
 			new TypeError("invalid must be a function"),
 		);

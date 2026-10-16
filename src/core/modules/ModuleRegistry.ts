@@ -66,7 +66,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 		if (this.loadPromise) return this.loadPromise;
 		this.startup = Promise.resolve().then(async () => {
 			await this.beforeLoad?.();
-			const imports = new Map<string, Promise<any>>();
+			const imports = new Map<string, Promise<Record<string, unknown>>>();
 			const staged = new Map<ModuleStore<Module>, Module[]>();
 			for (const store of this.values() as IterableIterator<
 				ModuleStore<Module>
@@ -123,6 +123,7 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 				throw new AggregateError(
 					[cause, cleanup],
 					"Startup and cleanup failed.",
+					{ cause: cleanup },
 				);
 			}
 			throw cause;

@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
 /** Consume equally sized arrays into one output array per column. Empty input, non-array values, or unequal row lengths throw. */
-export function unzip<const ElementType extends readonly any[]>(
+export function unzip<const ElementType extends readonly unknown[]>(
 	iterable: IterableResolvable<ElementType>,
 ): UnzipIterable<ElementType> {
 	const resolvedIterable = toIterableIterator(iterable);
@@ -38,6 +38,6 @@ export function unzip<const ElementType extends readonly any[]>(
 }
 
 /** Column-array tuple produced by unzipping rows of the supplied tuple type. */
-export type UnzipIterable<ElementType extends readonly any[]> = {
+export type UnzipIterable<ElementType extends readonly unknown[]> = {
 	-readonly [P in keyof ElementType]: ElementType[P][];
 };

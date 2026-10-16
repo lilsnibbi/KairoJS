@@ -1,10 +1,12 @@
 /** The function precondition interface. */
-export type FunctionPrecondition = (
-	...args: any[]
+export type FunctionPrecondition<Args extends unknown[] = never[]> = (
+	...args: Args
 ) => boolean | Promise<boolean>;
 
 /** The fallback interface, this is called when the function precondition returns or resolves with a falsy value. */
-export type FunctionFallback = (...args: any[]) => unknown;
+export type FunctionFallback<Args extends unknown[] = never[]> = (
+	...args: Args
+) => unknown;
 
 /** Service to make a method decorator with lighter syntax and inferred types. */
 export function createMethodDecorator(fn: MethodDecorator): MethodDecorator {
@@ -12,16 +14,16 @@ export function createMethodDecorator(fn: MethodDecorator): MethodDecorator {
 }
 
 /** Service to make a class decorator with lighter syntax and inferred types. */
-export function createClassDecorator<
-	TFunction extends (...args: any[]) => void,
->(fn: TFunction): ClassDecorator {
-	return fn;
+export function createClassDecorator<TFunction extends (target: never) => void>(
+	fn: TFunction,
+): ClassDecorator {
+	return fn as unknown as ClassDecorator;
 }
 
 /** Service to make function preconditions. */
-export function createFunctionPrecondition(
-	precondition: FunctionPrecondition,
-	fallback: FunctionFallback = (): void => undefined,
+export function createFunctionPrecondition<Args extends unknown[]>(
+	precondition: FunctionPrecondition<Args>,
+	fallback: FunctionFallback<Args> = (): void => undefined,
 ): MethodDecorator {
 	return createMethodDecorator((_target, _propertyKey, descriptor) => {
 		const method = descriptor.value;
@@ -32,8 +34,8 @@ export function createFunctionPrecondition(
 			);
 
 		descriptor.value = async function descriptorValue(
-			this: (...args: any[]) => any,
-			...args: any[]
+			this: unknown,
+			...args: Args
 		) {
 			const canRun = await precondition(...args);
 			return canRun ? method.call(this, ...args) : fallback.call(this, ...args);

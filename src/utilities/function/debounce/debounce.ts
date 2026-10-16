@@ -19,7 +19,10 @@ export interface DebounceSettings {
 }
 
 /** Debounced callback returning the most recent result, with cancellation and immediate-flush helpers. */
-export interface DebouncedFunc<FnArgumentsType extends any[], FnReturnType> {
+export interface DebouncedFunc<
+	FnArgumentsType extends unknown[],
+	FnReturnType,
+> {
 	/** Call the original function, but applying the debounce rules. */
 	(...args: FnArgumentsType): FnReturnType | undefined;
 
@@ -37,7 +40,7 @@ export interface DebouncedFunc<FnArgumentsType extends any[], FnReturnType> {
  * @returns A debounced callback with cancel() and flush(). It returns the latest completed invocation result, or
  * undefined.
  */
-export function debounce<FnArgumentsType extends any[], FnReturnType>(
+export function debounce<FnArgumentsType extends unknown[], FnReturnType>(
 	func: (...args: FnArgumentsType) => FnReturnType,
 	options: DebounceSettings = {},
 ): DebouncedFunc<FnArgumentsType, FnReturnType> {

@@ -1,4 +1,6 @@
 import {
+	type MessageEditOptions,
+	type MessageReplyOptions,
 	ActionRowBuilder,
 	type ActionRowComponentOptions,
 	type APIActionRowComponent,
@@ -235,7 +237,8 @@ export async function safelyReplyToInteraction<T extends "edit" | "reply">(
 		isMessageInstance(parameters.messageOrInteraction)
 	) {
 		await parameters.messageOrInteraction[parameters.messageMethod](
-			parameters.messageMethodContent as any,
+			parameters.messageMethodContent as MessageEditOptions &
+				MessageReplyOptions,
 		);
 	}
 }

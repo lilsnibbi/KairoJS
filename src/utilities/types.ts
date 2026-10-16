@@ -3,13 +3,19 @@ export type Primitive =
 	string | number | boolean | bigint | symbol | undefined | null;
 
 /** Primitive, function, Date, Error, or RegExp left intact by the deep utility types. */
-export type Builtin = Primitive | Function | Date | Error | RegExp;
+export type Builtin =
+	| Primitive
+	| ((...args: never[]) => unknown)
+	| AbstractConstructor<unknown>
+	| Date
+	| Error
+	| RegExp;
 
 /** Recursively make object fields and collection values read-only at the type level. Built-ins and callable types are preserved. */
 export type DeepReadonly<T> = T extends Builtin
 	? T
 	: // Skip class constructors and functions
-		T extends AbstractConstructor<unknown> | ((...args: any[]) => unknown)
+		T extends AbstractConstructor<unknown> | ((...args: never[]) => unknown)
 		? T
 		: T extends ReadonlyMap<infer K, infer V>
 			? ReadonlyMap<DeepReadonly<K>, DeepReadonly<V>>
@@ -44,7 +50,7 @@ export type DeepRequired<T> = T extends Builtin
 							? WeakSet<DeepRequired<U>>
 							: T extends Promise<infer U>
 								? Promise<DeepRequired<U>>
-								: T extends {}
+								: T extends NonNullable<unknown>
 									? { [K in keyof T]-?: DeepRequired<T[K]> }
 									: NonNullable<T>;
 
@@ -66,31 +72,37 @@ export type DeepPartial<T> = {
 };
 
 /** Extract a function’s parameter tuple. */
-export type ArgumentTypes<F extends (...args: any[]) => unknown> = F extends (
+export type ArgumentTypes<F extends (...args: never[]) => unknown> = F extends (
 	...args: infer A
-) => any
+) => unknown
 	? A
 	: never;
 
 /** A readonly array of any values. */
-export type AnyReadonlyArray = readonly any[];
+export type AnyReadonlyArray = readonly unknown[];
 
 /** A generic constructor with parameters */
-export type Ctor<A extends AnyReadonlyArray = readonly any[], R = any> = new (
-	...args: A
-) => R;
+export type Ctor<
+	A extends AnyReadonlyArray = readonly never[],
+	R = unknown,
+> = new (...args: A) => R;
 
 /** A generic abstract constructor with parameters */
 export type AbstractCtor<
-	A extends AnyReadonlyArray = readonly any[],
-	R = any,
+	A extends AnyReadonlyArray = readonly never[],
+	R = unknown,
 > = abstract new (...args: A) => R;
 
-/** Class constructor producing T, with any constructor arguments. */
-export type Constructor<T> = new (...args: any[]) => T;
+/** Constructor producing T. Supply Args to call it with a known parameter tuple; the default accepts arbitrary constructor signatures for type constraints. */
+export type Constructor<T, Args extends readonly unknown[] = never[]> = new (
+	...args: Args
+) => T;
 
-/** Abstract class constructor producing T, with any constructor arguments. */
-export type AbstractConstructor<T> = abstract new (...args: any[]) => T;
+/** Abstract constructor producing T. Supply Args for its parameter tuple; the default accepts arbitrary constructor signatures for type constraints. */
+export type AbstractConstructor<
+	T,
+	Args extends readonly unknown[] = never[],
+> = abstract new (...args: Args) => T;
 
 /** Get the first argument of any given function */
 export type FirstArgument<T> = T extends (
@@ -122,7 +134,7 @@ export type NonNullableProperties<T = unknown> = {
 
 /** An object that is non nullable, to bypass TypeScript not easily working with `Record<PropertyKey, unknown>` in various instances.
  * @deprecated Use the `object` type instead. */
-export type NonNullObject = {} & object;
+export type NonNullObject = object;
 
 /** An object with string keys. Prefer the built-in object type.
  * @deprecated Use the `object` type instead. */

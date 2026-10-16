@@ -23,7 +23,10 @@ describe("sharding transport boundaries", () => {
 			}),
 			1024,
 		);
-		expect(decode(valid, 1024, ["call"]).data.payload.empty).toEqual([]);
+		expect(decode(valid, 1024, ["call"]).data.payload).toEqual({
+			empty: [],
+			value: null,
+		});
 		for (const value of [
 			valid.replace('"v":1', '"v":2'),
 			valid.replace('"target":1', '"target":-1'),
@@ -44,7 +47,7 @@ describe("sharding transport boundaries", () => {
 				return 1;
 			},
 		};
-		const cycle: any = {};
+		const cycle: { self?: unknown } = {};
 		cycle.self = cycle;
 		for (const value of [
 			undefined,
@@ -62,7 +65,7 @@ describe("sharding transport boundaries", () => {
 		])
 			expect(() => encode(value, 1024)).toThrow();
 		expect(read).toBe(false);
-		let deep: any = {};
+		let deep: unknown = {};
 		for (let i = 0; i < 40; i++) deep = { deep };
 		expect(() => encode(deep, 1024)).toThrow();
 		expect(() => encode("🙂".repeat(400), 1024)).toThrow();
@@ -73,24 +76,24 @@ describe("sharding transport boundaries", () => {
 		expect(tokenMatches(null, "secret")).toBe(false);
 		let count = 0;
 		const socket = {
-			readyState: 1,
+			readyState: 1 as const,
 			getBufferedAmount: () => 0,
 			send: () => {
 				count++;
 				return -1;
 			},
 		};
-		sendSocket(socket as any, frame("ping"), limits());
+		sendSocket(socket, frame("ping"), limits());
 		expect(count).toBe(1);
 		expect(() =>
 			sendSocket(
-				{ ...socket, getBufferedAmount: () => 262144 } as any,
+				{ ...socket, getBufferedAmount: () => 262144 },
 				frame("ping"),
 				limits(),
 			),
 		).toThrow("buffer");
 		expect(() =>
-			sendSocket({ ...socket, send: () => 0 } as any, frame("ping"), limits()),
+			sendSocket({ ...socket, send: () => 0 }, frame("ping"), limits()),
 		).toThrow("dropped");
 	});
 	test("bounds, cancels, times out and drains pending requests", async () => {

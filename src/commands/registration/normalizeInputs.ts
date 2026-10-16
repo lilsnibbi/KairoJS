@@ -100,7 +100,9 @@ export function normalizeChatInputCommand(
 		finalObject.options = command.options.map(
 			(option) =>
 				ApplicationCommand["transformOption"](
-					option,
+					option as Parameters<
+						(typeof ApplicationCommand)["transformOption"]
+					>[0],
 				) as APIApplicationCommandOption,
 		);
 	}
@@ -189,7 +191,9 @@ export function convertApplicationCommandToApiData(
 		returnData.options = command.options.map(
 			(option) =>
 				ApplicationCommand["transformOption"](
-					option as any,
+					option as Parameters<
+						(typeof ApplicationCommand)["transformOption"]
+					>[0],
 				) as APIApplicationCommandOption,
 		);
 	}

@@ -1,5 +1,5 @@
 /** Throttled function returning its last invocation result. It also provides a timer reset helper. */
-export type ThrottleFn<T extends (...args: any[]) => any> = T & {
+export type ThrottleFn<T extends (...args: never[]) => unknown> = T & {
 	/** Reset the last-invocation timestamp so a later call can run immediately; does not invoke the callback. */
 	flush: () => void;
 };
@@ -11,7 +11,7 @@ export type ThrottleFn<T extends (...args: any[]) => any> = T & {
  * @param wait - Minimum interval in milliseconds.
  * @returns A function with flush() to reset the interval; no trailing call is scheduled.
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: never[]) => unknown>(
 	func: T,
 	wait: number,
 ): ThrottleFn<T> {
@@ -23,7 +23,7 @@ export function throttle<T extends (...args: any[]) => any>(
 			const now = Date.now();
 			if (now - prev > wait) {
 				prev = now;
-				return (prevValue = func(...args));
+				return (prevValue = func(...args) as ReturnType<T>);
 			}
 
 			return prevValue;

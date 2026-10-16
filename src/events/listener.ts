@@ -20,7 +20,7 @@ export abstract class Listener<
 	/** Whether the listener will be unloaded after the first run. */
 	public readonly once: boolean;
 
-	private _listener: ((...args: any[]) => void) | null;
+	private _listener: ((...args: unknown[]) => void) | null;
 
 	/**
 	 * Select an emitter, event, and once behavior without attaching the callback yet.
@@ -110,7 +110,7 @@ export interface ListenerJSON extends Module.JSON {
 }
 
 /** Types and helpers for {@link Listener}. */
-export namespace Listener {
+export declare namespace Listener {
 	/** Shorthand for {@link ListenerOptions}. */
 	export type Options = ListenerOptions;
 	/** Shorthand for {@link ListenerJSON}. */

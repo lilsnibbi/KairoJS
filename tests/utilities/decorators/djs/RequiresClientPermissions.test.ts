@@ -24,7 +24,7 @@ interface Message {
 		permissionsFor(): BitField;
 	};
 	guild: {
-		members: any;
+		members: { me: string };
 	};
 }
 

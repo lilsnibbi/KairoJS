@@ -429,7 +429,7 @@ export class ArgumentStream {
 }
 
 /** Types and helpers for {@link ArgumentStream}. */
-export namespace ArgumentStream {
+export declare namespace ArgumentStream {
 	/** Consumption state for positional arguments. */
 	export interface State {
 		/** Zero-based positions already consumed. */

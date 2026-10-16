@@ -1,6 +1,4 @@
 import type { IterableResolvable } from "./from";
-import type { isSorted } from "./isSorted";
-import type { isSortedByKey } from "./isSortedByKey";
 import { assertFunction } from "./shared/_assertFunction";
 import {
 	type CompareByComparator,

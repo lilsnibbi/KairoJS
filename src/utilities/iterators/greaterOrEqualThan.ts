@@ -1,9 +1,6 @@
 import { compare } from "./compare";
 import type { IterableResolvable } from "./from";
-import {
-	type LexicographicComparison,
-	orderingIsLess,
-} from "./shared/_compare";
+import { orderingIsLess } from "./shared/_compare";
 
 /** Compare sources in string order and return whether the first is greater than or equal to the second. Undefined sorts last. */
 export function greaterOrEqualThan<const ElementType>(

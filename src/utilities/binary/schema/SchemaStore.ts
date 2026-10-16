@@ -8,7 +8,10 @@ export class SchemaStore<Entries extends object = object> {
 	/** Word capacity supplied when serializing variable-size schemas. Defaults to 100. */
 	public defaultMaximumArrayLength: number;
 
-	readonly #schemas = new Map<number, Schema>();
+	readonly #schemas = new Map<
+		number,
+		Pick<Schema, "serialize" | "serializeRaw" | "deserialize">
+	>();
 
 	/** Create a new schema store */
 	public constructor(defaultMaximumArrayLength = 100) {
@@ -27,7 +30,7 @@ export class SchemaStore<Entries extends object = object> {
 			throw new Error(`Schema with id ${schema.id} already exists`);
 		}
 
-		this.#schemas.set(schema.id, schema as any);
+		this.#schemas.set(schema.id, schema);
 		return this as unknown as Merge<Entries, Id, typeof schema>;
 	}
 

@@ -26,7 +26,7 @@ export class PreCommandRunListener extends Listener<
 				this.container.modules.require(
 					"preconditions",
 				) as unknown as PreconditionStore
-			).messageRun(message, command, commandPayload as any);
+			).messageRun(message, command, commandPayload);
 
 			if (globalResult.isErr()) {
 				message.client.emit(
@@ -41,7 +41,7 @@ export class PreCommandRunListener extends Listener<
 			const localResult = await command.preconditions.messageRun(
 				message,
 				command,
-				payload as any,
+				payload,
 			);
 			if (localResult.isErr()) {
 				message.client.emit(

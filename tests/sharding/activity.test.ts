@@ -76,7 +76,7 @@ async function peer(
 	socket.addEventListener("close", () => {
 		closed = true;
 	});
-	const next = async (op: Op, id?: string) => {
+	const next = async <K extends Op>(op: K, id?: string) => {
 		await until(
 			() =>
 				messages.some(
@@ -89,7 +89,7 @@ async function peer(
 				(message) => message.op === op && (!id || message.id === id),
 			),
 			1,
-		)[0];
+		)[0] as Frame<K>;
 	};
 	await next("welcome");
 	return {
@@ -99,7 +99,11 @@ async function peer(
 		get closed() {
 			return closed;
 		},
-		send(op: Op, data: any = {}, id: string = crypto.randomUUID()) {
+		send(
+			op: Op,
+			data: Record<string, unknown> = {},
+			id: string = crypto.randomUUID(),
+		) {
 			if (op === "ready")
 				socket.send(
 					encode(
@@ -211,9 +215,10 @@ for (const level of ["info", "debug"] as const) {
 				},
 				invocation.id,
 			);
-			expect((await host.next("reply", requestId)).data.value).toBe(
-				"fixture-sensitive-result",
-			);
+			expect((await host.next("reply", requestId)).data).toEqual({
+				ok: true,
+				value: "fixture-sensitive-result",
+			});
 			host.send("offline", { shard: 0, generation: "fixture-generation" });
 			const release = host.send("release");
 			await host.next("released", release);
@@ -380,8 +385,14 @@ test("request outcomes retain correlation and report capacity, timeout, cancella
 		const timed = a.send("call", call);
 		const timedInvoke = await b.next("invoke");
 		const capacity = a.send("call", call);
-		expect((await a.next("reply", capacity)).data.error.code).toBe("CAPACITY");
-		expect((await a.next("reply", timed)).data.error.code).toBe("TIMEOUT");
+		expect((await a.next("reply", capacity)).data).toMatchObject({
+			ok: false,
+			error: { code: "CAPACITY" },
+		});
+		expect((await a.next("reply", timed)).data).toMatchObject({
+			ok: false,
+			error: { code: "TIMEOUT" },
+		});
 		expect(String(logs.event("request_timed_out")[0].value)).toContain(
 			`requestId=${timed}`,
 		);
@@ -391,7 +402,10 @@ test("request outcomes retain correlation and report capacity, timeout, cancella
 		const cancelled = a.send("call", { ...call, timeoutMs: 1000 });
 		await b.next("invoke");
 		a.send("cancel", {}, cancelled);
-		expect((await a.next("reply", cancelled)).data.error.code).toBe("ABORTED");
+		expect((await a.next("reply", cancelled)).data).toMatchObject({
+			ok: false,
+			error: { code: "ABORTED" },
+		});
 		const failed = a.send(
 			"call",
 			{ ...call, name: tokenA, timeoutMs: 1000 },
@@ -411,19 +425,22 @@ test("request outcomes retain correlation and report capacity, timeout, cancella
 			},
 			failedInvoke.id,
 		);
-		expect((await a.next("reply", failed)).data.error.message).toBe(
-			"private-provider-details",
-		);
+		expect((await a.next("reply", failed)).data).toMatchObject({
+			ok: false,
+			error: { message: "private-provider-details" },
+		});
 		const disconnected = a.send("call", { ...call, timeoutMs: 1000 });
 		await b.next("invoke");
 		await b.close();
-		expect((await a.next("reply", disconnected)).data.error.code).toBe(
-			"DISCONNECTED",
-		);
+		expect((await a.next("reply", disconnected)).data).toMatchObject({
+			ok: false,
+			error: { code: "DISCONNECTED" },
+		});
 		const unavailable = a.send("call", call);
-		expect((await a.next("reply", unavailable)).data.error.code).toBe(
-			"UNAVAILABLE",
-		);
+		expect((await a.next("reply", unavailable)).data).toMatchObject({
+			ok: false,
+			error: { code: "UNAVAILABLE" },
+		});
 		expect(logs.event("request_cancelled")).toHaveLength(1);
 		expect(logs.event("request_failed")).toHaveLength(2);
 		expect(logs.event("request_rejected")).toHaveLength(2);
@@ -465,15 +482,19 @@ test("identify activity distinguishes queueing, granting, completion, cancellati
 			timeoutMs: 1000,
 		});
 		a.send("cancel", {}, cancelled);
-		expect((await a.next("reply", cancelled)).data.error.code).toBe("ABORTED");
+		expect((await a.next("reply", cancelled)).data).toMatchObject({
+			ok: false,
+			error: { code: "ABORTED" },
+		});
 		const exhausted = a.send("identify", {
 			shard: 0,
 			generation: "a1",
 			timeoutMs: 50,
 		});
-		expect((await a.next("reply", exhausted)).data.error.code).toBe(
-			"IDENTIFY_TIMEOUT",
-		);
+		expect((await a.next("reply", exhausted)).data).toMatchObject({
+			ok: false,
+			error: { code: "IDENTIFY_TIMEOUT" },
+		});
 		s.coordinator.updateSessionLimit({
 			total: 1,
 			remaining: 1,
@@ -548,7 +569,10 @@ test("a throwing custom activity sink cannot change WebSocket registration, repl
 			{ shard: 0, generation: "a1", result: { ok: true, value: 7 } },
 			invocation.id,
 		);
-		expect((await a.next("reply", request)).data.value).toBe(7);
+		expect((await a.next("reply", request)).data).toEqual({
+			ok: true,
+			value: 7,
+		});
 		await a.close();
 	} finally {
 		await a.close();

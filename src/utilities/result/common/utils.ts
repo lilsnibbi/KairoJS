@@ -12,22 +12,23 @@ export type If<
 		? FalseResult
 		: TrueResult | FalseResult;
 
-export function isFunction<A extends readonly any[], R>(
+export function isFunction<A extends readonly unknown[], R>(
 	cb: (...args: A) => R,
 ): true;
 export function isFunction(
-	input: any,
-): input is (...args: readonly any[]) => any;
-export function isFunction(input: any) {
+	input: unknown,
+): input is (...args: readonly never[]) => unknown;
+export function isFunction(input: unknown) {
 	return typeof input === "function";
 }
 
 export function isPromise<T>(input: PromiseLike<T>): true;
-export function isPromise(input: any): input is PromiseLike<any>;
-export function isPromise(input: any) {
+export function isPromise(input: unknown): input is PromiseLike<unknown>;
+export function isPromise(input: unknown) {
 	return (
 		typeof input === "object" &&
 		input !== null &&
+		"then" in input &&
 		typeof input.then === "function"
 	);
 }

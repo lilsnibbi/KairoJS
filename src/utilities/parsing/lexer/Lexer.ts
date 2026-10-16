@@ -37,7 +37,7 @@ export class Lexer {
 }
 
 /** Types and helpers for {@link Lexer}. */
-export namespace Lexer {
+export declare namespace Lexer {
 	/** Literal tokenization settings. */
 	export interface Options {
 		/** Nonempty literal delimiter. Defaults to one space. */

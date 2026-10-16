@@ -33,6 +33,8 @@ export class Module<
 	Options extends ModuleOptions = ModuleOptions,
 	StoreName extends ModuleKind = ModuleKind,
 > {
+	/** Module location metadata constructor. */
+	public static readonly Location = ModuleLocation;
 	/** Optional class metadata, passed as constructor options by the loader. */
 	public static readonly options?: ModuleOptions;
 	/** The store that contains the module. */
@@ -121,9 +123,7 @@ export interface ModuleJSON {
 }
 
 /** Types and helpers for {@link Module}. */
-export namespace Module {
-	/** ModuleLocation class exposed through the Module namespace. */
-	export const Location = ModuleLocation;
+export declare namespace Module {
 	/** Shorthand for {@link ModuleOptions}. */
 	export type Options = ModuleOptions;
 	/** Shorthand for {@link ModuleContext}. */

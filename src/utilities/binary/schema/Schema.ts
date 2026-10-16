@@ -9,7 +9,7 @@ export class Schema<
 	Entries extends object = object,
 > {
 	readonly #id: Id;
-	readonly #types = new Map<string, IType<any, number | null>>();
+	readonly #types = new Map<string, IType<unknown, number | null>>();
 	#bitSize: number | null = 0;
 
 	/**
@@ -90,9 +90,9 @@ export class Schema<
 	): void {
 		buffer.writeInt16(this.#id);
 		for (const [name, type] of this) {
-			(type as IType<any, number | null>).serialize(
+			(type as IType<unknown, number | null>).serialize(
 				buffer,
-				(value as any)[name],
+				(value as Record<keyof Entries, unknown>)[name],
 			);
 		}
 	}
@@ -314,7 +314,7 @@ type Merge<
 	Id extends number,
 	Entries extends object,
 	EntryName extends string,
-	EntryType extends IType<any, number | null>,
+	EntryType extends IType<unknown, number | null>,
 > = EntryName extends keyof Entries
 	? never
 	: Schema<

@@ -1,3 +1,4 @@
+import type { PreconditionContainerSingle } from "../../../src/commands/checks/containers/Entry";
 import { describe, expect, test } from "bun:test";
 import { PreconditionContainerArray } from "../../../src/commands/checks/containers/Group";
 import { parseConstructorPreConditionsNsfw } from "../../../src/commands/checks/resolvers/nsfw";
@@ -8,9 +9,10 @@ describe("parseConstructorPreConditionsNsfw", () => {
 		const preconditionContainerArray = new PreconditionContainerArray();
 		parseConstructorPreConditionsNsfw(true, preconditionContainerArray);
 		expect(preconditionContainerArray.entries.length).toBe(1);
-		expect((preconditionContainerArray.entries[0] as any).name).toBe(
-			CommandPreConditions.NotSafeForWork,
-		);
+		expect(
+			(preconditionContainerArray.entries[0] as PreconditionContainerSingle)
+				.name,
+		).toBe(CommandPreConditions.NotSafeForWork);
 	});
 
 	test("GIVEN nsfw false THEN does not append to preconditionContainerArray", () => {

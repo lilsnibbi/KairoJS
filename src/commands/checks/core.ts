@@ -81,7 +81,7 @@ export const CorePreconditions = {
 };
 
 /** Types and helpers for {@link CorePreconditions}. */
-export namespace CorePreconditions {
+export declare namespace CorePreconditions {
 	/** Shorthand for {@link PermissionPreconditionContext}. */
 	export type UserPermissionsPreconditionContext =
 		PermissionPreconditionContext;

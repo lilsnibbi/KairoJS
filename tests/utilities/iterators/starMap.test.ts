@@ -66,7 +66,7 @@ describe("starMap", () => {
 			[1, 2],
 			[3, 4],
 		] as [number, number][];
-		const callbackFn = "invalid" as any;
+		const callbackFn = "invalid" as unknown as Parameters<typeof starMap>[1];
 		expect(() => [...starMap(iterable, callbackFn)]).toThrow(
 			new TypeError("invalid must be a function"),
 		);

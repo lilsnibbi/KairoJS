@@ -74,7 +74,7 @@ export abstract class Argument<
 }
 
 /** Name, aliases, and enabled state for an argument module. */
-export interface ArgumentOptions extends AliasModule.Options {}
+export type ArgumentOptions = AliasModule.Options;
 
 /** Invocation metadata and extra settings passed to an argument resolver. */
 export interface ArgumentContext<T = unknown> extends Record<
@@ -100,7 +100,7 @@ export interface ArgumentContext<T = unknown> extends Record<
 }
 
 /** Types and helpers for {@link Argument}. */
-export namespace Argument {
+export declare namespace Argument {
 	/** Shorthand for {@link ArgumentOptions}. */
 	export type Options = ArgumentOptions;
 	/** Shorthand for {@link ArgumentContext}. */

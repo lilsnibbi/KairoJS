@@ -670,10 +670,7 @@ export interface ArgType {
 }
 
 /** Extra argument context passed to a resolver. Built-in numeric, date, and string resolvers use the bounds when provided. */
-export interface ArgOptions extends Omit<
-	Argument.RunContext,
-	"message" | "command"
-> {}
+export type ArgOptions = Omit<Argument.RunContext, "message" | "command">;
 
 /** Resolver context with an optional maximum number of repeated values. */
 export interface RepeatArgOptions extends ArgOptions {

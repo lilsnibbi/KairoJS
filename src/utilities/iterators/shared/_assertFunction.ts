@@ -1,4 +1,4 @@
-export function assertFunction<Fn extends (...args: any[]) => any>(
+export function assertFunction<Fn extends (...args: never[]) => unknown>(
 	value: Fn,
 ): Fn {
 	if (typeof value !== "function") {

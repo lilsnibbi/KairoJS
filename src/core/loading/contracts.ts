@@ -5,7 +5,7 @@ import type { ModuleStore } from "../modules/ModuleStore";
 /** The module data information. */
 export interface ModuleData {
 	/** Optional per-startup cache of import promises, keyed by absolute file path. */
-	imports?: Map<string, Promise<any>>;
+	imports?: Map<string, Promise<Record<string, unknown>>>;
 	/** The name of the module. */
 	name: string;
 
@@ -27,12 +27,12 @@ export type FilterResult = ModuleData | null;
 
 /** The return data from {@link ModuleLoaderHooks.preload} */
 export type PreloadResult<T extends Module> = Awaitable<
-	Constructor<T> & Record<PropertyKey, unknown>
+	Record<PropertyKey, unknown> | Constructor<T>
 >;
 
 /** The return data from {@link ModuleLoaderHooks.preload} */
 export type AsyncPreloadResult<T extends Module> = Promise<
-	Constructor<T> & Record<PropertyKey, unknown>
+	Record<PropertyKey, unknown> | Constructor<T>
 >;
 
 /** An entry from {@link ILoaderResult}. */

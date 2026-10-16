@@ -14,16 +14,16 @@ import type { Ctor } from "../index";
 import { createClassDecorator, createProxy } from "./utils";
 
 const applicationDecoratorsMap = new WeakMap<
-	CommandTarget<any>,
-	DecoratorMap<any>[]
+	CommandTarget<Command>,
+	unknown[]
 >();
 const proxyApplicationCommandToOriginal = new WeakMap<
-	CommandTarget<any>,
-	CommandTarget<any>
+	CommandTarget<Command>,
+	CommandTarget<Command>
 >();
 const originalApplicationCommandToProxy = new WeakMap<
-	CommandTarget<any>,
-	CommandTarget<any>
+	CommandTarget<Command>,
+	CommandTarget<Command>
 >();
 
 /** Decorator function that applies given options to any KairoJS module */
@@ -102,7 +102,9 @@ function collectApplicationCommandDecorators<CMD extends Command>(
 	applicationDecoratorsMap.set(original, exisiting);
 
 	if (originalApplicationCommandToProxy.has(original))
-		return originalApplicationCommandToProxy.get(original)!;
+		return originalApplicationCommandToProxy.get(
+			original,
+		)! as CommandTarget<CMD>;
 
 	const proxied = createProxy(target, {
 		construct(originalTarget, argArray) {

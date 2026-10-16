@@ -17,7 +17,7 @@ export class PreMessageCommandRunListener extends Listener<
 		// Run global preconditions:
 		const globalResult = await this.container.modules
 			.require("preconditions")
-			.messageRun(message, command, payload as any);
+			.messageRun(message, command, payload);
 		if (globalResult.isErr()) {
 			message.client.emit(
 				Events.MessageCommandDenied,
@@ -31,7 +31,7 @@ export class PreMessageCommandRunListener extends Listener<
 		const localResult = await command.preconditions.messageRun(
 			message,
 			command,
-			payload as any,
+			payload,
 		);
 		if (localResult.isErr()) {
 			message.client.emit(

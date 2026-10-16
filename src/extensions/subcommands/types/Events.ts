@@ -1,3 +1,4 @@
+import type { PreconditionContext } from "../../../commands/checks/Precondition";
 import type { Message } from "discord.js";
 import { type Args } from "../../../commands/arguments/Args";
 import { type UserError } from "../../../commands/errors/UserError";
@@ -107,10 +108,10 @@ export interface MessageSubcommandAcceptedPayload extends IMessageSubcommandPayl
 }
 
 /** Data passed with the message subcommand run event. */
-export interface MessageSubcommandRunPayload extends MessageSubcommandAcceptedPayload {}
+export type MessageSubcommandRunPayload = MessageSubcommandAcceptedPayload;
 
 /** Data passed with the message subcommand error event. */
-export interface MessageSubcommandErrorPayload extends MessageSubcommandRunPayload {}
+export type MessageSubcommandErrorPayload = MessageSubcommandRunPayload;
 
 /** Data passed with the message subcommand success event. */
 export interface MessageSubcommandSuccessPayload extends MessageSubcommandRunPayload {
@@ -119,7 +120,7 @@ export interface MessageSubcommandSuccessPayload extends MessageSubcommandRunPay
 }
 
 /** Data passed with the chat input subcommand event family. */
-export interface IChatInputSubcommandPayload {
+export interface IChatInputSubcommandPayload extends PreconditionContext {
 	/** Discord interaction that triggered this event. */
 	interaction: ChatInputCommand.Interaction;
 	/** Command associated with this invocation. */
@@ -135,13 +136,14 @@ export interface ChatInputSubcommandAcceptedPayload extends IChatInputSubcommand
 }
 
 /** Data passed with the chat input subcommand denied event. */
-export interface ChatInputSubcommandDeniedPayload extends ChatInputSubcommandAcceptedPayload {}
+export type ChatInputSubcommandDeniedPayload =
+	ChatInputSubcommandAcceptedPayload;
 
 /** Data passed with the chat input subcommand run event. */
-export interface ChatInputSubcommandRunPayload extends ChatInputSubcommandAcceptedPayload {}
+export type ChatInputSubcommandRunPayload = ChatInputSubcommandAcceptedPayload;
 
 /** Data passed with the chat input subcommand error event. */
-export interface ChatInputSubcommandErrorPayload extends ChatInputSubcommandRunPayload {}
+export type ChatInputSubcommandErrorPayload = ChatInputSubcommandRunPayload;
 
 /** Data passed with the chat input subcommand success event. */
 export interface ChatInputSubcommandSuccessPayload extends ChatInputSubcommandRunPayload {

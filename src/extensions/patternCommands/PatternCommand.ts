@@ -64,7 +64,7 @@ export interface PatternCommandOptions extends MessageCommand.Options {
 }
 
 /** Types and helpers for {@link PatternCommand}. */
-export namespace PatternCommand {
+export declare namespace PatternCommand {
 	/** Shorthand for {@link MessageCommand.Context}. */
 	export type Context = MessageCommand.Context;
 

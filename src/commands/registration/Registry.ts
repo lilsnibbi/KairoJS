@@ -796,7 +796,7 @@ export class ApplicationCommandRegistry {
 }
 
 /** Types and helpers for {@link ApplicationCommandRegistry}. */
-export namespace ApplicationCommandRegistry {
+export declare namespace ApplicationCommandRegistry {
 	/** Scope and synchronization options for one queued application command. */
 	export interface RegisterOptions {
 		/** Opt in to translation keys for Discord presentation; base names and choice values stay unchanged. */

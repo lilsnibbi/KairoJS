@@ -6,7 +6,7 @@ export abstract class Service<
 > extends Module<Options, "services"> {}
 
 /** Types and helpers for {@link Service}. */
-export namespace Service {
+export declare namespace Service {
 	/** Shorthand for {@link Module.Context}. */
 	export type Context = Module.Context<"services">;
 	/** Shorthand for {@link Module.Options}. */

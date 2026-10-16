@@ -13,6 +13,8 @@ export class AliasModule<
 	Options extends AliasModuleOptions = AliasModuleOptions,
 	StoreName extends ModuleKind = ModuleKind,
 > extends Module<Options, StoreName> {
+	/** Module location metadata constructor. */
+	public static override readonly Location = Module.Location;
 	/** Optional class metadata passed as constructor options by the loader. */
 	public static override readonly options?: AliasModuleOptions;
 	/** The aliases for the module. */
@@ -49,9 +51,7 @@ export interface AliasModuleJSON extends Module.JSON {
 }
 
 /** Types and helpers for {@link AliasModule}. */
-export namespace AliasModule {
-	/** ModuleLocation class exposed through the AliasModule namespace. */
-	export const { Location } = Module;
+export declare namespace AliasModule {
 	/** Shorthand for {@link AliasModuleOptions}. */
 	export type Options = AliasModuleOptions;
 	/** Shorthand for {@link Module.Context}. */

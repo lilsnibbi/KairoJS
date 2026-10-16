@@ -28,7 +28,7 @@ export class ArgumentError<T = unknown> extends UserError {
 }
 
 /** Types and helpers for {@link ArgumentError}. */
-export namespace ArgumentError {
+export declare namespace ArgumentError {
 	/** The options for {@link ArgumentError}. */
 	export interface Options<T> extends Omit<UserError.Options, "identifier"> {
 		/** The argument that caused the error. */

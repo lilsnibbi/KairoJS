@@ -89,7 +89,7 @@ export interface TaskOptionsBase extends Module.Options {
 export type ScheduledTaskCustomJobOptions = TaskJobOptions;
 
 /** The namespace for {@link Task}. */
-export namespace Task {
+export declare namespace Task {
 	/** The options for a {@link Task}. */
 	export type Options = TaskOptionsBase;
 	/** Shorthand for {@link Module.Context}. */

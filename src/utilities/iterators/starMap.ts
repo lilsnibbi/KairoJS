@@ -7,7 +7,7 @@ import { toIterableIterator } from "./toIterableIterator";
  * the call; errors propagate.
  */
 export function* starMap<
-	const ElementType extends IterableResolvable<any>,
+	const ElementType extends IterableResolvable<unknown>,
 	const MappedType,
 >(
 	iterable: IterableResolvable<ElementType>,
@@ -16,7 +16,9 @@ export function* starMap<
 	callbackFn = assertFunction(callbackFn);
 
 	for (const value of toIterableIterator(iterable)) {
-		yield callbackFn(...(toIterableIterator(value) as any));
+		yield callbackFn(
+			...([...toIterableIterator(value)] as StarMapParameters<ElementType>),
+		);
 	}
 }
 

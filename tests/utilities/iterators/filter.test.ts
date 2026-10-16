@@ -25,7 +25,7 @@ describe("filter", () => {
 
 	test("GIVEN iterable and invalid callback function THEN throws TypeError", () => {
 		const iterable = [1, 2, 3, 4, 5];
-		const callbackFn = "invalid" as any;
+		const callbackFn = "invalid" as unknown as Parameters<typeof filter>[1];
 		expect(() => [...filter(iterable, callbackFn)]).toThrow(
 			new TypeError("invalid must be a function"),
 		);

@@ -9,7 +9,25 @@ import {
 
 const workflow = Bun.YAML.parse(
 	readFileSync(join(import.meta.dir, "../../.github/workflows/ci.yml"), "utf8"),
-) as any;
+) as {
+	on: Record<string, unknown>;
+	permissions: Record<string, string>;
+	jobs: Record<
+		string,
+		{
+			if: string;
+			needs?: string[];
+			permissions?: Record<string, string>;
+			"runs-on": string;
+			steps: {
+				run?: string;
+				uses?: string;
+				with: Record<string, unknown>;
+				"continue-on-error"?: boolean;
+			}[];
+		}
+	>;
+};
 const release = workflow.jobs.release;
 
 // Exercise the actual restricted boolean expression, not a second handwritten gate.
@@ -68,15 +86,13 @@ describe("CI release boundary", () => {
 		);
 		expect(
 			workflow.jobs.validate.steps.some(
-				(step: any) => step.run === "bun scripts/ci.ts",
+				(step) => step.run === "bun scripts/ci.ts",
 			),
 		).toBe(true);
 		expect(
-			release.steps.some((step: any) =>
-				step.uses?.startsWith("actions/checkout@"),
-			),
+			release.steps.some((step) => step.uses?.startsWith("actions/checkout@")),
 		).toBe(false);
-		for (const job of Object.values(workflow.jobs) as any[]) {
+		for (const job of Object.values(workflow.jobs)) {
 			expect(job["runs-on"]).toBe("ubuntu-24.04");
 			for (const step of job.steps) {
 				expect(step["continue-on-error"]).toBeUndefined();
@@ -87,7 +103,7 @@ describe("CI release boundary", () => {
 	test("workflow validation invokes an existing checker", () => {
 		expect(
 			workflow.jobs.validate.steps.some(
-				(step: any) => step.run === "bash scripts/checkActions.sh",
+				(step) => step.run === "bash scripts/checkActions.sh",
 			),
 		).toBe(true);
 		expect(

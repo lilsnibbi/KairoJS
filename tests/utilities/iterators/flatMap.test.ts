@@ -40,7 +40,7 @@ describe("flatMap", () => {
 
 	test("GIVEN iterable and invalid callback function THEN throws TypeError", () => {
 		const iterable = [1, 2, 3];
-		const callback = "invalid" as any;
+		const callback = "invalid" as unknown as Parameters<typeof flatMap>[1];
 		expect(() => [...flatMap(iterable, callback)]).toThrow(
 			new TypeError("invalid must be a function"),
 		);

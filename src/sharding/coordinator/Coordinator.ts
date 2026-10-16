@@ -63,7 +63,7 @@ interface Route {
 }
 interface Identify {
 	session: Session;
-	message: Frame;
+	message: Frame<"identify">;
 	startedAt: number;
 	timer: ReturnType<typeof setTimeout>;
 }
@@ -557,7 +557,7 @@ export class ShardCoordinator {
 				requestId: message.id,
 			},
 		);
-		const d = message.data;
+		const { op, data: d } = message;
 		if (
 			this.transition &&
 			(message.op === "identify" ||
@@ -579,7 +579,7 @@ export class ShardCoordinator {
 			);
 			return;
 		}
-		switch (message.op) {
+		switch (op) {
 			case "lease":
 				this.lease(session, message);
 				return;
@@ -794,7 +794,7 @@ export class ShardCoordinator {
 				return;
 		}
 	}
-	private route(session: Session, message: Frame): void {
+	private route(session: Session, message: Frame<"call">): void {
 		const d = message.data;
 		if (d.source !== -1) {
 			this.assigned(session, d.source);
@@ -866,7 +866,10 @@ export class ShardCoordinator {
 			this.complete(id, failure(error));
 		}
 	}
-	private reserve(session: Session, message: Frame): boolean {
+	private reserve(
+		session: Session,
+		message: Frame<"call" | "identify">,
+	): boolean {
 		const id = message.id;
 		if (session.ids.has(id))
 			throw new ShardError("PROTOCOL", "Duplicate operation ID.");

@@ -37,12 +37,12 @@ export class BitField<
 			);
 		}
 
-		this.type = type as any;
+		this.type = type as typeof this.type;
 		this.flags = flags;
 		this[FlagEntriesSymbol] = entries;
 
 		if (type === "number") {
-			this.zero = 0 as any;
+			this.zero = 0 as typeof this.zero;
 
 			let mask = 0;
 			for (const [key, value] of entries) {
@@ -61,9 +61,9 @@ export class BitField<
 				mask |= value;
 			}
 
-			this.mask = mask as any;
+			this.mask = mask as ValueType<this>;
 		} else {
-			this.zero = 0n as any;
+			this.zero = 0n as typeof this.zero;
 
 			let mask = 0n;
 			for (const [key, value] of entries) {
@@ -78,7 +78,7 @@ export class BitField<
 				mask |= value;
 			}
 
-			this.mask = mask as any;
+			this.mask = mask as ValueType<this>;
 		}
 	}
 
@@ -87,12 +87,14 @@ export class BitField<
 		switch (typeof resolvable) {
 			case "string":
 				if ((resolvable as string) in this.flags)
-					return this.flags[resolvable as keyof Flags] as any;
+					return this.flags[
+						resolvable as keyof Flags
+					] as unknown as ValueType<this>;
 				throw new RangeError(
 					"Received a name that could not be resolved to a property of flags",
 				);
 			case this.type:
-				return ((resolvable as ValueType<this>) & this.mask) as any;
+				return ((resolvable as ValueType<this>) & this.mask) as ValueType<this>;
 			case "object":
 				if (Array.isArray(resolvable))
 					return resolvable.reduce(

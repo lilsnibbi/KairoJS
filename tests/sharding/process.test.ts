@@ -84,10 +84,8 @@ describe("independent host supervisor processes over the network transport", () 
 				s.coordinator.workers.every((w) => w.shards.length === 1),
 			);
 			const reply = await a.call("relay", 0, 47);
-			expect(reply.value).toBe(47);
-			expect(reply.source).toBe(0);
-			expect(reply.shard).toBe(1);
-			const oldPid = (await a.call("info"))[0].pid as number;
+			expect(reply).toMatchObject({ value: 47, source: 0, shard: 1 });
+			const oldPid = ((await a.call("info")) as { pid: number }[])[0].pid;
 			expect(alive(oldPid)).toBe(true);
 			a.child.kill(9);
 			await a.child.exited;

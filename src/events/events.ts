@@ -8,6 +8,7 @@ import {
 	type Message,
 	type Snowflake,
 } from "discord.js";
+import type { PreconditionContext } from "../commands/checks/Precondition";
 import type { Command } from "../commands/Command";
 import type { UserError } from "../commands/errors/UserError";
 import type { ApplicationCommandRegistry } from "../commands/registration/Registry";
@@ -372,7 +373,7 @@ export interface UnknownMessageCommandPayload extends UnknownMessageCommandNameP
 }
 
 /** Message and command shared by message-command events. */
-export interface IMessageCommandPayload {
+export interface IMessageCommandPayload extends PreconditionContext {
 	/** Message that triggered this event. */
 	message: Message;
 	/** Command associated with this invocation. */
@@ -380,7 +381,7 @@ export interface IMessageCommandPayload {
 }
 
 /** Data passed with the pre message command run event. */
-export interface PreMessageCommandRunPayload extends MessageCommandDeniedPayload {}
+export type PreMessageCommandRunPayload = MessageCommandDeniedPayload;
 
 /** Data passed with the message command denied event. */
 export interface MessageCommandDeniedPayload extends IMessageCommandPayload {
@@ -427,7 +428,7 @@ export interface MessageCommandSuccessPayload extends MessageCommandRunPayload {
 }
 
 /** Data passed with the message command typing error event. */
-export interface MessageCommandTypingErrorPayload extends MessageCommandRunPayload {}
+export type MessageCommandTypingErrorPayload = MessageCommandRunPayload;
 
 /** Data passed with the unknown chat input command event. */
 export interface UnknownChatInputCommandPayload {
@@ -448,7 +449,7 @@ export interface CommandDoesNotHaveChatInputCommandHandlerPayload {
 }
 
 /** Interaction and command shared by slash-command events. */
-export interface IChatInputCommandPayload {
+export interface IChatInputCommandPayload extends PreconditionContext {
 	/** Discord interaction that triggered this event. */
 	interaction: ChatInputCommandInteraction;
 	/** Command associated with this invocation. */
@@ -468,10 +469,10 @@ export interface ChatInputCommandDeniedPayload extends IChatInputCommandPayload 
 }
 
 /** Data passed with the chat input command accepted event. */
-export interface ChatInputCommandAcceptedPayload extends PreChatInputCommandRunPayload {}
+export type ChatInputCommandAcceptedPayload = PreChatInputCommandRunPayload;
 
 /** Data passed with the chat input command run event. */
-export interface ChatInputCommandRunPayload extends ChatInputCommandAcceptedPayload {}
+export type ChatInputCommandRunPayload = ChatInputCommandAcceptedPayload;
 
 /** Data passed with the chat input command finish event. */
 export interface ChatInputCommandFinishPayload extends ChatInputCommandAcceptedPayload {
@@ -514,7 +515,7 @@ export interface CommandDoesNotHaveContextMenuCommandHandlerPayload {
 }
 
 /** Interaction and command shared by context-menu events. */
-export interface IContextMenuCommandPayload {
+export interface IContextMenuCommandPayload extends PreconditionContext {
 	/** Discord interaction that triggered this event. */
 	interaction: ContextMenuCommandInteraction;
 	/** Command associated with this invocation. */
@@ -534,10 +535,10 @@ export interface ContextMenuCommandDeniedPayload extends IContextMenuCommandPayl
 }
 
 /** Data passed with the context menu command accepted event. */
-export interface ContextMenuCommandAcceptedPayload extends PreContextMenuCommandRunPayload {}
+export type ContextMenuCommandAcceptedPayload = PreContextMenuCommandRunPayload;
 
 /** Data passed with the context menu command run event. */
-export interface ContextMenuCommandRunPayload extends ContextMenuCommandAcceptedPayload {}
+export type ContextMenuCommandRunPayload = ContextMenuCommandAcceptedPayload;
 
 /** Data passed with the context menu command finish event. */
 export interface ContextMenuCommandFinishPayload extends ContextMenuCommandAcceptedPayload {
@@ -570,7 +571,7 @@ export interface IInteractionHandlerPayload {
 }
 
 /** Data passed with the interaction handler parse success event family. */
-export interface InteractionHandlerParseSuccess extends IInteractionHandlerPayload {}
+export type InteractionHandlerParseSuccess = IInteractionHandlerPayload;
 
 /** Data passed with the interaction handler parse some event family. */
 export interface InteractionHandlerParseSome<
@@ -581,13 +582,13 @@ export interface InteractionHandlerParseSome<
 }
 
 /** Data passed with the interaction handler parse none event family. */
-export interface InteractionHandlerParseNone extends IInteractionHandlerPayload {}
+export type InteractionHandlerParseNone = IInteractionHandlerPayload;
 
 /** Data passed with the interaction handler parse error event family. */
-export interface InteractionHandlerParseError extends IInteractionHandlerPayload {}
+export type InteractionHandlerParseError = IInteractionHandlerPayload;
 
 /** Data passed with the interaction handler error event family. */
-export interface InteractionHandlerError extends IInteractionHandlerPayload {}
+export type InteractionHandlerError = IInteractionHandlerPayload;
 
 /** Data passed with the autocomplete interaction event. */
 export interface AutocompleteInteractionPayload {

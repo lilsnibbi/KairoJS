@@ -82,7 +82,7 @@ export type InteractionHandlerParseResult<Instance extends InteractionHandler> =
 	Option.UnwrapSome<Awaited<ReturnType<Instance["parse"]>>>;
 
 /** Types and helpers for {@link InteractionHandler}. */
-export namespace InteractionHandler {
+export declare namespace InteractionHandler {
 	/** Shorthand for {@link Module.Context}. */
 	export type Context = Module.Context<"interactions">;
 	/** Shorthand for {@link InteractionHandlerOptions}. */

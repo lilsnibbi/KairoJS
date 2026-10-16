@@ -17,7 +17,7 @@ export class BeforeRunListener extends Listener<
 		// Run global preconditions:
 		const globalResult = await this.container.modules
 			.require("preconditions")
-			.contextMenuRun(interaction, command, payload as any);
+			.contextMenuRun(interaction, command, payload);
 		if (globalResult.isErr()) {
 			this.container.client.emit(
 				Events.ContextMenuCommandDenied,
@@ -31,7 +31,7 @@ export class BeforeRunListener extends Listener<
 		const localResult = await command.preconditions.contextMenuRun(
 			interaction,
 			command,
-			payload as any,
+			payload,
 		);
 		if (localResult.isErr()) {
 			this.container.client.emit(

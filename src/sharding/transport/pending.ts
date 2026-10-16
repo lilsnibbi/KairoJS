@@ -5,7 +5,7 @@ export class Pending {
 	private readonly entries = new Map<
 		string,
 		{
-			resolve: (v: any) => void;
+			resolve: (v: unknown) => void;
 			reject: (e: unknown) => void;
 			clean: () => void;
 		}
@@ -19,7 +19,7 @@ export class Pending {
 		milliseconds: number,
 		signal?: AbortSignal,
 		cancel?: () => void,
-	): Promise<any> {
+	): Promise<unknown> {
 		timeout(milliseconds);
 		if (signal?.aborted)
 			return Promise.reject(
@@ -55,7 +55,7 @@ export class Pending {
 	public has(id: string): boolean {
 		return this.entries.has(id);
 	}
-	public resolve(id: string, value: any): void {
+	public resolve(id: string, value: unknown): void {
 		const entry = this.take(id);
 		entry?.resolve(value);
 	}

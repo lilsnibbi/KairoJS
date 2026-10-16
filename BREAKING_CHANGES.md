@@ -1,5 +1,22 @@
 # Breaking changes
 
+## Stricter utility types
+
+- Loose value types now use `unknown`; narrow formatter values, translation
+  dictionaries, and other untyped data before accessing their properties.
+- `ok()` defaults its absent error type to `never`, `err()` defaults its absent
+  value type to `never`, and `none` carries `never`. Supply explicit Result
+  generics when a consumer needs a particular type for the absent branch.
+- Constructor utility types accept arbitrary signatures as constraints. Supply
+  the parameter tuple when invoking a value typed as `Ctor`, `AbstractCtor`,
+  `Constructor`, or `AbstractConstructor`.
+- `PaginatedFieldMessageEmbed.formatItems()` returns the same instance with the
+  transformed item type. Continue chaining from that return value.
+- Empty interfaces that only renamed another type are now aliases. Extend the
+  alias or augment its underlying interface when adding application fields.
+  `Tasks`, `ShardRequests`, and `DetailedDescriptionCommandObject` remain
+  augmentable interfaces.
+
 ## Shard maintenance and coordinator reconciliation
 
 - Upgrade coordinator, hosts and children together. The internal protocol now

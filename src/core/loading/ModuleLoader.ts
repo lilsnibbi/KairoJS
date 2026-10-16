@@ -73,7 +73,7 @@ export class ModuleLoader<T extends Module> implements ModuleLoaderHooks<T> {
 		for (const value of new Set(
 			Object.keys(result)
 				.sort()
-				.map((key) => result[key]),
+				.map((key) => Reflect.get(result, key) as unknown),
 		)) {
 			if (isClass(value) && classExtends(value, store.Constructor)) {
 				yield value as ILoaderResultEntry<T>;

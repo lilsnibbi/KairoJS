@@ -1023,7 +1023,7 @@ describe("Option", () => {
 	});
 });
 
-function expectOptionError(message: string, cb: () => any) {
+function expectOptionError(message: string, cb: () => unknown) {
 	try {
 		cb();
 

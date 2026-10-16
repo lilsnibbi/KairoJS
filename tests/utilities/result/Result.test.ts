@@ -993,6 +993,7 @@ describe("Result", () => {
 	describe("safeTry", () => {
 		test("GIVEN a successful result THEN return Ok", () => {
 			const result = Result.safeTry(function* () {
+				yield* [];
 				return ok(42);
 			});
 
@@ -1001,6 +1002,7 @@ describe("Result", () => {
 
 		test("GIVEN a async successful result THEN return Ok", async () => {
 			const result = await Result.safeTry(async function* () {
+				yield* [];
 				return Result.fromAsync(() => Promise.resolve(42));
 			});
 
@@ -1009,6 +1011,7 @@ describe("Result", () => {
 
 		test("GIVEN a unsuccessful result THEN return Err", () => {
 			const result = Result.safeTry(function* () {
+				yield* [];
 				return err("Error!");
 			});
 
@@ -1017,6 +1020,7 @@ describe("Result", () => {
 
 		test("GIVEN a async unsuccessful result THEN return Err", async () => {
 			const result = await Result.safeTry(async function* () {
+				yield* [];
 				return Result.fromAsync(() => Promise.reject(new Error("Error!")));
 			});
 
@@ -1186,7 +1190,7 @@ describe("Result", () => {
 	});
 });
 
-function expectResultError<E>(message: string, value: E, cb: () => any) {
+function expectResultError<E>(message: string, value: E, cb: () => unknown) {
 	try {
 		cb();
 

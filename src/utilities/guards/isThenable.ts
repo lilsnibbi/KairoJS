@@ -3,16 +3,16 @@ import { isFunction } from "./isFunction";
 /** Object with callable then and catch members. */
 export interface Thenable {
 	/** Callable continuation member. */
-	then: Function;
+	then: (...args: never[]) => unknown;
 	/** Callable rejection handler member. */
-	catch: Function;
+	catch: (...args: never[]) => unknown;
 }
 
-function hasThen(input: { then?: Function }): boolean {
+function hasThen(input: { then?: (...args: never[]) => unknown }): boolean {
 	return Reflect.has(input, "then") && isFunction(input.then);
 }
 
-function hasCatch(input: { catch?: Function }): boolean {
+function hasCatch(input: { catch?: (...args: never[]) => unknown }): boolean {
 	return Reflect.has(input, "catch") && isFunction(input.catch);
 }
 

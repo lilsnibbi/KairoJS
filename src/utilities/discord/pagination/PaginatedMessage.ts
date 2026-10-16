@@ -277,7 +277,10 @@ export class PaginatedMessage {
 	};
 	// #endregion
 
-	/** Constructor for the {@link PaginatedMessage} class */
+	/** Constructor used by clone and subclass defaults. */
+	declare ["constructor"]: typeof PaginatedMessage;
+
+	/** Create a paginator with optional initial pages, actions, and templates. */
 	public constructor({
 		pages,
 		actions,
@@ -1339,10 +1342,4 @@ export class PaginatedMessage {
 		if (action) return action;
 		return this.pageActions.at(index)?.get(customId);
 	}
-}
-
-/** Instance typing for the overridable pagination constructor. */
-export interface PaginatedMessage {
-	/** Constructor used by clone and to read subclass default actions. */
-	constructor: typeof PaginatedMessage;
 }

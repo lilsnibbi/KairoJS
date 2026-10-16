@@ -166,7 +166,7 @@ export class Option<T, Exists extends boolean = boolean> {
 	/** Return the supplied Option for Some, or keep None. */
 	public and<OutputOption extends AnyOption>(
 		option: OutputOption,
-	): If<Exists, OutputOption, None> {
+	): If<Exists, OutputOption, None<never>> {
 		return this.match({ some: () => option, none: returnThis });
 	}
 
@@ -293,7 +293,7 @@ export class Option<T, Exists extends boolean = boolean> {
 	/** Remove one nested Option layer from Some; preserve None. */
 	public flatten<InnerOption extends AnyOption, Exists extends boolean>(
 		this: Option<InnerOption, Exists>,
-	): If<Exists, InnerOption, None> {
+	): If<Exists, InnerOption, None<never>> {
 		return this.match({ some: (inner) => inner, none: returnThis });
 	}
 
@@ -307,15 +307,15 @@ export class Option<T, Exists extends boolean = boolean> {
 	}
 
 	/** Check presence and strict equality of stored values. Objects compare by identity. */
-	public eq<OtherValue extends T, OtherExists extends boolean>(
+	public eq<OtherValue, OtherExists extends boolean>(
 		other: Option<OtherValue, OtherExists>,
-	): this is Option<OtherValue, OtherExists> {
+	): this is this & Option<OtherValue, OtherExists> {
 		const value: unknown = this[ValueProperty];
 		return this.isSome() === other.isSome() && value === other[ValueProperty];
 	}
 
 	/** Return the opposite of eq. */
-	public ne(other: Option<T, boolean>): boolean {
+	public ne(other: AnyOption): boolean {
 		return !this.eq(other);
 	}
 
@@ -324,19 +324,20 @@ export class Option<T, Exists extends boolean = boolean> {
 		/** Called for Some with its value and the Some Option as this. */
 		some(this: Some<T>, value: T): SomeValue;
 		/** Called for None with the None Option as this. */
-		none(this: None): NoneValue;
+		none(this: None<never>): NoneValue;
 	}): If<Exists, SomeValue, NoneValue>;
 	/** Call the matching callback with this Option as its this value and return its result. */
 	public match<SomeValue, NoneValue>(
 		this: Some<T> | None,
 		branches: {
 			some(this: Some<T>, value: T): SomeValue;
-			none(this: None): NoneValue;
+			none(this: None<never>): NoneValue;
 		},
 	): SomeValue | NoneValue {
+		// None has no stored value, irrespective of the original value type.
 		return this.isSome()
 			? branches.some.call(this, this[ValueProperty])
-			: branches.none.call(this);
+			: branches.none.call(this as unknown as None<never>);
 	}
 
 	/** Yield the Some value once, or yield nothing for None. */
@@ -350,7 +351,7 @@ export class Option<T, Exists extends boolean = boolean> {
 	}
 
 	/** Shared empty Option. Prefer this value over constructing Options directly. */
-	public static readonly none = new Option<any, false>(null, false);
+	public static readonly none = new Option<never, false>(null, false);
 
 	/** Create Some(value), including explicit nullish values. Omitting value stores undefined. */
 	public static some<T = undefined>(this: void, value?: T): Some<T>;
@@ -411,7 +412,7 @@ export class Option<T, Exists extends boolean = boolean> {
 	): Option<UnwrapSomeArray<Entries>> {
 		const values: unknown[] = [];
 		for (const result of results) {
-			if (result.isNone()) return result;
+			if (result.isNone()) return result as None<never>;
 
 			values.push(result[ValueProperty]);
 		}
@@ -425,7 +426,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		results: Entries,
 	): Option<UnwrapSome<Entries[number]>> {
 		for (const result of results) {
-			if (result.isSome()) return result;
+			if (result.isSome()) return result as Some<UnwrapSome<Entries[number]>>;
 		}
 
 		return none;
@@ -433,13 +434,13 @@ export class Option<T, Exists extends boolean = boolean> {
 }
 
 /** Types and helpers for {@link Option}. */
-export namespace Option {
+export declare namespace Option {
 	/** Option whose branch is known to contain a value, including explicit nullish values. */
 	export type Some<T> = Option<T, true>;
 	/** Option whose branch is known to be empty. */
-	export type None<T = any> = Option<T, false>;
+	export type None<T = unknown> = Option<T, false>;
 	/** Option with an unrestricted value type and unknown presence. */
-	export type Any = Option<any>;
+	export type Any = Option<unknown>;
 	/** Value, nullish value, or existing Option accepted by Option.from. */
 	export type Resolvable<T, Exists extends boolean = boolean> =
 		T | null | undefined | Option<T, Exists>;
@@ -469,7 +470,7 @@ export type OptionResolvable<
 /** Option whose value is known to be present. */
 export type Some<T> = Option.Some<T>;
 /** Option known to have no value. */
-export type None<T = any> = Option.None<T>;
+export type None<T = unknown> = Option.None<T>;
 /** Option with an unrestricted value type. */
 export type AnyOption = Option.Any;
 

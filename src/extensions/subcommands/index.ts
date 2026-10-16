@@ -24,7 +24,7 @@ export const SubcommandPreconditions = {
 
 /** The preconditions specific to subcommands
  * @deprecated - This will be replaced with a regular top level export of {@link SubcommandCooldownPreconditionContext} */
-export namespace SubcommandPreconditions {
+export declare namespace SubcommandPreconditions {
 	/** The context for the subcommand cooldown precondition */
 	export type SubcommandCooldownContext = SubcommandCooldownPreconditionContext;
 }

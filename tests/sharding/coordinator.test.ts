@@ -30,7 +30,7 @@ async function peer(
 	socket.addEventListener("close", () => {
 		closed = true;
 	});
-	const next = async (op: Op, id?: string, ms = 3000) => {
+	const next = async <K extends Op>(op: K, id?: string, ms = 3000) => {
 		await until(
 			() => messages.some((m) => m.op === op && (!id || m.id === id)),
 			ms,
@@ -38,7 +38,7 @@ async function peer(
 		const index = messages.findIndex(
 			(m) => m.op === op && (!id || m.id === id),
 		);
-		return messages.splice(index, 1)[0];
+		return messages.splice(index, 1)[0] as Frame<K>;
 	};
 	await next("welcome");
 	return {
@@ -48,7 +48,11 @@ async function peer(
 		get closed() {
 			return closed;
 		},
-		send(op: Op, data: any = {}, id: string = crypto.randomUUID()) {
+		send(
+			op: Op,
+			data: Record<string, unknown> = {},
+			id: string = crypto.randomUUID(),
+		) {
 			if (op === "ready")
 				socket.send(
 					encode(
@@ -81,7 +85,10 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "child-one",
 				preferred: 0,
 			});
-			expect((await original.next("reply", first)).data.value.shard).toBe(0);
+			expect((await original.next("reply", first)).data).toMatchObject({
+				ok: true,
+				value: { shard: 0 },
+			});
 			await original.close();
 			const replacement = await peer(s.coordinator.url!, "a", "replacement");
 			peers.push(replacement);
@@ -90,9 +97,10 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "child-one",
 				preferred: 0,
 			});
-			expect((await replacement.next("reply", refused)).data.error.code).toBe(
-				"LEASE_TAKEN",
-			);
+			expect((await replacement.next("reply", refused)).data).toMatchObject({
+				ok: false,
+				error: { code: "LEASE_TAKEN" },
+			});
 			const forged = replacement.send("offline", {
 				shard: null,
 				generation: "child-one",
@@ -106,9 +114,9 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "child-one",
 				preferred: 0,
 			});
-			expect((await returned.next("reply", again)).data.value).toEqual({
-				shard: 0,
-				count: 2,
+			expect((await returned.next("reply", again)).data).toEqual({
+				ok: true,
+				value: { shard: 0, count: 2 },
 			});
 			const released = returned.send("offline", {
 				shard: null,
@@ -120,25 +128,27 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "child-two",
 				preferred: 0,
 			});
-			expect((await replacement.next("reply", accepted)).data.value.shard).toBe(
-				0,
-			);
+			expect((await replacement.next("reply", accepted)).data).toMatchObject({
+				ok: true,
+				value: { shard: 0 },
+			});
 			const lostReplyRetry = replacement.send("lease", {
 				previous: null,
 				generation: "child-two",
 				preferred: 0,
 			});
 			expect(
-				(await replacement.next("reply", lostReplyRetry)).data.value.shard,
-			).toBe(0);
+				(await replacement.next("reply", lostReplyRetry)).data,
+			).toMatchObject({ ok: true, value: { shard: 0 } });
 			const invalid = returned.send("lease", {
 				previous: 2,
 				generation: "child-three",
 				preferred: 0,
 			});
-			expect((await returned.next("reply", invalid)).data.error.code).toBe(
-				"LEASE_INVALID",
-			);
+			expect((await returned.next("reply", invalid)).data).toMatchObject({
+				ok: false,
+				error: { code: "LEASE_INVALID" },
+			});
 		} finally {
 			await Promise.all(peers.map((entry) => entry.close()));
 			await s.close();
@@ -323,8 +333,14 @@ describe("authenticated coordinator on real WebSockets", () => {
 			const first = a.send("call", data);
 			await b.next("invoke");
 			const second = a.send("call", data);
-			expect((await a.next("reply", second)).data.error.code).toBe("CAPACITY");
-			expect((await a.next("reply", first)).data.error.code).toBe("TIMEOUT");
+			expect((await a.next("reply", second)).data).toMatchObject({
+				ok: false,
+				error: { code: "CAPACITY" },
+			});
+			expect((await a.next("reply", first)).data).toMatchObject({
+				ok: false,
+				error: { code: "TIMEOUT" },
+			});
 			expect(s.coordinator.pendingCount).toBe(0);
 			const duplicate = a.send("call", { ...data, timeoutMs: 1000 });
 			a.send("call", data, duplicate);
@@ -362,16 +378,20 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "b1",
 				timeoutMs: 100,
 			});
-			expect((await b.next("reply", blocked)).data.error.code).toBe(
-				"IDENTIFY_TIMEOUT",
-			);
+			expect((await b.next("reply", blocked)).data).toMatchObject({
+				ok: false,
+				error: { code: "IDENTIFY_TIMEOUT" },
+			});
 			const cancel = b.send("identify", {
 				shard: 1,
 				generation: "b1",
 				timeoutMs: 1000,
 			});
 			b.send("cancel", {}, cancel);
-			expect((await b.next("reply", cancel)).data.error.code).toBe("ABORTED");
+			expect((await b.next("reply", cancel)).data).toMatchObject({
+				ok: false,
+				error: { code: "ABORTED" },
+			});
 			a.send("done", { shard: 0, generation: "a1" });
 			const start = performance.now();
 			const next = b.send("identify", {
@@ -387,9 +407,10 @@ describe("authenticated coordinator on real WebSockets", () => {
 				generation: "a1",
 				timeoutMs: 100,
 			});
-			expect((await a.next("reply", exhausted)).data.error.code).toBe(
-				"IDENTIFY_TIMEOUT",
-			);
+			expect((await a.next("reply", exhausted)).data).toMatchObject({
+				ok: false,
+				error: { code: "IDENTIFY_TIMEOUT" },
+			});
 		} finally {
 			await Promise.all(peers.map((p) => p.close()));
 			await s.close();

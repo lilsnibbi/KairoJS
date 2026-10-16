@@ -13,12 +13,12 @@ import type { InitOptions } from "i18next";
 import type { Awaitable } from "../../utilities/index";
 
 /** Compatibility type used to control translation return-type inference. */
-export type $NoInfer<A> = [A][A extends any ? 0 : never];
+export type $NoInfer<A> = [A][A extends unknown ? 0 : never];
 
 /** String-keyed values used in translation options and object results. */
 export interface $Dictionary {
 	/** Application-defined translation or interpolation value by string key. */
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 /** Object or object-array translation result when returnObjects is enabled. */
@@ -104,7 +104,7 @@ export interface InternationalizationContext {
 }
 
 /** @deprecated Use {@link I18nextFormatter} instead */
-export interface I18nextFormatters extends I18nextNamedFormatter {}
+export type I18nextFormatters = I18nextNamedFormatter;
 
 /** A formatter that is added to i18next with `i18next.services.formatter.add` or `i18next.services.formatter.addCached`, depending on the `cached` property. */
 export type I18nextFormatter =
@@ -120,7 +120,7 @@ export interface I18nextNamedFormatter {
 	 * Format a value synchronously for the supplied language and options.
 	 * @returns Formatted text.
 	 */
-	format(value: any, lng: string | undefined, options: any): string;
+	format(value: unknown, lng: string | undefined, options: unknown): string;
 }
 
 /** A cached formatter that is added to i18next with `i18next.services.formatter.addCached`. */
@@ -133,7 +133,7 @@ export interface I18nextNamedCachedFormatter {
 	 * Build a formatter for one language/options combination.
 	 * @returns A function that turns each value into formatted text.
 	 */
-	format(lng: string | undefined, options: any): (value: any) => string;
+	format(lng: string | undefined, options: unknown): (value: unknown) => string;
 }
 
 /** Base presentation text and its Discord locale map. */

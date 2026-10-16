@@ -16,13 +16,14 @@ export function from<
  * @returns Its iterator.
  * @throws TypeError when the value cannot be converted.
  */
-export function from(value: any) {
+export function from(value: unknown) {
 	if (typeof value === "object" && value !== null) {
-		if (typeof value[Symbol.iterator] === "function") {
-			return value[Symbol.iterator]();
+		if (Symbol.iterator in value) {
+			const iterator = value[Symbol.iterator];
+			if (typeof iterator === "function") return iterator.call(value);
 		}
 
-		if (typeof value.next === "function") {
+		if ("next" in value && typeof value.next === "function") {
 			return value;
 		}
 	}

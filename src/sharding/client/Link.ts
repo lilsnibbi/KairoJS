@@ -68,7 +68,7 @@ export function shardConfig(): ShardConfig | undefined {
 	};
 }
 interface Handler {
-	run: (input: any, context: ShardContext) => unknown;
+	run(input: unknown, context: ShardContext): unknown;
 	validate?: (input: unknown) => unknown;
 }
 interface Active {
@@ -584,7 +584,7 @@ export class ShardLink extends ShardMessenger {
 	private readonly onSignal = (): void => {
 		void this.stop(0);
 	};
-	private invoke(message: Frame): void {
+	private invoke(message: Frame<"invoke">): void {
 		if (
 			!this.connected ||
 			this.closed ||

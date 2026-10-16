@@ -1,8 +1,9 @@
+import type { PreconditionContext } from "../../commands/checks/Precondition";
 import type { Message } from "discord.js";
 import type { PatternCommand } from "./PatternCommand";
 
 /** Data passed with the pattern command pre event. */
-export interface PatternCommandPrePayload {
+export interface PatternCommandPrePayload extends PreconditionContext {
 	/** Message that triggered this event. */
 	message: Message;
 	/** Candidate pattern commands, ordered for matching. */
@@ -10,7 +11,7 @@ export interface PatternCommandPrePayload {
 }
 
 /** Data passed with the pattern command event. */
-export interface PatternCommandPayload {
+export interface PatternCommandPayload extends PreconditionContext {
 	/** Message that triggered this event. */
 	message: Message;
 	/** Command associated with this invocation. */
@@ -20,7 +21,7 @@ export interface PatternCommandPayload {
 }
 
 /** Data passed with the pattern pre command run event. */
-export interface PatternPreCommandRunPayload extends PatternCommandDeniedPayload {}
+export type PatternPreCommandRunPayload = PatternCommandDeniedPayload;
 
 /** Data passed with the pattern command denied event. */
 export interface PatternCommandDeniedPayload extends PatternCommandPayload {
@@ -53,10 +54,10 @@ export interface PatternCommandFinishedPayload extends PatternCommandAcceptedPay
 }
 
 /** Data passed with the pattern command error event. */
-export interface PatternCommandErrorPayload extends PatternCommandFinishedPayload {}
+export type PatternCommandErrorPayload = PatternCommandFinishedPayload;
 
 /** Data passed with the pattern command no luck event. */
-export interface PatternCommandNoLuckPayload extends PatternCommandAcceptedPayload {}
+export type PatternCommandNoLuckPayload = PatternCommandAcceptedPayload;
 
 /** One pattern-command candidate with its alias and ordering weight. */
 export interface PossiblePatternCommand {

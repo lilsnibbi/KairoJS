@@ -134,7 +134,7 @@ describe("poll", () => {
 				const cb = jest.fn(cbRaw);
 				const cbCondition = jest.fn(cbConditionRaw);
 				const result = poll(cb, cbCondition, {
-					waitBetweenRetries: waitBetweenRetries as any,
+					waitBetweenRetries: waitBetweenRetries as unknown as number,
 				});
 
 				await expect(result).rejects.toStrictEqual(

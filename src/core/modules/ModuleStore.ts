@@ -44,6 +44,8 @@ export class ModuleStore<
 	T extends Module,
 	StoreName extends ModuleKind = ModuleKind,
 > extends Collection<string, T> {
+	/** Module registry constructor. */
+	public static readonly Registry = ModuleRegistry;
 	/** Base class accepted by this store. */
 	public readonly Constructor: AbstractConstructor<T>;
 	/** Registry key for this store. */
@@ -72,7 +74,9 @@ export class ModuleStore<
 		super();
 		this.Constructor = pieceConstructor;
 		this.name = options.name;
-		this.strategy = options.strategy ?? ModuleStore.defaultStrategy;
+		// The loader checks candidates against this store's constructor before activation.
+		this.strategy =
+			options.strategy ?? (ModuleStore.defaultStrategy as ModuleLoaderHooks<T>);
 	}
 	/** Shared framework services. */
 	get container(): Container {
@@ -101,12 +105,15 @@ export class ModuleStore<
 			this.#initialization ||
 			(this.#preparedModules && !this[RegisteredModules].has(entry.name))
 		) {
-			const module = this.construct(entry.module as unknown as Constructor<T>, {
-				name: entry.name,
-				root: VirtualPath,
-				path: VirtualPath,
-				extension: "",
-			});
+			const module = this.construct(
+				entry.module as unknown as ILoaderResultEntry<T>,
+				{
+					name: entry.name,
+					root: VirtualPath,
+					path: VirtualPath,
+					extension: "",
+				},
+			);
 			if (!this.#loaded && this.#insertions.has(module.name)) {
 				this.warnDuplicate(module.name, "explicit registration");
 				return;
@@ -134,13 +141,13 @@ export class ModuleStore<
 	async prepare(
 		files: string[],
 		root: string,
-		imports = new Map<string, Promise<any>>(),
+		imports = new Map<string, Promise<Record<string, unknown>>>(),
 	): Promise<T[]> {
 		const modules: T[] = [];
 		for (const entry of this[RegisteredModules].values()) {
 			try {
 				modules.push(
-					this.construct(entry.module as unknown as Constructor<T>, {
+					this.construct(entry.module as unknown as ILoaderResultEntry<T>, {
 						name: entry.name,
 						root: VirtualPath,
 						path: VirtualPath,
@@ -160,7 +167,7 @@ export class ModuleStore<
 	private async prepareFile(
 		root: string,
 		path: string,
-		imports: Map<string, Promise<any>>,
+		imports: Map<string, Promise<Record<string, unknown>>>,
 	): Promise<T[]> {
 		const data = this.strategy.filter(path);
 		if (!data) return [];
@@ -386,6 +393,7 @@ export class ModuleStore<
 			throw new AggregateError(
 				errors,
 				`Could not activate module "${module.name}".`,
+				{ cause },
 			);
 		}
 	}
@@ -414,7 +422,7 @@ export class ModuleStore<
 		return module;
 	}
 	/** Loader used by new stores without a custom strategy. Defaults to a TypeScript ModuleLoader. */
-	static defaultStrategy: ModuleLoaderHooks<any> = new ModuleLoader();
+	static defaultStrategy: ModuleLoaderHooks<Module> = new ModuleLoader();
 	/** Optional synchronous module trace sink. Defaults to null; the active client sets it when traceModules is enabled. */
 	static logger: ModuleStoreLogger | null = null;
 }
@@ -429,9 +437,7 @@ export interface ModuleRegistration<StoreName extends ModuleKind> {
 		: never;
 }
 /** Types and helpers for {@link ModuleStore}. */
-export namespace ModuleStore {
-	/** ModuleRegistry class, also available through the ModuleStore namespace. */
-	export const Registry = ModuleRegistry;
+export declare namespace ModuleStore {
 	/** Shorthand for {@link ModuleStoreOptions}. */
 	export type Options<T extends Module> = ModuleStoreOptions<T>;
 	/** Shorthand for {@link ModuleStoreLogger}. */

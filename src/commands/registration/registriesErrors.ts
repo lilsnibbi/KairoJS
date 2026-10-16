@@ -5,10 +5,7 @@ import type { Command } from "../Command";
 import { bulkOverwriteError } from "./registriesLog";
 
 /** Opinionatedly logs the encountered registry error. */
-export function emitPerRegistryError(
-	error: unknown,
-	command: Command<any, any>,
-) {
+export function emitPerRegistryError(error: unknown, command: Command) {
 	const { name, location } = command;
 	const { client, logger } = container;
 
