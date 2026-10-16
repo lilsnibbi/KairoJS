@@ -1,7 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { assertCompleteTests, requiredRedisUrl } from "../../scripts/ciSupport";
+import {
+	assertCanaryToolchain,
+	assertCompleteTests,
+	requiredRedisUrl,
+} from "../../scripts/ciSupport";
 
 const workflow = Bun.YAML.parse(
 	readFileSync(join(import.meta.dir, "../../.github/workflows/ci.yml"), "utf8"),
@@ -117,6 +121,28 @@ describe("CI release boundary", () => {
 });
 
 describe("complete validation prerequisites", () => {
+	test("CI selects canary from the manifest and rejects stable toolchains", () => {
+		const manifest = JSON.parse(
+			readFileSync(join(import.meta.dir, "../../package.json"), "utf8"),
+		);
+		expect(manifest.packageManager).toBe("bun@canary");
+		expect(workflow.jobs.validate.steps[1].with["bun-version-file"]).toBe(
+			"package.json",
+		);
+		expect(() =>
+			assertCanaryToolchain(manifest.packageManager, "1.4.4-canary.1+abc123"),
+		).not.toThrow();
+		expect(() =>
+			assertCanaryToolchain(manifest.packageManager, "1.5.0-canary.2+def456"),
+		).not.toThrow();
+		expect(() =>
+			assertCanaryToolchain(manifest.packageManager, "1.4.4+abc123"),
+		).toThrow("Use Bun canary");
+		expect(() =>
+			assertCanaryToolchain("bun@1.4.4", "1.4.4-canary.1+abc123"),
+		).toThrow("Set packageManager");
+	});
+
 	test("missing, external and non-Redis endpoints fail", () => {
 		for (const url of [
 			undefined,

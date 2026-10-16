@@ -4,7 +4,7 @@
 
 ## Run it
 
-Use Bun 1.4.4 and `bun install --frozen-lockfile`.
+Use Bun canary (`bun upgrade --canary`) and `bun install --frozen-lockfile`.
 
 ```sh
 bun run engine:test

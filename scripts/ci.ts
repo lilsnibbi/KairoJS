@@ -2,12 +2,21 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { RedisClient } from "bun";
-import { assertCompleteTests, requiredRedisUrl } from "./ciSupport";
+import {
+	assertCanaryToolchain,
+	assertCompleteTests,
+	requiredRedisUrl,
+} from "./ciSupport";
 
 const root = join(import.meta.dir, "..");
 const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-if (manifest.packageManager !== `bun@${Bun.version}`)
-	throw new Error("Use the exact packageManager Bun version.");
+const revision = Bun.spawnSync([process.execPath, "--revision"]);
+if (revision.exitCode !== 0)
+	throw new Error("Could not read the Bun revision.");
+assertCanaryToolchain(
+	manifest.packageManager,
+	revision.stdout.toString().trim(),
+);
 const redis = new RedisClient(
 	requiredRedisUrl(process.env.KAIRO_TEST_REDIS_URL),
 	{ connectionTimeout: 5000, autoReconnect: false },

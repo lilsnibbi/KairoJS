@@ -1,3 +1,13 @@
+export function assertCanaryToolchain(
+	packageManager: unknown,
+	revision: string,
+): void {
+	if (packageManager !== "bun@canary")
+		throw new Error("Set packageManager to bun@canary.");
+	if (!/-canary(?:[.+]|$)/.test(revision))
+		throw new Error("Use Bun canary: bun upgrade --canary.");
+}
+
 export function requiredRedisUrl(value: string | undefined): string {
 	if (!value)
 		throw new Error(

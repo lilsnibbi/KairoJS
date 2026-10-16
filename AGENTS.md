@@ -13,7 +13,7 @@ KairoJS is a modular Discord framework shipped as raw TypeScript for Bun. There 
 
 ## Build, Test, and Development Commands
 
-Use Bun 1.4.4. From the repository root:
+Use Bun canary (`bun upgrade --canary`), the project's standard toolchain. From the repository root:
 
 - `bun install --frozen-lockfile`: install locked dependencies.
 - `bun test`: run the test suite.

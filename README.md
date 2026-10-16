@@ -136,7 +136,7 @@ Try `bun examples/offline.ts` without a Discord token.
 
 ## Development
 
-Use Bun **1.4.4**.
+Use **Bun canary**, the project's standard toolchain. Install it with `bun upgrade --canary`; CI follows the canary channel through `packageManager` in `package.json`.
 
 | Command           | Purpose                                 |
 | ----------------- | --------------------------------------- |
