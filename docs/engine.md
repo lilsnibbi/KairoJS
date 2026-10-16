@@ -4,12 +4,13 @@
 
 ## Run it
 
-Use Bun 1.4.3 and `bun install --frozen-lockfile`.
+Use Bun 1.4.4 and `bun install --frozen-lockfile`.
 
 ```sh
 bun run engine:test
-bun run typecheck
-bun run lint:check
+bun check
+bun lint
+bun fmt --check
 bun examples/engine/offline.ts
 ```
 
@@ -103,7 +104,7 @@ Historical validation on 2026-10-11 used Bun 1.4.2 on Windows x64 and a disposab
 - `bun install --frozen-lockfile --ignore-scripts`: succeeded without lock changes.
 - `bun run engine:test`: 76 passing tests across four files, 279 assertions.
 - `bun scripts/ci.ts` with `KAIRO_TEST_REDIS_URL`: 2,361 passing tests across 226 files, 4,943 assertions, zero failures and zero skipped tests.
-- The same CI run passed `bun run typecheck`, Biome, the existing offline framework example, the engine offline example and `bun run smoke`.
+- The same CI run passed type checking, the lint and formatting checks configured at the time, the existing offline framework example, the engine offline example and `bun run smoke`.
 - The smoke test packed and installed the package in a temporary consumer, audited public exports/notices, loaded a framework command and ran the native engine connect/reply/resume example.
 
 Engine coverage comprises 14 cache tests, 11 client/event/helper tests, 28 gateway/protocol/identify tests and 23 REST tests. They exercise partial/null updates, resident identity, LRU boundaries and recency, deletion ordering, concurrent handlers, fetch/delete races, heartbeat debt, disconnect/resume/session invalidation, malformed/premature frames, stale sockets, cleanup, rate limits, bounded retries, cancellation and request limits.

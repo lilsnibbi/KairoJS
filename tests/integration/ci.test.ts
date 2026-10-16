@@ -57,9 +57,7 @@ describe("CI release boundary", () => {
 		expect(workflow.jobs.validate.permissions).toEqual({ contents: "read" });
 		expect(workflow.jobs.required.needs).toEqual(["validate"]);
 		expect(release.needs).toEqual(["validate", "required"]);
-		// biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub expression syntax.
 		expect(workflow.jobs.required.if).toBe("${{ always() }}");
-		// biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub expression syntax.
 		expect(workflow.jobs.validate.steps[0].with.ref).toBe("${{ github.sha }}");
 		expect(workflow.jobs.validate.steps[0].with["persist-credentials"]).toBe(
 			false,

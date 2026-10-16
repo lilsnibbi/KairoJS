@@ -13,20 +13,21 @@ KairoJS is a modular Discord framework shipped as raw TypeScript for Bun. There 
 
 ## Build, Test, and Development Commands
 
-Use Bun 1.4.3. From the repository root:
+Use Bun 1.4.4. From the repository root:
 
 - `bun install --frozen-lockfile`: install locked dependencies.
 - `bun test`: run the test suite.
-- `bun run typecheck`: check TypeScript without emitting files.
-- `bun run lint:check`: run Biome lint and formatting checks.
-- `bun run format`: apply Biome formatting; review changes before committing.
+- `bun check`: check TypeScript without emitting files.
+- `bun lint`: run Bun's built-in lint rules.
+- `bun fmt --check`: check formatting without writing files.
+- `bun fmt`: apply formatting; review changes before committing.
 - `bun examples/offline.ts`: check the example bot's modules and shard messaging without Discord.
 - `bun --env-file=examples/.env examples/coordinator.ts`: start the example coordinator.
 - `bun --env-file=examples/.env examples/host.ts`: start the example bot's shard host.
 
 ## Coding Style & Naming Conventions
 
-Use strict TypeScript, tabs, single quotes, semicolons, no trailing commas and a 140-column limit. Biome defines formatting and lint rules. Use camelCase directories and functions, and PascalCase classes and class filenames. Keep relative code imports extensionless. Implementation files must import internal modules directly rather than the root or public barrels. Expose supported APIs through the existing named exports.
+Use strict TypeScript and the Bun formatting settings in `bunfig.toml`: tabs and an 80-column print width, with Bun's defaults for quotes, semicolons and trailing commas. Bun's built-in linter defines lint rules. Use camelCase directories and functions, and PascalCase classes and class filenames. Keep relative code imports extensionless. Implementation files must import internal modules directly rather than the root or public barrels. Expose supported APIs through the existing named exports.
 
 ## Testing Guidelines
 

@@ -1139,11 +1139,11 @@ describe("Result", () => {
 
 	describe("types", () => {
 		test("GIVEN Ok<T> THEN assigns to Result<T, E>", () => {
-			expect<Result<number, string>>(ok(4));
+			expect<Result<number, string>>(ok(4)).toEqual(ok(4));
 		});
 
 		test("GIVEN Err<E> THEN assigns to Result<T, E>", () => {
-			expect<Result<number, string>>(err("foo"));
+			expect<Result<number, string>>(err("foo")).toEqual(err("foo"));
 		});
 	});
 });

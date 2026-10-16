@@ -978,11 +978,11 @@ describe("Option", () => {
 
 	describe("types", () => {
 		test("GIVEN Some<T> THEN assigns to Option<T>", () => {
-			expect<Option<string>>(some("foo"));
+			expect<Option<string>>(some("foo")).toEqual(some("foo"));
 		});
 
 		test("GIVEN None THEN assigns to Option<T>", () => {
-			expect<Option<string>>(none);
+			expect<Option<string>>(none).toBe(none);
 		});
 	});
 });

@@ -136,18 +136,19 @@ Try `bun examples/offline.ts` without a Discord token.
 
 ## Development
 
-Use Bun **1.4.3**.
+Use Bun **1.4.4**.
 
-| Command              | Purpose                                    |
-| -------------------- | ------------------------------------------ |
-| `bun test`           | Run Bun tests                              |
-| `bun run typecheck`  | Check TypeScript without emitting files    |
-| `bun run lint:check` | Check formatting and lint rules with Biome |
-| `bun run format`     | Apply formatting                           |
+| Command           | Purpose                                 |
+| ----------------- | --------------------------------------- |
+| `bun test`        | Run Bun tests                           |
+| `bun check`       | Check TypeScript without emitting files |
+| `bun lint`        | Run Bun's built-in lint rules           |
+| `bun fmt --check` | Check formatting without writing files  |
+| `bun fmt`         | Apply formatting                        |
 
 Redis integration tests require `KAIRO_TEST_REDIS_URL` pointing to a disposable Redis instance; otherwise those tests are skipped locally.
 
-Run `bun scripts/ci.ts` with that loopback Redis URL for complete validation: zero skipped tests, native Bun type checking, Biome and both offline examples. On the Ubuntu x64 CI runner, `bash scripts/checkActions.sh` also checks the workflow with checksum-pinned actionlint.
+Run `bun scripts/ci.ts` with that loopback Redis URL for complete validation: zero skipped tests, native Bun type checking, linting, formatting and both offline examples. On the Ubuntu x64 CI runner, `bash scripts/checkActions.sh` also checks the workflow with checksum-pinned actionlint.
 
 See [migration notes](BREAKING_CHANGES.md) when moving from an earlier KairoJS API.
 

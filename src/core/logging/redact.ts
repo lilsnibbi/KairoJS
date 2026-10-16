@@ -22,10 +22,10 @@ export function safeText(
 ): string {
 	let text = value
 		.slice(0, 16_384)
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: strip terminal escapes before secret matching
+		// eslint-disable-next-line no-control-regex -- strip terminal escapes before secret matching
 		.replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b\[[0-?]*[ -/]*[@-~]/g, "")
-		// biome-ignore lint/suspicious/noControlCharactersInRegex: keep only newlines/tabs to escape below
 		.replace(
+			// eslint-disable-next-line no-control-regex -- keep only newlines/tabs to escape below
 			/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x9f\u200b-\u200f\u202a-\u202e\u2066-\u2069]/g,
 			"",
 		);

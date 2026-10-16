@@ -19,7 +19,7 @@ describe("BitField", () => {
 	describe("constructor", () => {
 		test("GIVEN a valid mapped number flag set THEN returns a number BitField", () => {
 			const bitfield = new BitField(NumberFlags);
-			expect<BitField<typeof NumberFlags>>(bitfield);
+			expect<BitField<typeof NumberFlags>>(bitfield).toBeInstanceOf(BitField);
 			expect<"number">(bitfield.type).toBe("number");
 			expect<0>(bitfield.zero).toBe(0);
 			expect<number>(bitfield.mask).toBe(15);
@@ -28,7 +28,7 @@ describe("BitField", () => {
 
 		test("GIVEN a valid mapped bigint flag set THEN returns a bigint BitField", () => {
 			const bitfield = new BitField(BigIntFlags);
-			expect<BitField<typeof BigIntFlags>>(bitfield);
+			expect<BitField<typeof BigIntFlags>>(bitfield).toBeInstanceOf(BitField);
 			expect<"bigint">(bitfield.type).toBe("bigint");
 			expect<0n>(bitfield.zero).toBe(0n);
 			expect<bigint>(bitfield.mask).toBe(15n);

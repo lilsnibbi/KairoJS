@@ -38,12 +38,13 @@ try {
 	// Keep sequential: tests create and remove temporary TypeScript discovery fixtures.
 	await run("test", "--reporter=junit", `--reporter-outfile=${report}`);
 	assertCompleteTests(readFileSync(report, "utf8"));
-	await run("run", "typecheck");
-	await run("run", "lint:check");
+	await run("check");
+	await run("lint");
+	await run("fmt", "--check");
 	await run("examples/offline.ts");
 	await run("examples/engine/offline.ts");
 	console.log(
-		"Complete validation passed: no skipped tests, types, Biome and both offline examples.",
+		"Complete validation passed: no skipped tests, types, lint, formatting and both offline examples.",
 	);
 } finally {
 	rmSync(reportDirectory, { recursive: true, force: true });

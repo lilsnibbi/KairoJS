@@ -79,7 +79,6 @@ for (const [name, category] of Object.entries(categories)) {
 		expect(Object.keys(category).length).toBeGreaterThan(0);
 		expect("default" in category).toBe(false);
 		for (const [key, value] of Object.entries(category)) {
-			// biome-ignore lint/performance/noDynamicNamespaceImportAccess: compare the entire compatibility surface.
 			expect(value).toBe(Root[key as keyof typeof Root]);
 		}
 	});
