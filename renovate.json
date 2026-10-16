@@ -7,7 +7,7 @@
 	"reviewers": ["lilsnibbi"],
 	"labels": ["dependencies", "renovate"],
 	"prCreation": "immediate",
-	"automerge": true,
+	"automerge": false,
 	"prBodyTemplate": "{{{header}}}{{{table}}}{{{warnings}}}{{{notes}}}{{{changelogs}}}{{{controls}}}",
 	"lockFileMaintenance": { "enabled": true },
 	"customManagers": [
