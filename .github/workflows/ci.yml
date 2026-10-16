@@ -16,6 +16,15 @@ defaults:
 jobs:
   validate:
     name: Validate
+    # Identify the PR or commit author, never the actor who started this run.
+    if: >-
+      ${{ !(
+        (github.event_name == 'pull_request' &&
+         github.event.pull_request.user.login == 'github-actions[bot]') ||
+        (github.event_name == 'push' &&
+         github.event.head_commit.author.username == 'github-actions[bot]') ||
+        startsWith(github.head_ref || github.ref_name, 'release-please-')
+      ) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     permissions:
@@ -85,22 +94,41 @@ jobs:
     if: ${{ always() }}
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    outputs:
+      validation_skipped: ${{ steps.require_validation.outputs.validation_skipped }}
     steps:
-      - name: Require complete validation of this commit
+      - name: Require validation or allow the configured skip
+        id: require_validation
         env:
           RESULT: ${{ needs.validate.result }}
           VALIDATED_SHA: ${{ needs.validate.outputs.sha }}
+          SKIP_VALIDATION: >-
+            ${{
+              (github.event_name == 'pull_request' &&
+               github.event.pull_request.user.login == 'github-actions[bot]') ||
+              (github.event_name == 'push' &&
+               github.event.head_commit.author.username == 'github-actions[bot]') ||
+              startsWith(github.head_ref || github.ref_name, 'release-please-')
+            }}
         run: |
+          if [[ "$SKIP_VALIDATION" == "true" ]]; then
+            echo "validation_skipped=true" >> "$GITHUB_OUTPUT"
+            echo "Validation intentionally skipped for $GITHUB_REF" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           test "$RESULT" = success
           test "$VALIDATED_SHA" = "$GITHUB_SHA"
+          echo "validation_skipped=false" >> "$GITHUB_OUTPUT"
           echo "All required checks passed for $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
 
   release:
     name: Release Please
     needs: [validate, required]
     if: >-
-      ${{ success() && needs.validate.result == 'success' &&
-          needs.required.result == 'success' && needs.validate.outputs.sha == github.sha &&
+      ${{ always() && needs.required.result == 'success' &&
+          ((needs.validate.result == 'success' && needs.validate.outputs.sha == github.sha) ||
+           (needs.validate.result == 'skipped' &&
+            needs.required.outputs.validation_skipped == 'true')) &&
           github.event_name == 'push' && github.ref_type == 'branch' &&
           github.ref_name == github.event.repository.default_branch &&
           vars.KAIRO_RELEASES == 'true' }}
@@ -113,6 +141,9 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+    outputs:
+      release_created: ${{ steps.release_please.outputs.release_created }}
+      tag_name: ${{ steps.release_please.outputs.tag_name }}
     steps:
       # No checkout or repository code is executed with the write token.
       - name: Reject a stale default-branch run
@@ -133,8 +164,21 @@ jobs:
           current_sha=$(gh api "repos/$GH_REPO/git/ref/heads/$encoded_branch" --jq .object.sha)
           test "$current_sha" = "$GITHUB_SHA"
       - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0, Node 24
+        id: release_please
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           target-branch: ${{ github.event.repository.default_branch }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+  publish:
+    name: Publish to npm
+    needs: [release]
+    if: ${{ needs.release.outputs.release_created == 'true' }}
+    # Release Please uses GITHUB_TOKEN, so its release event cannot start a workflow.
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/publish.yml
+    with:
+      tag_name: ${{ needs.release.outputs.tag_name }}

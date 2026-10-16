@@ -4,6 +4,10 @@
 	"description": "A modular Discord framework for Bun, written in TypeScript.",
 	"type": "module",
 	"license": "MIT AND Apache-2.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/lilsnibbi/kairo.js.git"
+	},
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
