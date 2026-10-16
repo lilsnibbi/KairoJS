@@ -293,10 +293,11 @@ export class LocaleManager {
 	>(
 		locale: string,
 		key: string | string[],
-		options: TOpt & $Dictionary & {
-			/** Fallback text used when no translation is found. */
-			defaultValue: string
-		},
+		options: TOpt &
+			$Dictionary & {
+				/** Fallback text used when no translation is found. */
+				defaultValue: string;
+			},
 	): TFunctionReturnOptionalDetails<Ret, TOpt>;
 
 	/** Localizes a content given one or more keys and i18next options. */

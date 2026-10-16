@@ -22,11 +22,11 @@ export type NumberResolvable =
 	| null
 	| {
 			/** Return a number, boolean, or null for numeric conversion. */
-			valueOf(): number | boolean | null
+			valueOf(): number | boolean | null;
 	  }
 	| {
 			/** Return a number, boolean, or null for numeric conversion. */
-			[Symbol.toPrimitive](): number | boolean | null
+			[Symbol.toPrimitive](): number | boolean | null;
 	  };
 
 function assertNumber(value: number, original: unknown): number {

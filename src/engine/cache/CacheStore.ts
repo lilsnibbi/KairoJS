@@ -15,7 +15,8 @@ export class CacheStore<T extends object> implements Iterable<
 	 */
 	public constructor(
 		/** Maximum stored entries. Defaults to Infinity; 0 disables storage. */
-		public readonly limit = Number.POSITIVE_INFINITY) {
+		public readonly limit = Number.POSITIVE_INFINITY,
+	) {
 		if (limit !== Number.POSITIVE_INFINITY) integer(limit, "cache limit");
 	}
 	/** Number of stored entries. */

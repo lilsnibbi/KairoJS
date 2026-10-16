@@ -13,7 +13,7 @@ export function resolveEnum(
 		/** Allowed strings. An omitted or empty list fails. */
 		enum?: string[];
 		/** Ignore case when comparing values. Defaults to false. */
-		caseInsensitive?: boolean
+		caseInsensitive?: boolean;
 	},
 ): Result<
 	string,

@@ -193,7 +193,7 @@ export type CommandLocalisation =
 				/** Stable choice value used to match the original choice; it is never translated. */
 				value: string | number;
 				/** Translation key for this choice’s display name. */
-				name: string
+				name: string;
 			}[];
 	  };
 

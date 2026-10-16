@@ -13,7 +13,7 @@ export function resolveString(
 		/** Inclusive minimum string length. Omit for no lower bound. */
 		minimum?: number;
 		/** Inclusive maximum string length. Omit for no upper bound. */
-		maximum?: number
+		maximum?: number;
 	},
 ): Result<
 	string,

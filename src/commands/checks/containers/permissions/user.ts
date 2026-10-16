@@ -8,7 +8,7 @@ export class UserPermissionsPrecondition implements PreconditionSingleResolvable
 	/** Permission context passed to the check. */
 	public context: {
 		/** Required invoking-user permissions. */
-		permissions: PermissionsBitField
+		permissions: PermissionsBitField;
 	};
 
 	/**

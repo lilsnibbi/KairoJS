@@ -16,24 +16,25 @@ export type $Patch<T> = T extends readonly unknown[]
 
 /** Cached entity with a completeness flag. A patch alone never makes an entry complete. */
 export type $CacheEntry<T> =
-	{
-		/** True after a full entity was stored with put; false when only patches are known. */
-		complete: true;
-		/** Full entity when complete is true; otherwise the known partial fields. */
-		data: T
-	} | {
-		/** True after a full entity was stored with put; false when only patches are known. */
-		complete: false;
-		/** Full entity when complete is true; otherwise the known partial fields. */
-		data: $Patch<T>
-	};
+	| {
+			/** True after a full entity was stored with put; false when only patches are known. */
+			complete: true;
+			/** Full entity when complete is true; otherwise the known partial fields. */
+			data: T;
+	  }
+	| {
+			/** True after a full entity was stored with put; false when only patches are known. */
+			complete: false;
+			/** Full entity when complete is true; otherwise the known partial fields. */
+			data: $Patch<T>;
+	  };
 
 /** Native Discord entity types supported by the engine cache. */
 export interface $CacheEntities {
 	/** Guild metadata, possibly marked unavailable. Gateway guild snapshots remain partial. */
 	guild: APIGuild & {
 		/** Whether Discord temporarily marked this guild unavailable, when known. */
-		unavailable?: boolean
+		unavailable?: boolean;
 	};
 	/** Native Discord channel data. */
 	channel: APIChannel;

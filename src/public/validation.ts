@@ -10,5 +10,5 @@ export {
 	/** An ArkType schema and its inferred input/output types. */
 	type Type,
 	/** Create an ArkType schema from a supported definition. */
-	type
+	type,
 } from "arktype";

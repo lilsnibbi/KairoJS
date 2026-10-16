@@ -38,7 +38,7 @@ type _TypeToOptionMap = {
 		 * Option-kind discriminator used by the map.
 		 * @internal
 		 */
-		type: Option
+		type: Option;
 	};
 };
 
@@ -60,7 +60,7 @@ type _TypeToModalComponentMap = {
 		 * Component-kind discriminator used by the map.
 		 * @internal
 		 */
-		type: Component
+		type: Component;
 	};
 };
 

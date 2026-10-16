@@ -20,7 +20,8 @@ export class DurationFormatter {
 	 */
 	public constructor(
 		/** Unit labels retained by this formatter. Defaults to DEFAULT_UNITS. */
-		public units: DurationFormatAssetsTime = DEFAULT_UNITS) {}
+		public units: DurationFormatAssetsTime = DEFAULT_UNITS,
+	) {}
 
 	/**
 	 * Format a millisecond duration using fixed year/month lengths and whole units down to seconds.

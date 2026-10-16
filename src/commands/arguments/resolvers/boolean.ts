@@ -16,7 +16,7 @@ export function resolveBoolean(
 		/** Additional lowercase true spellings. Built-ins are 1, true, +, t, yes, and y. */
 		truths?: readonly string[];
 		/** Additional lowercase false spellings. Built-ins are 0, false, -, f, no, and n. */
-		falses?: readonly string[]
+		falses?: readonly string[];
 	},
 ): Result<boolean, Identifiers.ArgumentBooleanError> {
 	const boolean = parameter.toLowerCase();

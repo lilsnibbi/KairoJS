@@ -11,13 +11,16 @@ export type $MessageUpdateData = Partial<GatewayMessageUpdateDispatchData> &
 	Pick<GatewayMessageUpdateDispatchData, "id" | "channel_id">;
 /** Native Discord dispatch payload, allowing partial MESSAGE_UPDATE data. */
 export type $GatewayDispatch =
-	| Exclude<GatewayDispatchPayload, {
-			/** MESSAGE_UPDATE event discriminator for the partial message-update branch. */
-			t: GatewayDispatchEvents.MessageUpdate
-	  }>
+	| Exclude<
+			GatewayDispatchPayload,
+			{
+				/** MESSAGE_UPDATE event discriminator for the partial message-update branch. */
+				t: GatewayDispatchEvents.MessageUpdate;
+			}
+	  >
 	| (Omit<GatewayMessageUpdateDispatch, "d"> & {
 			/** Partial message update data with required message and channel IDs. */
-			d: $MessageUpdateData
+			d: $MessageUpdateData;
 	  });
 /** Native incoming gateway packet, including dispatches with partial message updates. */
 export type $GatewayPacket =

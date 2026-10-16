@@ -8,7 +8,7 @@ export class ClientPermissionsPrecondition implements PreconditionSingleResolvab
 	/** Permission context passed to the check. */
 	public context: {
 		/** Required bot permissions. */
-		permissions: PermissionsBitField
+		permissions: PermissionsBitField;
 	};
 
 	/**

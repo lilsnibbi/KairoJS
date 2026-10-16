@@ -21,7 +21,7 @@ export function request<T = unknown>(
 	url: URL | string,
 	options?: HttpRequestOptions & {
 		/** Select the overload’s decoded response type. */
-		response?: "json"
+		response?: "json";
 	},
 ): Promise<T>;
 /**
@@ -36,7 +36,7 @@ export function request(
 	url: URL | string,
 	options: HttpRequestOptions & {
 		/** Select the overload’s decoded response type. */
-		response: "text"
+		response: "text";
 	},
 ): Promise<string>;
 /**
@@ -51,7 +51,7 @@ export function request(
 	url: URL | string,
 	options: HttpRequestOptions & {
 		/** Select the overload’s decoded response type. */
-		response: "bytes"
+		response: "bytes";
 	},
 ): Promise<Uint8Array>;
 /**
@@ -66,7 +66,7 @@ export function request(
 	url: URL | string,
 	options: HttpRequestOptions & {
 		/** Select the overload’s decoded response type. */
-		response: "blob"
+		response: "blob";
 	},
 ): Promise<Blob>;
 /**
@@ -81,7 +81,7 @@ export function request(
 	url: URL | string,
 	options: HttpRequestOptions & {
 		/** Select the overload’s decoded response type. */
-		response: "response"
+		response: "response";
 	},
 ): Promise<Response>;
 /**

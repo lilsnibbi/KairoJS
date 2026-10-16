@@ -49,9 +49,9 @@ export type PointerLike =
 	| Pointer
 	| {
 			/** Return the numeric bit offset. */
-			valueOf(): number
+			valueOf(): number;
 	  }
 	| {
 			/** Return the numeric bit offset for the number hint. */
-			[Symbol.toPrimitive](hint: "number"): number
+			[Symbol.toPrimitive](hint: "number"): number;
 	  };

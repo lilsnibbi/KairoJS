@@ -100,10 +100,11 @@ export async function resolveKey<
 >(
 	target: Target,
 	key: string | string[],
-	options: TOpt & $Dictionary & {
-		/** Fallback text used when the translation key is missing. */
-		defaultValue: string
-	},
+	options: TOpt &
+		$Dictionary & {
+			/** Fallback text used when the translation key is missing. */
+			defaultValue: string;
+		},
 ): Promise<TFunctionReturnOptionalDetails<Ret, TOpt>>;
 
 /** Resolve a key and its parameters. */

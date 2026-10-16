@@ -42,7 +42,7 @@ export type ShardResult<T> =
 			/** True for a successful reply; false when this shard could not answer. */
 			ok: true;
 			/** Handler output, present only when ok is true. */
-			value: T
+			value: T;
 	  }
 	| {
 			/** Target Discord shard ID. */
@@ -50,7 +50,7 @@ export type ShardResult<T> =
 			/** True for a successful reply; false when this shard could not answer. */
 			ok: false;
 			/** Request failure, present only when ok is false. */
-			error: ShardError
+			error: ShardError;
 	  };
 /** A fresh sample taken inside one shard process when it receives your stats request. */
 export interface ShardStats {
@@ -94,7 +94,7 @@ export type ShardStatsResult =
 			/** True for a fresh sample; false for a failed shard request. */
 			readonly ok: true;
 			/** Frozen live sample, present only when ok is true. */
-			readonly value: ShardStats
+			readonly value: ShardStats;
 	  }
 	| {
 			/** Target Discord shard ID. */
@@ -247,12 +247,14 @@ export interface ShardManagerOptions {
 	/** Child crash recovery settings, or false to disable restarts. Enabled with ShardRecovery defaults when omitted. */
 	restart?: false | ShardRecovery;
 	/** Initial connection/admission waits and later reconnection are independent of child restart; default enabled without an attempt limit. */
-	reconnect?: false | {
-		/** Initial coordinator reconnect delay in milliseconds (50..300000). Defaults to 500. */
-		initialDelayMs?: number;
-		/** Maximum coordinator reconnect delay in milliseconds, at least initialDelayMs and at most 300000. Defaults to 30000. */
-		maxDelayMs?: number
-	};
+	reconnect?:
+		| false
+		| {
+				/** Initial coordinator reconnect delay in milliseconds (50..300000). Defaults to 500. */
+				initialDelayMs?: number;
+				/** Maximum coordinator reconnect delay in milliseconds, at least initialDelayMs and at most 300000. Defaults to 30000. */
+				maxDelayMs?: number;
+		  };
 	/** Deadline for each coordinator handshake or child boot attempt in milliseconds (1..300000). Defaults to 30000. */
 	startupTimeoutMs?: number;
 	/** Grace period for each shutdown stage in milliseconds (1..300000). Defaults to 5000. */

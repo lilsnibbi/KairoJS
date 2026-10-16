@@ -20,7 +20,7 @@ export interface Container {
 	/** Access to named application command registries. */
 	applicationCommandRegistries: {
 		/** Get the registry for a command name, creating it when needed. */
-		acquire: typeof acquire
+		acquire: typeof acquire;
 	};
 	/** Locale manager, present while the localisation extension is enabled. */
 	i18n: LocaleManager;

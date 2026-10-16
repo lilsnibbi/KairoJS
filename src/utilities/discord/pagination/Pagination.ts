@@ -86,7 +86,7 @@ export type PaginationOptions = PaginationBaseOptions &
 				/** Output mode: embed or container. */
 				type: "embed";
 				/** Embed template copied at construction. Its description is replaced by page text. Defaults to a new empty embed. */
-				embed?: EmbedBuilder
+				embed?: EmbedBuilder;
 		  }
 		| {
 				/** Output mode: embed or container. */

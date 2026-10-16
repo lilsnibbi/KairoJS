@@ -13,7 +13,7 @@ export function resolveDate(
 		/** Inclusive minimum Unix timestamp in milliseconds. Omit for no lower bound. */
 		minimum?: number;
 		/** Inclusive maximum Unix timestamp in milliseconds. Omit for no upper bound. */
-		maximum?: number
+		maximum?: number;
 	},
 ): Result<
 	Date,

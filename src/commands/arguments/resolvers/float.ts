@@ -13,7 +13,7 @@ export function resolveFloat(
 		/** Inclusive minimum numeric value. Omit for no lower bound. */
 		minimum?: number;
 		/** Inclusive maximum numeric value. Omit for no upper bound. */
-		maximum?: number
+		maximum?: number;
 	},
 ): Result<
 	number,
