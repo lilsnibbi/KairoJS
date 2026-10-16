@@ -1,6 +1,12 @@
 import { isArrayLike } from "../shared/_common";
 import type { IType } from "./base/IType";
 
+/**
+ * Create a codec for exactly the supplied number of elements, without a length prefix.
+ * @param type - Element codec.
+ * @param length - Required element count.
+ * @returns A codec that rejects inputs of a different length. Element and buffer errors propagate.
+ */
 export function FixedLengthArrayType<
 	ValueType,
 	ValueBitSize extends number | null,

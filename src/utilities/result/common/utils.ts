@@ -1,5 +1,7 @@
+/** Value or promise-like value. */
 export type Awaitable<T> = PromiseLike<T> | T;
 
+/** Choose a type for true or false, or their union when the boolean is not known. */
 export type If<
 	Value extends boolean,
 	TrueResult,

@@ -3,7 +3,10 @@ import type { IterableResolvable } from "./from";
 import type { LexicographicComparison } from "./shared/_compare";
 import { defaultCompare } from "./shared/comparators";
 
-/** {@link LexicographicComparison Lexicographically} compares the elements of both iterators are equal. */
+/**
+ * Compare two sources value by value using string ordering. Return -1, 0, or 1; a shared prefix sorts before a longer
+ * source. Undefined sorts after defined values.
+ */
 export function compare<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	other: IterableResolvable<ElementType>,

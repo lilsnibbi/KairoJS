@@ -7,11 +7,20 @@ import type { Command } from "../../Command";
 import { Identifiers } from "../../errors/Identifiers";
 import { AllFlowsPrecondition } from "../Precondition";
 
+/** Require command.enabled to be true. Available through CorePreconditions. */
 export class EnabledCheck extends AllFlowsPrecondition {
+	/**
+	 * Create the enabled check at global position 10.
+	 * @param context - Loader metadata and precondition store.
+	 */
 	public constructor(context: AllFlowsPrecondition.Context) {
 		super(context, { position: 10 });
 	}
 
+	/**
+	 * Check a message invocation. Require command.enabled to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public messageRun(
 		_: Message,
 		command: Command,
@@ -26,6 +35,10 @@ export class EnabledCheck extends AllFlowsPrecondition {
 				});
 	}
 
+	/**
+	 * Check a slash invocation. Require command.enabled to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public chatInputRun(
 		_: ChatInputCommandInteraction,
 		command: Command,
@@ -40,6 +53,10 @@ export class EnabledCheck extends AllFlowsPrecondition {
 				});
 	}
 
+	/**
+	 * Check a context-menu invocation. Require command.enabled to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public contextMenuRun(
 		_: ContextMenuCommandInteraction,
 		command: Command,

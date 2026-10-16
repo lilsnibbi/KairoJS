@@ -15,7 +15,10 @@ import type {
 	TypeToOptionMap,
 } from "./util";
 
-/** Service class for resolving (application command) interaction options while working with the raw API. Based on {@linkplain https://github.com/discordjs/discord.js/blob/main/packages/discord.js/src/structures/CommandInteractionOptionResolver.js} */
+/**
+ * Read native slash command options after hoisting the selected group/subcommand. Entity getters use the payload’s
+ * resolved tables directly.
+ */
 export class ChatInputInteractionOptionResolver {
 	/** The interaction options array */
 	private readonly data: APIApplicationCommandInteractionDataOption[] | null =
@@ -34,6 +37,10 @@ export class ChatInputInteractionOptionResolver {
 	/** The name of the subcommand */
 	private readonly subcommand: string | null = null;
 
+	/**
+	 * Read a native Discord slash command payload without HTTP requests.
+	 * @param interaction - Native API interaction payload, including any resolved entity tables.
+	 */
 	public constructor(interaction: APIChatInputApplicationCommandInteraction) {
 		this.data =
 			"options" in interaction.data ? (interaction.data.options ?? null) : null;
@@ -63,11 +70,22 @@ export class ChatInputInteractionOptionResolver {
 		}
 	}
 
-	/** Get an option by its name */
+	/**
+	 * Read a named option from the selected subcommand.
+	 * @param name - Option name.
+	 * @param required - Throw if the option is absent. Defaults to false.
+	 * @returns Native option data, or null when optional and absent.
+	 */
 	public get<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIApplicationCommandInteractionDataOption>;
+	/**
+	 * Read a named option from the selected subcommand.
+	 * @param name - Option name.
+	 * @param required - Throw if the option is absent. Defaults to false.
+	 * @returns Native option data, or null when optional and absent.
+	 */
 	public get(
 		name: string,
 		required = false,
@@ -84,10 +102,23 @@ export class ChatInputInteractionOptionResolver {
 		return option;
 	}
 
-	/** Get the selected subcommand */
+	/**
+	 * Read the selected subcommand name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no subcommand was selected.
+	 */
 	public getSubcommand<Required extends boolean = false>(
 		required?: Required,
 	): RequiredIf<Required, string>;
+	/**
+	 * Read the selected subcommand name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no subcommand was selected.
+	 */
 	public getSubcommand(required = true): string | null {
 		if (required && !this.subcommand) {
 			throw new Error("A subcommand was not selected");
@@ -96,10 +127,23 @@ export class ChatInputInteractionOptionResolver {
 		return this.subcommand;
 	}
 
-	/** Get the selected subcommand group */
+	/**
+	 * Read the selected subcommand group name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no group was selected.
+	 */
 	public getSubcommandGroup<Required extends boolean = false>(
 		required?: Required,
 	): RequiredIf<Required, string>;
+	/**
+	 * Read the selected subcommand group name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no group was selected.
+	 */
 	public getSubcommandGroup(required = true): string | null {
 		if (required && !this.group) {
 			throw new Error("A subcommand group was not selected");
@@ -108,11 +152,24 @@ export class ChatInputInteractionOptionResolver {
 		return this.group;
 	}
 
-	/** Get a boolean option */
+	/**
+	 * Read a boolean option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getBoolean<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, boolean>;
+	/**
+	 * Read a boolean option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getBoolean(name: string, required = false): boolean | null {
 		const option = this.getTypedOption(
 			name,
@@ -122,11 +179,24 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ?? null;
 	}
 
-	/** Get a channel option */
+	/**
+	 * Read a channel option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved channel data, or null for an absent optional option. Missing resolved channel data also returns null.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getChannel<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIInteractionDataResolvedChannel>;
+	/**
+	 * Read a channel option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved channel data, or null for an absent optional option. Missing resolved channel data also returns null.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getChannel(
 		name: string,
 		required = false,
@@ -141,11 +211,24 @@ export class ChatInputInteractionOptionResolver {
 			: null;
 	}
 
-	/** Get a string option */
+	/**
+	 * Read a string option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getString<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, string>;
+	/**
+	 * Read a string option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getString(name: string, required = false): string | null {
 		const option = this.getTypedOption(
 			name,
@@ -155,11 +238,24 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ?? null;
 	}
 
-	/** Get an integer option */
+	/**
+	 * Read a integer number option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getInteger<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, number>;
+	/**
+	 * Read a integer number option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getInteger(name: string, required = false): number | null {
 		const option = this.getTypedOption(
 			name,
@@ -169,11 +265,24 @@ export class ChatInputInteractionOptionResolver {
 		return (option?.value as number | null) ?? null;
 	}
 
-	/** Get a number option */
+	/**
+	 * Read a number option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getNumber<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, number>;
+	/**
+	 * Read a number option.
+	 * @param name - Option name.
+	 * @param required - Throw if absent. Defaults to false.
+	 * @returns The native value, or null when optional and absent.
+	 * @throws For a missing required option or a mismatched type.
+	 */
 	public getNumber(name: string, required = false): number | null {
 		const option = this.getTypedOption(
 			name,
@@ -183,11 +292,26 @@ export class ChatInputInteractionOptionResolver {
 		return (option?.value as number | null) ?? null;
 	}
 
-	/** Get a user option */
+	/**
+	 * Read a user option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved user data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getUser<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIUser>;
+	/**
+	 * Read a user option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved user data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getUser(name: string, required = false): APIUser | null {
 		const option = this.getTypedOption(
 			name,
@@ -197,12 +321,27 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ? this.resolved!.users![option.value] : null;
 	}
 
-	/** Get a member option */
+	/**
+	 * Read a guild member option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved guild member data, or null for an absent optional option. Missing resolved entries may return
+	 * undefined despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getMember<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIInteractionDataResolvedGuildMember>;
 
+	/**
+	 * Read a guild member option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved guild member data, or null for an absent optional option. Missing resolved entries may return
+	 * undefined despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getMember(
 		name: string,
 		required = false,
@@ -215,11 +354,26 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ? this.resolved!.members![option.value] : null;
 	}
 
-	/** Get a role option */
+	/**
+	 * Read a role option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved role data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getRole<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIRole>;
+	/**
+	 * Read a role option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved role data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getRole(name: string, required = false): APIRole | null {
 		const option = this.getTypedOption(
 			name,
@@ -229,11 +383,26 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ? this.resolved!.roles![option.value] : null;
 	}
 
-	/** Get an attachment option */
+	/**
+	 * Read a attachment option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved attachment data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getAttachment<Required extends boolean = false>(
 		name: string,
 		required?: Required,
 	): RequiredIf<Required, APIAttachment>;
+	/**
+	 * Read a attachment option from native resolved data.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved attachment data, or null for an absent optional option. Missing resolved entries may return undefined
+	 * despite the declared return type.
+	 * @throws For a missing required option or a mismatched type. Missing resolved tables can also throw.
+	 */
 	public getAttachment(name: string, required = false): APIAttachment | null {
 		const option = this.getTypedOption(
 			name,
@@ -243,7 +412,13 @@ export class ChatInputInteractionOptionResolver {
 		return option?.value ? this.resolved!.attachments![option.value] : null;
 	}
 
-	/** Get a mentionable option */
+	/**
+	 * Read a mentionable option as a resolved member, user, or role, in that order.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved data, or null if no data is available, even with required: true.
+	 * @throws For a missing required option or a mismatched option type.
+	 */
 	public getMentionable<Required extends boolean = false>(
 		name: string,
 		required?: Required,
@@ -252,6 +427,13 @@ export class ChatInputInteractionOptionResolver {
 		APIUser | APIInteractionDataResolvedGuildMember | APIRole
 	>;
 
+	/**
+	 * Read a mentionable option as a resolved member, user, or role, in that order.
+	 * @param name - Option name.
+	 * @param required - Require the option itself. Defaults to false.
+	 * @returns Resolved data, or null if no data is available, even with required: true.
+	 * @throws For a missing required option or a mismatched option type.
+	 */
 	public getMentionable(
 		name: string,
 		required = false,

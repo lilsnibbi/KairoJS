@@ -1,3 +1,7 @@
+/**
+ * Define, register, load, and unload framework modules and stores.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export type { ModulePatterns } from "../core/loading/ModuleGlob";

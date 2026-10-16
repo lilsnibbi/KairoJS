@@ -1,3 +1,7 @@
+/**
+ * KairoJS client, modules, commands, events, extensions, and shared helpers. The separate engine API is available from kairojs/engine.
+ * @packageDocumentation
+ */
 import "./core/runtime";
 
 export * from "./public/client";

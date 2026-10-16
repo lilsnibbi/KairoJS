@@ -18,6 +18,7 @@ export * from "./types/mappings";
 /** The preconditions specific to subcommands
  * @deprecated - This will be replaced with a regular top level export of {@link SubcommandCooldown} */
 export const SubcommandPreconditions = {
+	/** Subcommand cooldown check class, using separate buckets for each mapped subcommand. */
 	SubcommandCooldown,
 };
 

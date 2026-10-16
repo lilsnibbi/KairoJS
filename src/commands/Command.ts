@@ -50,10 +50,12 @@ const GuildChannelTypes = ChannelTypes.filter(
 	(type) => type !== ChannelType.DM && type !== ChannelType.GroupDM,
 ) as readonly ChannelType[];
 
+/** Base command module. Implement message, slash, context-menu, or autocomplete handlers as needed. */
 export class Command<
 	PreParseReturn = Args,
 	Options extends Command.Options = Command.Options,
 > extends AliasModule<Options, "commands"> {
+	/** Optional command metadata passed as constructor options by the loader. */
 	public static override readonly options?: Command.Options;
 	/** The raw name of the command as provided through file name or constructor options. */
 	public rawName: string;
@@ -73,8 +75,7 @@ export class Command<
 	/** The strategy to use for the lexer. */
 	public strategy: IUnorderedStrategy;
 
-	/** If {@link KairoClient.typing} is true, it can be overridden for a specific command using this property, set via its options. Otherwise, this property will be ignored.
-	 * @default true */
+	/** Send a typing indicator for message commands when client.options.typing also allows it. Defaults to true. */
 	public typing: boolean;
 
 	/** The application command registry associated with this command. */
@@ -83,6 +84,12 @@ export class Command<
 	/** The lexer to be used for command parsing */
 	protected lexer: Lexer;
 
+	/**
+	 * Create a command, normalize its stored name to lowercase, and build its configured preconditions.
+	 * @param context - Loader metadata and command store.
+	 * @param options - Command settings; defaults to an empty object.
+	 * @throws If precondition settings such as an empty runIn list are invalid.
+	 */
 	public constructor(
 		context: Command.Context,
 		options: Options = {} as Options,
@@ -131,7 +138,14 @@ export class Command<
 		this.parseConstructorPreConditions(options);
 	}
 
-	/** The message pre-parse method. This method can be overridden by plugins to define their own argument parser. */
+	/**
+	 * Parse message parameters into Args using this command’s quotes and flag strategy. Override to return a custom argument
+	 * shape.
+	 * @param message - Triggering message.
+	 * @param parameters - Text after the command name.
+	 * @param context - Matched prefix and command metadata.
+	 * @returns Arguments passed to messageRun, immediately or asynchronously.
+	 */
 	public messagePreParse(
 		message: Message,
 		parameters: string,
@@ -162,26 +176,46 @@ export class Command<
 		return this.fullCategory.at(-1) ?? null;
 	}
 
-	/** Run the message command's logic. */
+	/**
+	 * Handle an accepted message command after preconditions and argument preparation.
+	 * @param message - Triggering message.
+	 * @param args - Value returned by messagePreParse.
+	 * @param context - Matched prefix and command metadata.
+	 * @returns Any result, awaited and included in the success event. Thrown errors produce the command error event.
+	 */
 	public messageRun?(
 		message: Message,
 		args: PreParseReturn,
 		context: MessageCommand.RunContext,
 	): Awaitable<unknown>;
 
-	/** Run the application command's logic. */
+	/**
+	 * Handle an accepted slash command after preconditions.
+	 * @param interaction - Slash command interaction.
+	 * @param context - Command name and ID.
+	 * @returns Any result, awaited and included in the success event. Acknowledge the interaction in your handler.
+	 */
 	public chatInputRun?(
 		interaction: ChatInputCommandInteraction,
 		context: ChatInputCommand.RunContext,
 	): Awaitable<unknown>;
 
-	/** Run the context menu's logic. */
+	/**
+	 * Handle an accepted user or message context-menu command.
+	 * @param interaction - Context-menu interaction.
+	 * @param context - Command name and ID.
+	 * @returns Any result, awaited and included in the success event. Acknowledge the interaction in your handler.
+	 */
 	public contextMenuRun?(
 		interaction: ContextMenuCommandInteraction,
 		context: ContextMenuCommand.RunContext,
 	): Awaitable<unknown>;
 
-	/** Handle autocomplete for this command. This takes priority over a matching interaction handler. */
+	/**
+	 * Answer autocomplete choices for this command.
+	 * @param interaction - Autocomplete interaction to respond to.
+	 * @returns Optional asynchronous work. Failures produce the autocomplete error event.
+	 */
 	public autocompleteRun?(
 		interaction: AutocompleteInteraction,
 	): Awaitable<unknown>;
@@ -196,7 +230,11 @@ export class Command<
 		};
 	}
 
-	/** Register the application commands that should be handled by this command. */
+	/**
+	 * Declare this module’s Discord command registrations during the ready registration phase.
+	 * @param registry - Registry for this command. Register data or configure its supplied builders.
+	 * @returns Completion of registration setup; actual API calls run afterward.
+	 */
 	public registerApplicationCommands?(
 		registry: ApplicationCommandRegistry,
 	): Awaitable<void>;
@@ -331,6 +369,11 @@ export class Command<
 		return [...resolved].sort((a, b) => a - b);
 	}
 
+	/**
+	 * Check whether runIn provides truthy per-handler settings.
+	 * @param types - Shared channel restriction or per-handler settings.
+	 * @returns Whether the object is treated as handler-specific settings.
+	 */
 	public static runInTypeIsSpecificsObject(
 		types: Command.Options["runIn"],
 	): types is CommandSpecificRunIn {
@@ -347,24 +390,35 @@ export class Command<
 	}
 }
 
+/** Types and helpers for {@link Command}. */
 export namespace Command {
+	/** Shorthand for {@link CommandOptions}. */
 	export type Options = CommandOptions;
+	/** Shorthand for {@link CommandJSON}. */
 	export type JSON = CommandJSON;
+	/** Shorthand for {@link AliasModule.Context}. */
 	export type Context = AliasModule.Context<"commands">;
+	/** Shorthand for {@link CommandOptionsRunType}. */
 	export type RunInTypes = CommandOptionsRunType;
+	/** Shorthand for {@link CommandRunInUnion}. */
 	export type RunInUnion = CommandRunInUnion;
+	/** Shorthand for {@link CommandSpecificRunIn}. */
 	export type SpecificRunIn = CommandSpecificRunIn;
+	/** Shorthand for the discord.js ChatInputCommandInteraction type, retaining its cache-state parameter. */
 	export type ChatInputCommandInteraction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = import("discord.js").ChatInputCommandInteraction<Cached>;
+	/** Shorthand for the discord.js ContextMenuCommandInteraction type, retaining its cache-state parameter. */
 	export type ContextMenuCommandInteraction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = import("discord.js").ContextMenuCommandInteraction<Cached>;
+	/** Shorthand for the discord.js AutocompleteInteraction type, retaining its cache-state parameter. */
 	export type AutocompleteInteraction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = import("discord.js").AutocompleteInteraction<Cached>;
+	/** Shorthand for {@link ApplicationCommandRegistry}. */
 	export type Registry = ApplicationCommandRegistry;
 }

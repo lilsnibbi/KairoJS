@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterable that yields the elements of each iterable returned by the provided function on each element of the input iterable. */
+/** Call callbackFn(value, zeroBasedIndex) and lazily flatten each returned synchronous source. Callback errors propagate. */
 export function* flatMap<const ElementType, const MappedType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (

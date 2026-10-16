@@ -6,7 +6,10 @@ import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow
 import { toArray } from "./toArray";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Consumes the iterable and returns a new iterable with the last `count` elements. */
+/**
+ * Consume input into an array and yield its final count values. Count is truncated and must be nonnegative. Zero reads
+ * nothing; Infinity returns the source iterator directly.
+ */
 export function takeLast<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	count: number,

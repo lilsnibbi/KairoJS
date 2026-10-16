@@ -19,7 +19,13 @@ export function writeLog(
 	);
 }
 
-/** Preserve the four-method contract and original error cause for custom loggers. */
+/**
+ * Write a structured event, exported as logEvent. Custom loggers receive a readable message and original error cause.
+ * @param logger - Destination logger.
+ * @param level - One of the four logger methods.
+ * @param entry - Event details.
+ * @remarks Sink errors use the fallback console logger and do not escape this call.
+ */
 export function writeEvent(
 	logger: LoggerLike,
 	level: keyof LoggerLike,

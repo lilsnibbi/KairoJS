@@ -40,6 +40,11 @@ export class Snowflake {
 	 * @internal */
 	private [WorkerIdSymbol] = 0n;
 
+	/**
+	 * Create a snowflake generator/parser for an epoch.
+	 * @param epoch - Epoch in Unix milliseconds, as an integer number, bigint, or Date.
+	 * @throws If the epoch cannot be converted to bigint.
+	 */
 	public constructor(epoch: number | bigint | Date) {
 		this[EpochSymbol] = BigInt(epoch instanceof Date ? epoch.getTime() : epoch);
 		this[EpochNumberSymbol] = Number(this[EpochSymbol]);
@@ -75,7 +80,12 @@ export class Snowflake {
 		this[WorkerIdSymbol] = BigInt(value) & MaximumWorkerId;
 	}
 
-	/** Generates a snowflake given an epoch and optionally a timestamp */
+	/**
+	 * Pack timestamp, worker/process IDs, and increment into a bigint snowflake.
+	 * @param options - Optional timestamp and field overrides. Timestamp defaults to Date.now().
+	 * @returns The packed ID. Omitted increments advance the local counter; callers coordinate uniqueness across generators.
+	 * @throws If timestamp conversion to bigint fails.
+	 */
 	public generate({
 		increment,
 		timestamp = Date.now(),
@@ -125,7 +135,13 @@ export class Snowflake {
 		);
 	}
 
-	/** Return a number indicating whether a reference snowflake comes before, or after, or is same as the given snowflake in sort order. */
+	/**
+	 * Compare nonnegative canonical snowflake IDs. Two string operands compare by length, then lexically; mixed types convert
+	 * to bigint.
+	 * @param a - First ID.
+	 * @param b - Second ID.
+	 * @returns -1, 0, or 1 for ascending order.
+	 */
 	public static compare(a: string | bigint, b: string | bigint): -1 | 0 | 1 {
 		const typeA = typeof a;
 		return typeA === typeof b
@@ -160,16 +176,13 @@ export interface SnowflakeGenerateOptions {
 	 * @default Date.now() */
 	timestamp?: number | bigint | Date;
 
-	/** The increment to use
-	 * @default 0n */
+	/** Explicit low 12 bits, or omit to use and advance the generator’s counter modulo 4096. */
 	increment?: bigint;
 
-	/** The worker ID to use, will be truncated to 5 bits (0-31)
-	 * @default 0n */
+	/** Worker ID, masked to five bits. Defaults to this generator’s configured workerId, initially 0n. */
 	workerId?: bigint;
 
-	/** The process ID to use, will be truncated to 5 bits (0-31)
-	 * @default 1n */
+	/** Process ID, masked to five bits. Defaults to this generator’s configured processId, initially 1n. */
 	processId?: bigint;
 }
 

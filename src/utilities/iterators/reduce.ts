@@ -2,7 +2,10 @@ import type { IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Consumes the iterable and reduces it to the reducer function's result. */
+/**
+ * Consume input into an accumulator using callbackFn(accumulator, value, zeroBasedIndex). Without an initial argument, the
+ * first value becomes the accumulator; empty input then throws TypeError.
+ */
 export function reduce<const ElementType, const MappedType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (

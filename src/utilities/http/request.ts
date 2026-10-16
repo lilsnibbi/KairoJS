@@ -1,31 +1,97 @@
 import { HttpError } from "./HttpError";
 
+/** Successful response formats supported by request. */
 export type ResponseFormat = "json" | "text" | "bytes" | "blob" | "response";
+/** Native fetch options with an optional JSON body and response format. */
 export type HttpRequestOptions = RequestInit & {
+	/** JSON-serializable request body. Cannot be supplied together with body; sets Content-Type unless already set. */
 	json?: unknown;
+	/** Successful response format. Defaults to json. */
 	response?: ResponseFormat;
 };
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export function request<T = unknown>(
 	url: URL | string,
-	options?: HttpRequestOptions & { response?: "json" },
+	options?: HttpRequestOptions & {
+		/** Select the overload’s decoded response type. */
+		response?: "json"
+	},
 ): Promise<T>;
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export function request(
 	url: URL | string,
-	options: HttpRequestOptions & { response: "text" },
+	options: HttpRequestOptions & {
+		/** Select the overload’s decoded response type. */
+		response: "text"
+	},
 ): Promise<string>;
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export function request(
 	url: URL | string,
-	options: HttpRequestOptions & { response: "bytes" },
+	options: HttpRequestOptions & {
+		/** Select the overload’s decoded response type. */
+		response: "bytes"
+	},
 ): Promise<Uint8Array>;
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export function request(
 	url: URL | string,
-	options: HttpRequestOptions & { response: "blob" },
+	options: HttpRequestOptions & {
+		/** Select the overload’s decoded response type. */
+		response: "blob"
+	},
 ): Promise<Blob>;
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export function request(
 	url: URL | string,
-	options: HttpRequestOptions & { response: "response" },
+	options: HttpRequestOptions & {
+		/** Select the overload’s decoded response type. */
+		response: "response"
+	},
 ): Promise<Response>;
-/** Native fetch with an explicit JSON body, response format and HTTP errors. */
+/**
+ * Fetch a URL and decode its successful response in the selected format.
+ * @param url - Request URL.
+ * @param options - Native fetch settings, optional JSON body, and response format.
+ * @returns Decoded JSON/text/bytes/blob, or the original Response. JSON mode returns undefined for HTTP 204/205.
+ * @throws HttpError with the saved text body for non-2xx responses; invalid JSON/body settings, cancellation, and
+ * fetch/decoding failures propagate.
+ */
 export async function request(
 	url: URL | string,
 	options: HttpRequestOptions = {},

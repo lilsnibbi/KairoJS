@@ -100,7 +100,10 @@ export async function resolveKey<
 >(
 	target: Target,
 	key: string | string[],
-	options: TOpt & $Dictionary & { defaultValue: string },
+	options: TOpt & $Dictionary & {
+		/** Fallback text used when the translation key is missing. */
+		defaultValue: string
+	},
 ): Promise<TFunctionReturnOptionalDetails<Ret, TOpt>>;
 
 /** Resolve a key and its parameters. */
@@ -292,6 +295,7 @@ export function createLocalizedChoice<
 >(
 	key: ParseKeys<Ns, TOpt, KPrefix>,
 	options: Omit<APIApplicationCommandOptionChoice<ValueType>, "name"> & {
+		/** Optional stable base display name. Defaults to the key’s text in the default presentation locale. */
 		name?: string;
 	},
 ): APIApplicationCommandOptionChoice<ValueType> {

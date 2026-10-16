@@ -15,12 +15,19 @@ export function toNumberOrThrow(value: NumberResolvable): number {
 	}
 }
 
+/** Number, boolean, null, or an object coercible to one. NaN, undefined, symbols, and bigint inputs are rejected by numeric helpers. */
 export type NumberResolvable =
 	| number
 	| boolean
 	| null
-	| { valueOf(): number | boolean | null }
-	| { [Symbol.toPrimitive](): number | boolean | null };
+	| {
+			/** Return a number, boolean, or null for numeric conversion. */
+			valueOf(): number | boolean | null
+	  }
+	| {
+			/** Return a number, boolean, or null for numeric conversion. */
+			[Symbol.toPrimitive](): number | boolean | null
+	  };
 
 function assertNumber(value: number, original: unknown): number {
 	if (Number.isNaN(value)) {

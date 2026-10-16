@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { minBy } from "./minBy";
 import { defaultCompare } from "./shared/comparators";
 
-/** Consumes the iterable and returns the lowest number element. */
+/** Consume input and return the least value by string ordering, or null when empty. Equal values choose the last; undefined sorts last. */
 export function min<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): ElementType | null {

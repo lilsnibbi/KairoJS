@@ -3,6 +3,7 @@ import { UnalignedUint16Array } from "../buffer/UnalignedUint16Array";
 import { Pointer, type PointerLike } from "../shared/Pointer";
 import { type IType, t } from "../types/index";
 
+/** Ordered named binary fields with a 16-bit schema ID prefixed to serialized values. */
 export class Schema<
 	Id extends number = number,
 	Entries extends object = object,
@@ -11,7 +12,10 @@ export class Schema<
 	readonly #types = new Map<string, IType<any, number | null>>();
 	#bitSize: number | null = 0;
 
-	/** Create a new schema. */
+	/**
+	 * Create an empty schema.
+	 * @param id - Identifier encoded in a 16-bit field. Use distinct IDs that fit that field.
+	 */
 	public constructor(id: Id) {
 		this.#id = id;
 	}
@@ -21,17 +25,22 @@ export class Schema<
 		return this.#id;
 	}
 
-	/** The bit size of the entries in the schema. */
+	/** Combined field size in bits, or null if any field has variable size. */
 	public get bitSize(): number | null {
 		return this.#bitSize;
 	}
 
-	/** The total bit size of the entries in the schema and the ID. */
+	/** Combined field size plus the 16-bit ID, or null for variable-size schemas. */
 	public get totalBitSize(): number | null {
 		return this.#bitSize === null ? null : this.#bitSize + 16;
 	}
 
-	/** Get a property from the schema. */
+	/**
+	 * Get a field codec by name.
+	 * @param name - Registered field name.
+	 * @returns Its codec.
+	 * @throws If the field is absent.
+	 */
 	public get<const Name extends keyof Entries & string>(
 		name: Name,
 	): Entries[Name] {
@@ -43,7 +52,12 @@ export class Schema<
 		return type;
 	}
 
-	/** Create a buffer and serialize a value into it, then convert it to a string */
+	/**
+	 * Encode a value, including the schema ID, as codec text.
+	 * @param value - Input fields in this schema.
+	 * @param defaultMaximumArrayLength - Word capacity used for variable-size schemas; defaults to 100.
+	 * @returns Encoded codec text. Buffer and field errors propagate.
+	 */
 	public serialize(
 		value: Readonly<SerializeValueEntries<Entries>>,
 		defaultMaximumArrayLength = 100,
@@ -51,7 +65,13 @@ export class Schema<
 		return this.serializeRaw(value, defaultMaximumArrayLength).toString();
 	}
 
-	/** Create a buffer and serialize a value into it. */
+	/**
+	 * Encode a value, including the schema ID, into a new buffer.
+	 * @param value - Input fields in this schema.
+	 * @param defaultMaximumArrayLength - Word capacity for variable-size schemas; defaults to 100. Fixed schemas use
+	 * totalBitSize as their word capacity.
+	 * @returns The written buffer. Buffer and field errors propagate.
+	 */
 	public serializeRaw(
 		value: Readonly<SerializeValueEntries<Entries>>,
 		defaultMaximumArrayLength = 100,
@@ -306,37 +326,50 @@ type Merge<
 			}
 		>;
 
+/** Names of fields in a schema. */
 export type KeyOfSchema<SchemaValue extends object> =
 	SchemaValue extends Schema<infer _, infer Type> ? keyof Type & string : never;
+/** Union of a schema’s field codec types. */
 export type ValueOfSchema<SchemaValue extends object> =
 	SchemaValue extends Schema<infer _, infer Type>
 		? { [K in keyof Type]: Type[K] }[keyof Type]
 		: never;
+/** Union of [field name, codec] pairs in a schema. */
 export type EntryOfSchema<SchemaValue extends object> =
 	SchemaValue extends Schema<infer _, infer Type>
 		? { [K in keyof Type]: readonly [K, Type[K]] }[keyof Type]
 		: never;
 
+/** Decoded value type of one codec. */
 export type UnwrapSchemaType<Type extends object> =
 	Type extends IType<infer ValueType, infer _BitSize, infer _InputType>
 		? ValueType
 		: never;
+/** Object of decoded value types for a set of field codecs. */
 export type UnwrapSchemaEntries<Entries extends object> = {
 	[K in keyof Entries]: UnwrapSchemaType<Entries[K] & object>;
 } & object;
+/** Object returned when a schema is decoded. */
 export type UnwrapSchema<SchemaValue extends object> =
 	SchemaValue extends Schema<infer _Id, infer Type>
 		? UnwrapSchemaEntries<Type>
 		: never;
 
+/**
+ * Remove fields whose input type is never, such as constant codecs.
+ * @internal
+ */
 type OmitNever<T> = { [K in keyof T as T[K] extends never ? never : K]: T[K] };
+/** Input value type accepted by one codec. */
 export type SerializeValueType<Type extends object> =
 	Type extends IType<infer _ValueType, infer _BitSize, infer InputType>
 		? InputType
 		: never;
+/** Input fields for a set of codecs, excluding constant fields that accept never. */
 export type SerializeValueEntries<Entries extends object> = OmitNever<{
 	[K in keyof Entries]: SerializeValueType<Entries[K] & object>;
 }>;
+/** Object accepted when serializing a schema. */
 export type SerializeValue<SchemaValue extends object> =
 	SchemaValue extends Schema<infer _Id, infer Type>
 		? SerializeValueEntries<Type>

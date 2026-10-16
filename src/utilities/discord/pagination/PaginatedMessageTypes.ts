@@ -66,39 +66,49 @@ export type PaginatedMessageActionStringMenu = PaginatedMessageActionRun &
 /** To utilize User Select Menus you can pass an object with the structure of {@link PaginatedMessageActionUserMenu} to {@link PaginatedMessage} actions. */
 export type PaginatedMessageActionUserMenu = PaginatedMessageActionRun &
 	UserSelectMenuComponentData & {
+		/** Unavailable for this select type; Discord supplies its selectable entities. */
 		options?: never;
 	};
 
 /** To utilize Role Select Menus you can pass an object with the structure of {@link PaginatedMessageActionRoleMenu} to {@link PaginatedMessage} actions. */
 export type PaginatedMessageActionRoleMenu = PaginatedMessageActionRun &
 	RoleSelectMenuComponentData & {
+		/** Unavailable for this select type; Discord supplies its selectable entities. */
 		options?: never;
 	};
 
 /** To utilize Mentionable Select Menus you can pass an object with the structure of {@link PaginatedMessageActionMentionableMenu} to {@link PaginatedMessage} actions. */
 export type PaginatedMessageActionMentionableMenu = PaginatedMessageActionRun &
 	MentionableSelectMenuComponentData & {
+		/** Unavailable for this select type; Discord supplies its selectable entities. */
 		options?: never;
 	};
 
 /** To utilize Channel Select Menus you can pass an object with the structure of {@link PaginatedMessageActionChannelMenu} to {@link PaginatedMessage} actions. */
 export type PaginatedMessageActionChannelMenu = PaginatedMessageActionRun &
 	ChannelSelectMenuComponentData & {
+		/** Unavailable for this select type; Discord supplies its selectable entities. */
 		options?: never;
 	};
 
 /** The context to be used in {@link PaginatedMessageActionButton}. */
 export interface PaginatedMessageActionContext {
+	/** Component interaction that triggered the action. */
 	interaction: PaginatedMessageInteractionUnion;
+	/** Pagination handler to inspect or update. */
 	handler: PaginatedMessage;
+	/** User allowed to control this pagination. */
 	author: User;
+	/** Channel containing the response. */
 	channel: Message["channel"];
+	/** Current pagination response or interaction target. */
 	response:
 		| APIMessage
 		| Message
 		| CommandInteraction
 		| ButtonInteraction
 		| PaginatedMessageInteractionUnion;
+	/** Collector handling pagination component interactions. */
 	collector: InteractionCollector<PaginatedMessageInteractionUnion>;
 }
 
@@ -166,6 +176,7 @@ export type PaginatedMessageMessageOptionsUnion = Omit<
 	PaginatedMessageResolvedPage,
 	"components"
 > & {
+	/** Optional actions for this page, overriding the handler’s default actions. */
 	actions?: PaginatedMessageAction[];
 };
 

@@ -49,6 +49,13 @@ export class Args {
 	/** The states stored in the args. */
 	private readonly states: ArgumentStream.State[] = [];
 
+	/**
+	 * Wrap the parsed arguments for one message command.
+	 * @param message - Triggering message.
+	 * @param command - Command being invoked.
+	 * @param parser - Parsed argument stream.
+	 * @param context - Matched command and prefix metadata.
+	 */
 	public constructor(
 		message: Message,
 		command: MessageCommand,
@@ -67,16 +74,32 @@ export class Args {
 		return this;
 	}
 
-	/** Get the next parameter and parses it. Advances index on success. */
+	/**
+	 * Resolve the next positional argument, consuming it only on success.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns Ok with the parsed value, or an unavailable, missing, or argument error. Resolver exceptions still reject.
+	 */
 	public async pickResult<T>(
 		type: IArgument<T>,
 		options?: ArgOptions,
 	): Promise<ResultType<T>>;
-	/** Get the next parameter and parses it. Advances index on success. */
+	/**
+	 * Resolve the next positional argument, consuming it only on success.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns Ok with the parsed value, or an unavailable, missing, or argument error. Resolver exceptions still reject.
+	 */
 	public async pickResult<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
 	): Promise<ResultType<ArgType[K]>>;
+	/**
+	 * Resolve the next positional argument, consuming it only on success.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns Ok with the parsed value, or an unavailable, missing, or argument error. Resolver exceptions still reject.
+	 */
 	public async pickResult<K extends keyof ArgType>(
 		type: K,
 		options: ArgOptions = {},
@@ -101,13 +124,32 @@ export class Args {
 		return result as ResultType<ArgType[K]>;
 	}
 
-	/** Similar to {@link Args.pickResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve and consume the next positional argument.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw UserError or ArgumentError on failure; resolver exceptions also propagate.
+	 */
 	public async pick<T>(type: IArgument<T>, options?: ArgOptions): Promise<T>;
-	/** Similar to {@link Args.pickResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve and consume the next positional argument.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw UserError or ArgumentError on failure; resolver exceptions also propagate.
+	 */
 	public async pick<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
 	): Promise<ArgType[K]>;
+	/**
+	 * Resolve and consume the next positional argument.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw UserError or ArgumentError on failure; resolver exceptions also propagate.
+	 */
 	public async pick<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
@@ -116,16 +158,32 @@ export class Args {
 		return result.unwrapRaw();
 	}
 
-	/** Get all the following arguments. */
+	/**
+	 * Join all remaining positional arguments and resolve them as one value. Restore the cursor if the resolver returns Err.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value or an argument/missing-resolver error. Resolver exceptions still reject.
+	 */
 	public async restResult<T>(
 		type: IArgument<T>,
 		options?: ArgOptions,
 	): Promise<ResultType<T>>;
-	/** Get all the following arguments. */
+	/**
+	 * Join all remaining positional arguments and resolve them as one value. Restore the cursor if the resolver returns Err.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value or an argument/missing-resolver error. Resolver exceptions still reject.
+	 */
 	public async restResult<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
 	): Promise<ResultType<ArgType[K]>>;
+	/**
+	 * Join all remaining positional arguments and resolve them as one value. Restore the cursor if the resolver returns Err.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value or an argument/missing-resolver error. Resolver exceptions still reject.
+	 */
 	public async restResult<T>(
 		type: keyof ArgType | IArgument<T>,
 		options: ArgOptions = {},
@@ -148,13 +206,32 @@ export class Args {
 		return result.inspectErr(() => this.parser.restore(state));
 	}
 
-	/** Similar to {@link Args.restResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve all remaining positional arguments as one joined value.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw resolution error, or a thrown resolver exception.
+	 */
 	public async rest<T>(type: IArgument<T>, options?: ArgOptions): Promise<T>;
-	/** Similar to {@link Args.restResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve all remaining positional arguments as one joined value.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw resolution error, or a thrown resolver exception.
+	 */
 	public async rest<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
 	): Promise<ArgType[K]>;
+	/**
+	 * Resolve all remaining positional arguments as one joined value.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings.
+	 * @returns The parsed value.
+	 * @throws The raw resolution error, or a thrown resolver exception.
+	 */
 	public async rest<K extends keyof ArgType>(
 		type: K,
 		options?: ArgOptions,
@@ -163,16 +240,35 @@ export class Args {
 		return result.unwrapRaw();
 	}
 
-	/** Get all the following arguments. */
+	/**
+	 * Resolve consecutive arguments until input ends, the count is reached, or resolution fails.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values; a failure before the first value returns Err. Later failures stop with the values collected so
+	 * far.
+	 */
 	public async repeatResult<T>(
 		type: IArgument<T>,
 		options?: RepeatArgOptions,
 	): Promise<ArrayResultType<T>>;
-	/** Get all the following arguments. */
+	/**
+	 * Resolve consecutive arguments until input ends, the count is reached, or resolution fails.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values; a failure before the first value returns Err. Later failures stop with the values collected so
+	 * far.
+	 */
 	public async repeatResult<K extends keyof ArgType>(
 		type: K,
 		options?: RepeatArgOptions,
 	): Promise<ArrayResultType<ArgType[K]>>;
+	/**
+	 * Resolve consecutive arguments until input ends, the count is reached, or resolution fails.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values; a failure before the first value returns Err. Later failures stop with the values collected so
+	 * far.
+	 */
 	public async repeatResult<K extends keyof ArgType>(
 		type: K,
 		options: RepeatArgOptions = {},
@@ -212,16 +308,38 @@ export class Args {
 		return Result.ok(output);
 	}
 
-	/** Similar to {@link Args.repeatResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve consecutive arguments and return the collected values. Later parse failures stop the list without consuming the
+	 * failed input.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values.
+	 * @throws A missing input/resolver error, the first resolution error, or a thrown resolver exception.
+	 */
 	public async repeat<T>(
 		type: IArgument<T>,
 		options?: RepeatArgOptions,
 	): Promise<T[]>;
-	/** Similar to {@link Args.repeatResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Resolve consecutive arguments and return the collected values. Later parse failures stop the list without consuming the
+	 * failed input.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values.
+	 * @throws A missing input/resolver error, the first resolution error, or a thrown resolver exception.
+	 */
 	public async repeat<K extends keyof ArgType>(
 		type: K,
 		options?: RepeatArgOptions,
 	): Promise<ArgType[K][]>;
+	/**
+	 * Resolve consecutive arguments and return the collected values. Later parse failures stop the list without consuming the
+	 * failed input.
+	 * @param type - Registered argument name or resolver object.
+	 * @param options - Extra resolver settings and optional times limit.
+	 * @returns Parsed values.
+	 * @throws A missing input/resolver error, the first resolution error, or a thrown resolver exception.
+	 */
 	public async repeat<K extends keyof ArgType>(
 		type: K,
 		options?: RepeatArgOptions,
@@ -230,21 +348,38 @@ export class Args {
 		return result.unwrapRaw();
 	}
 
-	/** Peeks the following parameter(s) without advancing the parser's state. */
+	/**
+	 * Try a resolver or parsing callback, restoring the saved cursor after it resolves normally.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsing result. Thrown callbacks/resolvers reject before cursor restoration.
+	 */
 	public async peekResult<T>(
 		type: () => Argument.Result<T>,
 	): Promise<ResultType<T>>;
-	/** Peeks the following parameter(s) without advancing the parser's state. */
+	/**
+	 * Try a resolver or parsing callback, restoring the saved cursor after it resolves normally.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsing result. Thrown callbacks/resolvers reject before cursor restoration.
+	 */
 	public async peekResult<T>(
 		type: IArgument<T>,
 		options?: ArgOptions,
 	): Promise<ResultType<T>>;
-	/** Peeks the following parameter(s) without advancing the parser's state. */
+	/**
+	 * Try a resolver or parsing callback, restoring the saved cursor after it resolves normally.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsing result. Thrown callbacks/resolvers reject before cursor restoration.
+	 */
 	public async peekResult<K extends keyof ArgType>(
 		type: (() => Awaitable<Argument.Result<ArgType[K]>>) | K,
 		options?: ArgOptions,
 	): Promise<ResultType<ArgType[K]>>;
 
+	/**
+	 * Try a resolver or parsing callback, restoring the saved cursor after it resolves normally.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsing result. Thrown callbacks/resolvers reject before cursor restoration.
+	 */
 	public async peekResult<K extends keyof ArgType>(
 		type: (() => Awaitable<Argument.Result<ArgType[K]>>) | K,
 		options: ArgOptions = {},
@@ -258,15 +393,36 @@ export class Args {
 		return result;
 	}
 
-	/** Similar to {@link Args.peekResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Try a resolver or parsing callback without consuming input on normal completion.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsed value.
+	 * @throws The raw result error or any thrown resolver/callback exception.
+	 */
 	public async peek<T>(type: () => Argument.Result<T>): Promise<T>;
-	/** Similar to {@link Args.peekResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Try a resolver or parsing callback without consuming input on normal completion.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsed value.
+	 * @throws The raw result error or any thrown resolver/callback exception.
+	 */
 	public async peek<T>(type: IArgument<T>, options?: ArgOptions): Promise<T>;
-	/** Similar to {@link Args.peekResult} but returns the value on success, throwing otherwise. */
+	/**
+	 * Try a resolver or parsing callback without consuming input on normal completion.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsed value.
+	 * @throws The raw result error or any thrown resolver/callback exception.
+	 */
 	public async peek<K extends keyof ArgType>(
 		type: (() => Argument.Result<ArgType[K]>) | K,
 		options?: ArgOptions,
 	): Promise<ArgType[K]>;
+	/**
+	 * Try a resolver or parsing callback without consuming input on normal completion.
+	 * @param type - Registered resolver, resolver object, or callback returning a Result.
+	 * @returns The parsed value.
+	 * @throws The raw result error or any thrown resolver/callback exception.
+	 */
 	public async peek<K extends keyof ArgType>(
 		type: (() => Argument.Result<ArgType[K]>) | K,
 		options?: ArgOptions,
@@ -275,10 +431,23 @@ export class Args {
 		return result.unwrapRaw();
 	}
 
-	/** Get the next raw argument from the parser. */
+	/**
+	 * Read the next raw positional argument, optionally mapping it through a callback.
+	 * @param cb - Optional mapper returning Some to consume the argument or None to leave it available.
+	 * @returns Some with the raw or mapped value, or None when no value is accepted.
+	 */
 	public nextMaybe(): Option<string>;
-	/** Get the value of the next unused ordered token, but only if it could be transformed. That token will now be used if the transformation succeeds. @typeparam T Output type of the {@link ArgsNextCallback callback}. */
+	/**
+	 * Read the next raw positional argument, optionally mapping it through a callback.
+	 * @param cb - Optional mapper returning Some to consume the argument or None to leave it available.
+	 * @returns Some with the raw or mapped value, or None when no value is accepted.
+	 */
 	public nextMaybe<T>(cb: ArgsNextCallback<T>): Option<T>;
+	/**
+	 * Read the next raw positional argument, optionally mapping it through a callback.
+	 * @param cb - Optional mapper returning Some to consume the argument or None to leave it available.
+	 * @returns Some with the raw or mapped value, or None when no value is accepted.
+	 */
 	public nextMaybe<T>(cb?: ArgsNextCallback<T>): Option<T | string> {
 		return Option.from<T | string>(
 			typeof cb === "function"
@@ -287,10 +456,26 @@ export class Args {
 		);
 	}
 
-	/** Similar to {@link Args.nextMaybe} but returns the value on success, null otherwise. */
+	/**
+	 * Read the next raw positional argument, optionally mapping it.
+	 * @param cb - Optional mapper returning an Option.
+	 * @returns The raw or mapped value, or null at exhaustion or when the mapper returns None, despite the narrower overload
+	 * types.
+	 */
 	public next(): string;
-	/** Similar to {@link Args.nextMaybe} but returns the value on success, null otherwise. @typeparam T Output type of the {@link ArgsNextCallback callback}. */
+	/**
+	 * Read the next raw positional argument, optionally mapping it.
+	 * @param cb - Optional mapper returning an Option.
+	 * @returns The raw or mapped value, or null at exhaustion or when the mapper returns None, despite the narrower overload
+	 * types.
+	 */
 	public next<T>(cb: ArgsNextCallback<T>): T;
+	/**
+	 * Read the next raw positional argument, optionally mapping it.
+	 * @param cb - Optional mapper returning an Option.
+	 * @returns The raw or mapped value, or null at exhaustion or when the mapper returns None, despite the narrower overload
+	 * types.
+	 */
 	public next<T>(cb?: ArgsNextCallback<T>): T | string | null {
 		const value = cb ? this.nextMaybe<T | string | null>(cb) : this.nextMaybe();
 		return value.unwrapOr(null);
@@ -347,6 +532,11 @@ export class Args {
 		};
 	}
 
+	/**
+	 * Create an ArgsUnavailable error result for a missing resolver.
+	 * @param type - Requested resolver name or object.
+	 * @returns Err with the name and invocation context.
+	 */
 	protected unavailableArgument<T>(
 		type: string | IArgument<T>,
 	): Result.Err<UserError> {
@@ -360,6 +550,7 @@ export class Args {
 		);
 	}
 
+	/** Create an ArgsMissing error result with this invocation’s context. */
 	protected missingArguments(): Result.Err<UserError> {
 		return Result.err(
 			new UserError({
@@ -397,55 +588,94 @@ export class Args {
 	}
 }
 
+/** Invocation metadata included in argument errors and toJSON output. */
 export interface ArgsJson {
+	/** Message whose arguments are being parsed. */
 	message: Message<boolean>;
+	/** Command being invoked. */
 	command: MessageCommand;
+	/** Matched prefix and command metadata. */
 	commandContext: MessageCommand.RunContext;
 }
 
+/** Built-in argument names and their output types. Augment this interface to type custom argument names. */
 export interface ArgType {
+	/** Boolean parsed from the accepted true/false spellings. */
 	boolean: boolean;
+	/** Cached channel resolved by ID or mention. */
 	channel: ChannelTypes;
+	/** Date parsed with the JavaScript Date constructor. */
 	date: Date;
+	/** Fully cached direct-message channel. */
 	dmChannel: DMChannel;
+	/** Unicode or custom Discord emoji metadata. */
 	emoji: EmojiObject;
+	/** Number parsed with Number(), subject to optional bounds. */
 	float: number;
+	/** Cached guild category channel. */
 	guildCategoryChannel: CategoryChannel;
+	/** Cached guild channel of any supported type. */
 	guildChannel: GuildBasedChannelTypes;
+	/** Cached guild announcement channel. */
 	guildNewsChannel: NewsChannel;
+	/** Cached announcement thread. */
 	guildNewsThreadChannel: ThreadChannel & {
+		/** Discord channel type for this thread variant. */
 		type: ChannelType.AnnouncementThread;
+		/** Cached parent channel, or null when unavailable. */
 		parent: NewsChannel | null;
 	};
+	/** Cached private thread. */
 	guildPrivateThreadChannel: ThreadChannel & {
+		/** Discord channel type for this thread variant. */
 		type: ChannelType.PrivateThread;
+		/** Cached parent channel, or null when unavailable. */
 		parent: TextChannel | null;
 	};
+	/** Cached public thread. */
 	guildPublicThreadChannel: ThreadChannel & {
+		/** Discord channel type for this thread variant. */
 		type: ChannelType.PublicThread;
+		/** Cached parent channel, or null when unavailable. */
 		parent: TextChannel | null;
 	};
+	/** Cached stage voice channel. */
 	guildStageVoiceChannel: StageChannel;
+	/** Cached guild text channel. */
 	guildTextChannel: TextChannel;
+	/** Cached guild thread of any thread type. */
 	guildThreadChannel: ThreadChannel;
+	/** Cached guild voice channel. */
 	guildVoiceChannel: VoiceChannel;
+	/** URL accepted by the URL constructor. */
 	hyperlink: URL;
+	/** Integer parsed with Number(), subject to optional bounds. */
 	integer: number;
+	/** Fetched guild member. */
 	member: GuildMember;
+	/** Resolved Discord message; fetching can use HTTP. */
 	message: Message;
+	/** Number parsed with Number(), subject to optional bounds. */
 	number: number;
+	/** Guild role resolved by ID, mention, or cached name. */
 	role: Role;
+	/** Raw argument text subject to optional length bounds. */
 	string: string;
+	/** Alias of the hyperlink argument. */
 	url: URL;
+	/** Fetched Discord user. */
 	user: User;
+	/** Original input text matching one configured enum value. */
 	enum: string;
 }
 
+/** Extra argument context passed to a resolver. Built-in numeric, date, and string resolvers use the bounds when provided. */
 export interface ArgOptions extends Omit<
 	Argument.RunContext,
 	"message" | "command"
 > {}
 
+/** Resolver context with an optional maximum number of repeated values. */
 export interface RepeatArgOptions extends ArgOptions {
 	/** The maximum number of times the argument can be repeated.
 	 * @default Infinity */
@@ -455,5 +685,7 @@ export interface RepeatArgOptions extends ArgOptions {
 /** The callback used for {@link Args.nextMaybe} and {@link Args.next}. */
 export type ArgsNextCallback<T> = (value: string) => Option<T>;
 
+/** One parsed argument or a user-facing missing/resolution error. */
 export type ResultType<T> = Result<T, UserError | ArgumentError<T>>;
+/** A list of parsed arguments or a user-facing missing/resolution error. */
 export type ArrayResultType<T> = Result<T[], UserError | ArgumentError<T>>;

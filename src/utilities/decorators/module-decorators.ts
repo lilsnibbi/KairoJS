@@ -162,13 +162,25 @@ function collectApplicationCommandDecorators<CMD extends Command>(
 	return proxied;
 }
 
+/** Context passed to an ApplyOptions callback while constructing a module. */
 export interface ApplyOptionsCallbackParameters {
+	/** Shared framework services available during construction. */
 	container: Container;
+	/** Loader context for the module being constructed. */
 	context: Module.Context;
 }
 
+/**
+ * Registration callback contract used by application command decorators.
+ * @internal
+ */
 interface ChatInputCommandDecoratorsMap<CMD extends Command> {
+	/**
+	 * Decorator kind used for registration bookkeeping.
+	 * @internal
+	 */
 	type: "RegisterChatInputCommand";
+	/** Configure the supplied builder using the command instance, and return the builder. */
 	optionsFn: (
 		builder: SlashCommandBuilder,
 		command: ThisType<CMD> & CMD,
@@ -176,15 +188,26 @@ interface ChatInputCommandDecoratorsMap<CMD extends Command> {
 		| SlashCommandBuilder
 		| SlashCommandSubcommandsOnlyBuilder
 		| SlashCommandOptionsOnlyBuilder;
+	/** Optional guild scope, localization, ID hints, and registration behavior. */
 	registryOptions?: ApplicationCommandRegistryRegisterOptions;
 }
 
+/**
+ * Registration callback contract used by application command decorators.
+ * @internal
+ */
 interface ContextMenuCommandDecoratorsMap<CMD extends Command> {
+	/**
+	 * Decorator kind used for registration bookkeeping.
+	 * @internal
+	 */
 	type: "RegisterMessageContextMenuCommand" | "RegisterUserContextMenuCommand";
+	/** Configure the supplied builder using the command instance, and return the builder. */
 	optionsFn: (
 		builder: ContextMenuCommandBuilder, //
 		command: ThisType<CMD> & CMD,
 	) => ContextMenuCommandBuilder;
+	/** Optional guild scope, localization, ID hints, and registration behavior. */
 	registryOptions?: ApplicationCommandRegistryRegisterOptions;
 }
 

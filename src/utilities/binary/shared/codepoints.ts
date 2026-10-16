@@ -1,3 +1,4 @@
+/** Codepoint ranges used to map 16-bit words to codec text. Each range contains inclusive codepoint and word-index bounds. */
 export const codepointRanges = [
 	{
 		start: 0x4e00,

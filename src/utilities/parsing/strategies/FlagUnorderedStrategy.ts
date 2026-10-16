@@ -3,12 +3,10 @@ import { PrefixedStrategy } from "../index";
 
 /** The strategy options used in KairoJS. */
 export interface FlagStrategyOptions {
-	/** The accepted flags. Flags are key-only identifiers that can be placed anywhere in the command.
-	 * @default [] */
+	/** Accepted key-only flags. Use true to allow any name, or false/an empty list to disable flags. Defaults to an empty list. */
 	flags?: readonly string[] | boolean;
 
-	/** The accepted options. Options are key-value identifiers that can be placed anywhere in the command.
-	 * @default [] */
+	/** Accepted key/value option names. Use true to allow any name, or false/an empty list to disable options. Defaults to an empty list. */
 	options?: readonly string[] | boolean;
 
 	/** The prefixes for both flags and options.

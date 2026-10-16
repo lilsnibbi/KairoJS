@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { union } from "./union";
 
-/** Create an iterable with the unique elements of the input iterable. Under the hood, it calls {@linkcode union} with the iterable itself. */
+/** Lazily remove duplicates using Set equality, preserving first-seen order and retaining seen values in memory. */
 export function unique<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<ElementType> {

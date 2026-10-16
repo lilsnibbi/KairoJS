@@ -70,7 +70,7 @@ import {
 	safelyReplyToInteraction,
 } from "./utils";
 
-/** This is a {@link PaginatedMessage}, a utility to paginate messages (usually embeds). You must either use this class directly or extend it. */
+/** Paginate up to 25 message pages with component actions. Page functions are resolved and cached when run. */
 export class PaginatedMessage {
 	// #region public static class properties
 	/** The default actions of this handler. */
@@ -134,8 +134,10 @@ export class PaginatedMessage {
 		},
 	];
 
-	/** Whether to emit the warning about running a {@link PaginatedMessage} in a DM channel without the client the `'CHANNEL'` partial.
-	 * @default true */
+	/**
+	 * Warn when a missing channel suggests DM partials are unconfigured. Defaults to true. Use Partials.Channel, and
+	 * GatewayIntentBits.DirectMessages for message commands.
+	 */
 	public static emitPartialDMChannelWarning = true;
 
 	/** A list of `customId` that are bound to actions that will stop the {@link PaginatedMessage}
@@ -149,12 +151,10 @@ export class PaginatedMessage {
 		"guildDelete",
 	];
 
-	/** Text before the page number. A trailing space is added for you.
-	 * @default "" */
+	/** Default text before the page number, initially empty. A nonempty prefix gets one trailing space. */
 	public static pageIndexPrefix = "";
 
-	/** Custom separator for the page index in the embed footer.
-	 * @default "•" */
+	/** Default separator between page numbers and existing footer text, initially a bullet. */
 	public static embedFooterSeparator = "•";
 
 	/** Active paginations, keyed by the message that started them. Each message gets one active session. */
@@ -163,14 +163,12 @@ export class PaginatedMessage {
 	/** The current {@link InteractionCollector} handlers that are active. */
 	public static readonly handlers = new Map<string, PaginatedMessage>();
 
-	/** A generator for {@link MessageSelectOption} that will be used to generate the options for the {@link StringSelectMenuBuilder}.
-	 * @default */
+	/** Shared option-label callback. Receives a one-based page number and defaults to a label such as Page 1. */
 	public static selectMenuOptions: PaginatedMessageSelectMenuOptionsFunction = (
 		pageIndex,
 	) => ({ label: `Page ${pageIndex}` });
 
-	/** A generator for {@link MessageComponentInteraction#reply} that will be called and sent whenever an untargeted user interacts with one of the buttons.
-	 * @default */
+	/** Shared callback for replies to other users. Defaults to an ephemeral warning with user and role mentions disabled. */
 	public static wrongUserInteractionReply: PaginatedMessageWrongUserInteractionReplyFunction =
 		(targetUser: User) => ({
 			content: `Please stop interacting with the components on this message. They are only for ${userMention(targetUser.id)}.`,
@@ -197,7 +195,7 @@ export class PaginatedMessage {
 	// #endregion
 
 	// #region public class properties
-	/** The pages to be converted to {@link PaginatedMessage.messages} */
+	/** Page definitions to resolve. addPage accepts up to 25 pages. */
 	public pages: PaginatedMessagePage[] = [];
 
 	/** The response message used to edit on page changes. */
@@ -207,7 +205,7 @@ export class PaginatedMessage {
 	public collector: InteractionCollector<PaginatedMessageInteractionUnion> | null =
 		null;
 
-	/** The pages which were converted from {@link PaginatedMessage.pages} */
+	/** Resolved pages cached by zero-based index; null marks a page for resolution again. */
 	public messages: (PaginatedMessageResolvedPage | null)[] = [];
 
 	/** The actions which are to be used. */
@@ -219,19 +217,16 @@ export class PaginatedMessage {
 	/** The handler's current page/message index. */
 	public index = 0;
 
-	/** The number of milliseconds to idle before the paginator is closed.
-	 * @default 14.5 minutes */
+	/** Collector lifetime in milliseconds, despite the idle name. Defaults to 14.5 minutes; component activity does not reset it. */
 	public idle = Time.Minute * 14.5;
 
 	/** The template for this {@link PaginatedMessage}. You can use templates to set defaults that will apply to each and every page in the {@link PaginatedMessage} */
 	public template: PaginatedMessageMessageOptionsUnion;
 
-	/** Text before the page number. A trailing space is added for you.
-	 * @default ```PaginatedMessage.pageIndexPrefix``` (static property) */
+	/** Text before the page number. Defaults to the static pageIndexPrefix; a nonempty prefix gets one trailing space. */
 	public pageIndexPrefix = PaginatedMessage.pageIndexPrefix;
 
-	/** Text after the page number. A trailing space is added for you.
-	 * @default ```PaginatedMessage.embedFooterSeparator``` (static property) */
+	/** Separator between page numbers and existing footer text, surrounded by spaces. Defaults to the static embedFooterSeparator. */
 	public embedFooterSeparator = PaginatedMessage.embedFooterSeparator;
 
 	/** A list of `customId` that are bound to actions that will stop the {@link PaginatedMessage}
@@ -239,8 +234,7 @@ export class PaginatedMessage {
 	public stopPaginatedMessageCustomIds =
 		PaginatedMessage.stopPaginatedMessageCustomIds;
 
-	/** Whether to emit the warning about running a {@link PaginatedMessage} in a DM channel without the client having the `'CHANNEL'` partial.
-	 * @default ```PaginatedMessage.emitPartialDMChannelWarning``` (static property) */
+	/** Enable the missing-DM-channel warning for this instance. Defaults to the static emitPartialDMChannelWarning. */
 	public emitPartialDMChannelWarning =
 		PaginatedMessage.emitPartialDMChannelWarning;
 	// #endregion
@@ -267,11 +261,11 @@ export class PaginatedMessage {
 	 * @default true */
 	protected shouldAddFooterToEmbeds = true;
 
-	/** Function that returns the select menu options for the paginated message. */
+	/** Option-label callback copied from the static default when this instance is created. */
 	protected selectMenuOptions: PaginatedMessageSelectMenuOptionsFunction =
 		PaginatedMessage.selectMenuOptions;
 
-	/** Function that handles the reply when a user interacts with the paginated message incorrectly. */
+	/** Reply callback for users other than the target, copied from the static default when this instance is created. */
 	protected wrongUserInteractionReply: PaginatedMessageWrongUserInteractionReplyFunction =
 		PaginatedMessage.wrongUserInteractionReply;
 	// #endregion
@@ -348,7 +342,11 @@ export class PaginatedMessage {
 		return this;
 	}
 
-	/** Set the amount of time to idle before the paginator is closed. */
+	/**
+	 * Set the collector lifetime for the next run.
+	 * @param idle - Lifetime in milliseconds; activity does not reset it.
+	 * @returns This handler.
+	 */
 	public setIdle(idle: number): this {
 		this.idle = idle;
 		return this;
@@ -406,7 +404,11 @@ export class PaginatedMessage {
 		return this;
 	}
 
-	/** Adds a page to the existing ones. This will be added as the last page. */
+	/**
+	 * Append a page. At 25 pages, warn once and ignore further additions.
+	 * @param page - Message data or a page callback.
+	 * @returns This handler.
+	 */
 	public addPage(page: PaginatedMessagePage): this {
 		// Do not allow more than 25 pages, and send a warning when people try to do so.
 		if (this.pages.length === 25) {
@@ -430,7 +432,13 @@ export class PaginatedMessage {
 		return this;
 	}
 
-	/** Update the current page. */
+	/**
+	 * Replace the current page, clear its resolved data/actions, and resolve it again. This call does not send a Discord
+	 * edit.
+	 * @param page - New page definition.
+	 * @returns This handler after resolution.
+	 * @throws If no response exists yet, or page resolution fails.
+	 */
 	public async updateCurrentPage(page: PaginatedMessagePage): Promise<this> {
 		const interaction = this.response;
 		const currentIndex = this.index;
@@ -453,7 +461,11 @@ export class PaginatedMessage {
 		return this;
 	}
 
-	/** Adds a page to the existing ones using a {@link MessageBuilder}. This will be added as the last page. */
+	/**
+	 * Append a builder page, evaluating a supplied callback immediately.
+	 * @param builder - MessageBuilder or callback receiving a new builder.
+	 * @returns This handler.
+	 */
 	public addPageBuilder(
 		builder: MessageBuilder | ((builder: MessageBuilder) => MessageBuilder),
 	): this {
@@ -462,7 +474,11 @@ export class PaginatedMessage {
 		);
 	}
 
-	/** Adds a page to the existing ones asynchronously using a {@link MessageBuilder}. This wil be added as the last page. */
+	/**
+	 * Append a builder page whose callback is awaited during page resolution.
+	 * @param builder - MessageBuilder or async callback receiving a new builder.
+	 * @returns This handler.
+	 */
 	public addAsyncPageBuilder(
 		builder:
 			MessageBuilder | ((builder: MessageBuilder) => Promise<MessageBuilder>),
@@ -477,7 +493,11 @@ export class PaginatedMessage {
 		return this.addPage({ content });
 	}
 
-	/** Adds a page to the existing ones using a {@link EmbedBuilder}. This wil be added as the last page. */
+	/**
+	 * Append one embed, evaluating a supplied callback immediately.
+	 * @param embed - Embed data or callback receiving a new EmbedBuilder.
+	 * @returns This handler.
+	 */
 	public addPageEmbed(
 		embed: EmbedResolvable | ((embed: EmbedBuilder) => EmbedResolvable),
 	): this {
@@ -486,7 +506,11 @@ export class PaginatedMessage {
 		});
 	}
 
-	/** Adds a page to the existing ones asynchronously using a {@link EmbedBuilder}. This wil be added as the last page. */
+	/**
+	 * Append one embed whose callback is awaited during page resolution.
+	 * @param embed - Embed data or callback receiving a new EmbedBuilder.
+	 * @returns This handler.
+	 */
 	public addAsyncPageEmbed(
 		embed:
 			EmbedResolvable | ((builder: EmbedBuilder) => Awaitable<EmbedResolvable>),
@@ -496,7 +520,11 @@ export class PaginatedMessage {
 		}));
 	}
 
-	/** Adds a page to the existing ones asynchronously using multiple {@link EmbedBuilder}'s. This wil be added as the last page. */
+	/**
+	 * Append multiple embeds, evaluating a supplied callback immediately and keeping at most ten.
+	 * @param embeds - Embeds or callback receiving ten fresh builders.
+	 * @returns This handler.
+	 */
 	public addPageEmbeds(
 		embeds:
 			| EmbedResolvable[]
@@ -535,7 +563,11 @@ export class PaginatedMessage {
 		return this.addPage({ embeds: processedEmbeds });
 	}
 
-	/** Adds a page to the existing ones using multiple {@link EmbedBuilder}'s. This wil be added as the last page. */
+	/**
+	 * Append multiple embeds whose callback is awaited during page resolution, keeping at most ten.
+	 * @param embeds - Embeds or async callback receiving ten fresh builders.
+	 * @returns This handler.
+	 */
 	public addAsyncPageEmbeds(
 		embeds:
 			| EmbedResolvable[]
@@ -770,7 +802,13 @@ export class PaginatedMessage {
 		}
 	}
 
-	/** Executed whenever an action is triggered and resolved. */
+	/**
+	 * Resolve a page and its shared/page-specific component actions, reusing an existing cached result.
+	 * @param messageOrInteraction - Original pagination target.
+	 * @param target - User allowed to control the pages.
+	 * @param index - Zero-based page index.
+	 * @returns Resolved message data. Page and action callback failures reject.
+	 */
 	public async resolvePage(
 		messageOrInteraction: Message | AnyInteractableInteraction,
 		target: User,
@@ -819,7 +857,11 @@ export class PaginatedMessage {
 		return resolved;
 	}
 
-	/** Clones the current handler into a new instance. */
+	/**
+	 * Create another handler with the same pages, index, and lifetime. Action maps, response, and template are shared with
+	 * the original.
+	 * @returns The new handler.
+	 */
 	public clone(): PaginatedMessage {
 		const clone = new this.constructor({ pages: this.pages, actions: [] })
 			.setIndex(this.index)
@@ -831,7 +873,11 @@ export class PaginatedMessage {
 		return clone;
 	}
 
-	/** Get the options of a page. */
+	/**
+	 * Read a page definition, evaluating and awaiting its callback if needed. This does not use the resolved-page cache.
+	 * @param index - Array index; negative values count from the end.
+	 * @returns Raw page options, or undefined when no page exists. Callback failures reject.
+	 */
 	public async getPageOptions(
 		index: number,
 	): Promise<PaginatedMessageMessageOptionsUnion | undefined> {
@@ -1135,7 +1181,12 @@ export class PaginatedMessage {
 		}
 	}
 
-	/** Apply footer to the last embed of the page */
+	/**
+	 * Copy embeds and add the page count to the last embed footer when enabled. Other message fields are retained.
+	 * @param message - Resolved page data.
+	 * @param index - Zero-based page index.
+	 * @returns Page data with the footer applied.
+	 */
 	protected applyFooter(
 		message: PaginatedMessageMessageOptionsUnion,
 		index: number,
@@ -1290,8 +1341,8 @@ export class PaginatedMessage {
 	}
 }
 
-/** The `PaginatedMessage` interface represents a paginated message. */
+/** Instance typing for the overridable pagination constructor. */
 export interface PaginatedMessage {
-	/** The `constructor` field represents the constructor of the `PaginatedMessage` interface. It is of type `typeof PaginatedMessage`, which means it refers to the type of the `PaginatedMessage` interface itself. */
+	/** Constructor used by clone and to read subclass default actions. */
 	constructor: typeof PaginatedMessage;
 }

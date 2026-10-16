@@ -1,6 +1,6 @@
 import { from, type IterableResolvable } from "./from";
 
-/** Consumes the iterable and returns the number of elements. */
+/** Consume the entire source and return the number of values read. */
 export function count<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): number {

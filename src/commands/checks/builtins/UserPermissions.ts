@@ -15,6 +15,7 @@ import {
 	type PermissionPreconditionContext,
 } from "./ClientPermissions";
 
+/** Require the invoking user’s configured permissions. Available through CorePreconditions. */
 export class UserPermissionsCheck extends AllFlowsPrecondition {
 	private readonly dmChannelPermissions = new PermissionsBitField(
 		~new PermissionsBitField([
@@ -30,6 +31,10 @@ export class UserPermissionsCheck extends AllFlowsPrecondition {
 		]).bitfield & PermissionsBitField.All,
 	).freeze();
 
+	/**
+	 * Check a message invocation. Require the invoking user’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public messageRun(
 		message: Message,
 		_command: Command,
@@ -44,6 +49,10 @@ export class UserPermissionsCheck extends AllFlowsPrecondition {
 		return this.sharedRun(required, permissions, "message");
 	}
 
+	/**
+	 * Check a slash invocation. Require the invoking user’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		_command: Command,
@@ -57,6 +66,10 @@ export class UserPermissionsCheck extends AllFlowsPrecondition {
 		return this.sharedRun(required, permissions, "chat input");
 	}
 
+	/**
+	 * Check a context-menu invocation. Require the invoking user’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		_command: Command,

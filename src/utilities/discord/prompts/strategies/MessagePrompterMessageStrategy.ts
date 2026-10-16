@@ -14,6 +14,7 @@ import type { IMessagePrompterExplicitMessageReturn } from "../ExplicitReturnTyp
 import type { IMessagePrompterStrategyOptions } from "../strategyOptions";
 import { MessagePrompterBaseStrategy } from "./MessagePrompterBaseStrategy";
 
+/** Prompt strategy that waits for a message response. Timeout and Discord failures reject. */
 export class MessagePrompterMessageStrategy
 	extends MessagePrompterBaseStrategy
 	implements IMessagePrompterStrategyOptions

@@ -9,9 +9,13 @@ import { ResultError } from "./ResultError";
 
 const ValueProperty = Symbol.for("kairojs/result:Result.value");
 const SuccessProperty = Symbol.for("kairojs/result:Result.success");
+/** Symbol used to delegate safe unwrapping inside safeTry generators. */
 const UnwrapSafeProperty = Symbol.for("kairojs/result:Result.safeUnwrap");
 
-/** A type used to express computations that can fail, it can be used for returning and propagating errors. */
+/**
+ * An Ok value or Err error. Create one with Result.ok/err. Ordinary callbacks run synchronously and propagate exceptions;
+ * from/fromAsync capture them.
+ */
 export class Result<T, E, const Success extends boolean = boolean> {
 	/** Branded value to ensure `Success` is typed correctly.
 	 * @internal */
@@ -30,9 +34,11 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this[SuccessProperty];
 	}
 
-	/** Return `true` if the result is `Ok` and the value inside of it matches a predicate. */
+	/** Return true only for Ok whose value passes the callback. A type-guard callback also narrows the value type. */
 	public isOkAnd<R extends T>(cb: (value: T) => value is R): this is Ok<R, E>;
+	/** Return true only for Ok whose value passes the callback. A type-guard callback also narrows the value type. */
 	public isOkAnd<R extends boolean>(cb: (value: T) => R): this is Ok<T, E> & R;
+	/** Return true only for Ok whose value passes the callback. A type-guard callback also narrows the value type. */
 	public isOkAnd<R extends boolean>(cb: (value: T) => R): this is Ok<T, E> & R {
 		return this.isOk() && cb(this[ValueProperty]);
 	}
@@ -42,28 +48,30 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return !this[SuccessProperty];
 	}
 
-	/** Return `true` if the result is `Err` and the value inside of it matches a predicate. */
+	/** Return true only for Err whose error passes the callback. A type-guard callback also narrows the error type. */
 	public isErrAnd<R extends E>(cb: (error: E) => error is R): this is Err<R, T>;
+	/** Return true only for Err whose error passes the callback. A type-guard callback also narrows the error type. */
 	public isErrAnd<R extends boolean>(
 		cb: (error: E) => R,
 	): this is Err<E, T> & R;
+	/** Return true only for Err whose error passes the callback. A type-guard callback also narrows the error type. */
 	public isErrAnd<R extends boolean>(
 		cb: (error: E) => R,
 	): this is Err<E, T> & R {
 		return this.isErr() && cb(this[ValueProperty]);
 	}
 
-	/** Convert from `Result<T, E>` to `Option<T>`.  Converts itself into an `Option<T>`, and discarding the error, if any. */
+	/** Convert Ok(value) to Some(value), or Err to None. */
 	public ok(): If<Success, Some<T>, None> {
 		return this.match({ ok: (value) => some(value), err: () => none });
 	}
 
-	/** Convert from `Result<T, E>` to `Option<E>`.  Converts itself into an `Option<E>`, and discarding the successful value, if any. */
+	/** Convert Err(error) to Some(error), or Ok to None. */
 	public err(): If<Success, None, Some<E>> {
 		return this.match({ ok: () => none, err: (error) => some(error) });
 	}
 
-	/** Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a contained `Ok` value, leaving an `Err` value untouched. */
+	/** Map an Ok value into a new Ok; preserve Err unchanged. The callback’s result is stored without awaiting it. */
 	public map<OutputValue>(
 		cb: (value: If<Success, T, never>) => OutputValue,
 	): Result<OutputValue, E, Success> {
@@ -71,14 +79,14 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.match({ ok: (value) => ok(cb(value)), err: returnThis });
 	}
 
-	/** Map a success to another Result without wrapping it again. Keep errors unchanged. */
+	/** Replace an Ok with the Result returned by the callback; preserve Err unchanged. */
 	public mapInto<OutputResult extends AnyResult>(
 		cb: (value: If<Success, T, never>) => OutputResult,
 	): If<Success, OutputResult, Err<E>> {
 		return this.match({ ok: (value) => cb(value), err: returnThis });
 	}
 
-	/** Map the success value, or use the default for an error. Use mapOrElse for a lazy fallback. */
+	/** Map an Ok value, or return the supplied default value for Err. */
 	public mapOr<MappedOutputValue, DefaultOutputValue>(
 		defaultValue: DefaultOutputValue,
 		cb: (value: If<Success, T, never>) => MappedOutputValue,
@@ -86,7 +94,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.match({ ok: (value) => cb(value), err: () => defaultValue });
 	}
 
-	/** Map success and error values with separate callbacks. */
+	/** Map an Ok with cb, or map its error with op. Return the selected callback’s result directly. */
 	public mapOrElse<OutputValue, OutputError>(
 		op: (error: If<Success, never, E>) => OutputError,
 		cb: (value: If<Success, T, never>) => OutputValue,
@@ -94,7 +102,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.match({ ok: (value) => cb(value), err: (error) => op(error) });
 	}
 
-	/** Maps a `Result<T, E>` to `Result<T, F>` by applying a function to a contained `Err` value, leaving an `Ok` value untouched.  This function can be used to pass through a successful result while handling an error. */
+	/** Map an Err error into a new Err; preserve Ok unchanged. */
 	public mapErr<OutputError>(
 		cb: (error: If<Success, never, E>) => OutputError,
 	): Result<T, OutputError, Success> {
@@ -102,20 +110,20 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.match({ ok: returnThis, err: (error) => err(cb(error)) });
 	}
 
-	/** Maps a `Result<T, E>` to `Result<T, F>` by applying a function to a contained `Err` value, leaving an `Ok` value untouched. */
+	/** Replace an Err with the Result returned by the callback; preserve Ok unchanged. */
 	public mapErrInto<OutputResult extends AnyResult>(
 		cb: (error: If<Success, never, E>) => OutputResult,
 	): If<Success, Ok<T>, OutputResult> {
 		return this.match({ ok: returnThis, err: (error) => cb(error) });
 	}
 
-	/** Calls the provided closure with a reference to the contained value (if `Ok`). */
+	/** Call the callback for Ok, ignore its return value, and return this Result. */
 	public inspect(cb: (value: T) => unknown): this {
 		if (this.isOk()) cb(this[ValueProperty]);
 		return this;
 	}
 
-	/** Calls the provided closure with a reference to the contained value (if `Ok`) and awaits it. */
+	/** Await the callback for Ok, then return this Result. Callback errors reject. */
 	public async inspectAsync(
 		cb: (value: T) => Awaitable<unknown>,
 	): Promise<this> {
@@ -123,13 +131,13 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this;
 	}
 
-	/** Calls the provided closure with a reference to the contained error (if `Err`). */
+	/** Call the callback for Err, ignore its return value, and return this Result. */
 	public inspectErr(cb: (error: E) => unknown): this {
 		if (this.isErr()) cb(this[ValueProperty]);
 		return this;
 	}
 
-	/** Calls the provided closure with a reference to the contained error (if `Err`) and awaits it. */
+	/** Await the callback for Err, then return this Result. Callback errors reject. */
 	public async inspectErrAsync(
 		cb: (error: E) => Awaitable<unknown>,
 	): Promise<this> {
@@ -137,59 +145,68 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this;
 	}
 
-	/** Return an iterator over the possibly contained value.  The iterator yields one value if the result is `Ok`, otherwise none. */
+	/** Yield the Ok value once, or yield nothing for Err. */
 	public *iter(): Generator<T> {
 		if (this.isOk()) yield this[ValueProperty];
 	}
 
-	/** Return the contained `Ok` value.  If the value is an `Err`, it throws a {@link ResultError} with the given message and the content of the `Err`. */
+	/**
+	 * Return the Ok value.
+	 * @param message - Message for the ResultError thrown when this is Err.
+	 */
 	public expect(message: string): If<Success, T, never> {
 		if (this.isErr()) throw new ResultError(message, this[ValueProperty]);
 		return this[ValueProperty] as If<Success, T, never>;
 	}
 
-	/** Return the contained `Err` value.  If the value is an `Ok`, it throws a {@link ResultError} with the given message and the content of the `Ok`. */
+	/**
+	 * Return the Err error.
+	 * @param message - Message for the ResultError thrown when this is Ok.
+	 */
 	public expectErr(message: string): If<Success, never, E> {
 		if (this.isOk()) throw new ResultError(message, this[ValueProperty]);
 		return this[ValueProperty] as If<Success, never, E>;
 	}
 
-	/** Return the contained `Ok` value. */
+	/** Return the Ok value, or throw a ResultError retaining the Err error. */
 	public unwrap(): If<Success, T, never> {
 		if (this.isErr())
 			throw new ResultError("Unwrap failed", this[ValueProperty]);
 		return this[ValueProperty] as If<Success, T, never>;
 	}
 
-	/** Return the contained `Err` value. */
+	/** Return the Err error, or throw a ResultError retaining the Ok value. */
 	public unwrapErr(): If<Success, never, E> {
 		if (this.isOk())
 			throw new ResultError("Unwrap failed", this[ValueProperty]);
 		return this[ValueProperty] as If<Success, never, E>;
 	}
 
-	/** Return the contained `Ok` value or the provided default. */
+	/** Return the Ok value, or the supplied default for Err. */
 	public unwrapOr<OutputValue>(
 		defaultValue: OutputValue,
 	): If<Success, T, OutputValue> {
 		return this.match({ ok: (value) => value, err: () => defaultValue });
 	}
 
-	/** Return the contained `Ok` value or computes it from a closure. @seealso {@link unwrap} @seealso {@link unwrapOr} @seealso {@link unwrapErr} @seealso {@link unwrapRaw} @seealso {@link unwrapSafe} */
+	/** Return the Ok value, or call op with the Err error and return its result. */
 	public unwrapOrElse<OutputValue>(
 		op: (error: E) => OutputValue,
 	): If<Success, T, OutputValue> {
 		return this.match({ ok: (value) => value, err: (error) => op(error) });
 	}
 
-	/** Return the contained `Ok` value.  If the value is an `Err`, it throws the contained error. @seealso {@link unwrap} @seealso {@link unwrapOr} @seealso {@link unwrapOrElse} @seealso {@link unwrapErr} @seealso {@link unwrapSafe} */
+	/** Return the Ok value, or throw the Err value itself without wrapping it. */
 	public unwrapRaw(): If<Success, T, never> {
 		if (this.isErr()) throw this[ValueProperty];
 		// @ts-expect-error Complex types
 		return this[ValueProperty] as T;
 	}
 
-	/** Return the contained `Ok` value or yelds the contained `Err` value. */
+	/**
+	 * Delegate with yield* inside safeTry. Ok returns its value; Err yields itself to stop the generator early.
+	 * @throws ResultError if an Err generator is resumed outside safeTry.
+	 */
 	public *unwrapSafe(): Generator<Err<E, T>, T> {
 		if (this.isOk()) {
 			return this[ValueProperty];
@@ -202,14 +219,14 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		);
 	}
 
-	/** Return `result` if the result is `Ok`, otherwise returns the `Err` value of itself. */
+	/** Return the supplied Result for Ok; otherwise return this Err. */
 	public and<OutputResult extends AnyResult>(
 		result: OutputResult,
 	): If<Success, OutputResult, Err<E>> {
 		return this.match({ ok: () => result, err: returnThis });
 	}
 
-	/** Calls `cb` if the result is `Ok`, otherwise returns the `Err` value of self.  This function can be used for control flow based on `Result` values. */
+	/** Call cb with the Ok value and return its Result; otherwise return this Err. */
 	public andThen<OutputResult extends AnyResult>(
 		cb: (value: T) => OutputResult,
 	): OutputResult {
@@ -217,41 +234,45 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.match({ ok: (value) => cb(value), err: returnThis });
 	}
 
-	/** Use the fallback Result on error. Use orElse to create the fallback lazily. */
+	/** Keep this Ok, or return the supplied Result for Err. */
 	public or<OutputResult extends AnyResult>(
 		result: OutputResult,
 	): If<Success, Ok<T>, OutputResult> {
 		return this.match({ ok: returnThis, err: () => result });
 	}
 
-	/** Calls `cb` if the result is `Err`, otherwise returns the `Ok` value of self.  This function can be used for control flow based on result values. */
+	/** Keep this Ok, or call cb with the Err error and return its Result. */
 	public orElse<OutputResult extends AnyResult>(
 		cb: (error: E) => OutputResult,
 	): If<Success, Ok<T>, OutputResult> {
 		return this.match({ ok: returnThis, err: (error) => cb(error) });
 	}
 
-	/** Return `true` if the result is an `Ok` and the given value strict equals it. */
+	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
 	public contains<const Value extends T>(
 		this: Ok<T>,
 		value: Value,
 	): this is Ok<Value>;
+	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
 	public contains(this: Err<E>, value: T): false;
+	/** Check whether this is Ok with a value strictly equal to the supplied value. Objects compare by identity. */
 	public contains(value: T): boolean {
 		return this.isOkAnd((inner) => inner === value);
 	}
 
-	/** Return `true` if the result is an `Err` and the given error strict equals it. */
+	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
 	public containsErr(this: Ok<T>, error: E): false;
+	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
 	public containsErr<const Value extends E>(
 		this: Err<E>,
 		error: Value,
 	): this is Err<Value>;
+	/** Check whether this is Err with an error strictly equal to the supplied error. Objects compare by identity. */
 	public containsErr(error: E): boolean {
 		return this.isErrAnd((inner) => inner === error);
 	}
 
-	/** Transposes a `Result` of an `Option` into an `Option` of a `Result`.  `ok(none)` will be mapped to `none`. `ok(some(v))` and `err(e)` will be mapped to `some(ok(v))` and `some(err(e))`. */
+	/** Turn Ok(Some(value)) into Some(Ok(value)), Ok(None) into None, and Err into Some(Err). */
 	public transpose<InnerValue>(
 		this: Result<Option<InnerValue>, E, Success>,
 	): If<Success, Option<Ok<InnerValue>>, Some<Err<E>>> {
@@ -263,19 +284,19 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		});
 	}
 
-	/** Convert from `Result<Result<T, E>, E>` to `Result<T, E>`. */
+	/** Remove one nested Result layer from Ok; preserve Err unchanged. */
 	public flatten<InnerResult extends AnyResult>(
 		this: Result<InnerResult, E, Success>,
 	): If<Success, InnerResult, Err<E>> {
 		return this.match({ ok: (value) => value, err: returnThis });
 	}
 
-	/** Return the `Ok` value if self is `Ok`, and the `Err` value if self is `Err`. */
+	/** Return the stored value or error without checking the branch. */
 	public intoOkOrErr(): If<Success, T, E> {
 		return this[ValueProperty];
 	}
 
-	/** Return a `Promise` object with the awaited value (if `Ok`) or the awaited error (if `Err`). */
+	/** Await the stored value or error and wrap it in the same branch. A rejected inner promise rejects the returned promise. */
 	public intoPromise(): Promise<If<Success, Ok<Awaited<T>>, Err<Awaited<E>>>> {
 		// @ts-expect-error Complex types
 		return this.match<Ok<Awaited<T>>, Err<Awaited<E>>>({
@@ -286,7 +307,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		});
 	}
 
-	/** Check whether `other` equals with self. */
+	/** Check branch equality and strict equality of the stored values. Objects compare by identity. */
 	public eq<
 		OtherValue extends T,
 		OtherError extends E,
@@ -301,14 +322,16 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		);
 	}
 
-	/** Check whether `other` doesn't equal with self. */
+	/** Return the opposite of eq. */
 	public ne(other: Result<T, E>): boolean {
 		return !this.eq(other);
 	}
 
-	/** Runs `ok` function if self is `Ok`, otherwise runs `err` function. */
+	/** Call the matching branch with its stored value and this Result as the callback’s this value. Return its result directly. */
 	public match<OkValue, ErrValue>(branches: {
+		/** Called for Ok with its value and the Ok Result as this. */
 		ok(this: Ok<T>, value: If<Success, T, never>): OkValue;
+		/** Called for Err with its error and the Err Result as this. */
 		err(this: Err<E>, error: If<Success, never, E>): ErrValue;
 	}): If<Success, OkValue, ErrValue> {
 		// @ts-expect-error Complex types
@@ -317,11 +340,12 @@ export class Result<T, E, const Success extends boolean = boolean> {
 			: branches.err.call(this, this[ValueProperty] as E);
 	}
 
-	/** Return an iterator over the possibly contained value.  The iterator yields one value if the result is `Ok`, otherwise none. */
+	/** Yield the Ok value once, or yield nothing for Err. */
 	public [Symbol.iterator](): Generator<T> {
 		return this.iter();
 	}
 
+	/** Ok or Err, used by Object.prototype.toString. */
 	public get [Symbol.toStringTag](): If<Success, "Ok", "Err"> {
 		return this.match({ ok: () => "Ok", err: () => "Err" });
 	}
@@ -331,12 +355,16 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return this.unwrapSafe();
 	}
 
+	/** Create Ok(value). Omitting value stores undefined. */
 	public static ok<T = undefined, E = any>(this: void, value?: T): Ok<T, E>;
+	/** Create Ok(value). Omitting value stores undefined. */
 	public static ok<T, E = any>(this: void, value: T): Ok<T, E> {
 		return new Result<T, E, true>(value, true);
 	}
 
+	/** Create Err(value). Omitting value stores undefined. */
 	public static err<E = undefined, T = any>(this: void, value?: E): Err<E, T>;
+	/** Create Err(value). Omitting value stores undefined. */
 	public static err<E, T = any>(this: void, value: E): Err<E, T> {
 		return new Result<T, E, false>(value, false);
 	}
@@ -362,7 +390,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return Result[Symbol.hasInstance](instance);
 	}
 
-	/** Create a {@link Result} out of a callback.    */
+	/** Resolve a value, existing Result, or synchronous callback into a Result. Thrown values become Err; promises are not awaited. */
 	public static from<T, E = unknown>(
 		this: void,
 		op: ResultResolvable<T, E> | (() => ResultResolvable<T, E>),
@@ -374,7 +402,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		}
 	}
 
-	/** Create a {@link Result} out of a promise or async callback.    */
+	/** Await a value, existing Result, or callback result. Thrown values and rejected promises become Err. */
 	public static async fromAsync<T, E = unknown>(
 		this: void,
 		op:
@@ -388,7 +416,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		}
 	}
 
-	/** Create an {@link Ok} that is the combination of all collected {@link Ok} values as an array, or the first {@link Err} encountered. */
+	/** Collect Ok values in input order, returning the first Err. Empty input returns Ok([]). */
 	public static all<const Entries extends readonly AnyResult[]>(
 		this: void,
 		results: Entries,
@@ -403,7 +431,7 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return ok(values as UnwrapOkArray<Entries>);
 	}
 
-	/** Return the first encountered {@link Ok}, or an {@link Err} that is the combination of all collected error values. */
+	/** Return the first Ok, or Err with all errors in input order. Empty input returns Err([]). */
 	public static any<const Entries extends readonly AnyResult[]>(
 		this: void,
 		results: Entries,
@@ -418,15 +446,31 @@ export class Result<T, E, const Success extends boolean = boolean> {
 		return err(errors as UnwrapErrArray<Entries>);
 	}
 
-	/** Evaluates the given generator to a Result returned or an Err yielded from it, whichever comes first.  This function, in combination with `[$]`, is intended to emulate Rust's ? operator. */
+	/**
+	 * Run a generator until its first yielded Err or returned Result. Use yield* with unwrapSafe(), or with $async for
+	 * promised Results.
+	 * @param body - Synchronous or asynchronous generator. The async form returns a promise.
+	 * @returns The first yielded error Result or final returned Result. Thrown generator errors are not captured.
+	 */
 	public static safeTry<T, E>(
 		body: (options: SafeTryOptions) => Generator<Err<E>, Result<T, E>>,
 	): Result<T, E>;
 
-	/** Evaluates the given generator to a Result returned or an Err yielded from it, whichever comes first.  This function, in combination with `[$]`, is intended to emulate Rust's ? operator. */
+	/**
+	 * Run a generator until its first yielded Err or returned Result. Use yield* with unwrapSafe(), or with $async for
+	 * promised Results.
+	 * @param body - Synchronous or asynchronous generator. The async form returns a promise.
+	 * @returns The first yielded error Result or final returned Result. Thrown generator errors are not captured.
+	 */
 	public static safeTry<T, E>(
 		body: (options: SafeTryOptions) => AsyncGenerator<Err<E>, Result<T, E>>,
 	): Promise<Result<T, E>>;
+	/**
+	 * Run a generator until its first yielded Err or returned Result. Use yield* with unwrapSafe(), or with $async for
+	 * promised Results.
+	 * @param body - Synchronous or asynchronous generator. The async form returns a promise.
+	 * @returns The first yielded error Result or final returned Result. Thrown generator errors are not captured.
+	 */
 	public static safeTry<T, E>(
 		body:
 			| ((options: SafeTryOptions) => Generator<Err<E>, Result<T, E>>)
@@ -441,19 +485,28 @@ export class Result<T, E, const Success extends boolean = boolean> {
 	}
 }
 
+/** Types and helpers for {@link Result}. */
 export namespace Result {
+	/** Result whose branch is known to hold a successful value. */
 	export type Ok<T, E = any> = Result<T, E, true>;
+	/** Result whose branch is known to hold an error. */
 	export type Err<E, T = any> = Result<T, E, false>;
+	/** Result with unrestricted value and error types. */
 	export type Any = Result<any, any>;
+	/** Value or existing Result accepted by Result.from. */
 	export type Resolvable<T, E = any, Success extends boolean = boolean> =
 		T | Result<T, E, Success>;
+	/** Extract the Ok value type, or never when no Ok branch exists. */
 	export type UnwrapOk<T extends AnyResult> = T extends Ok<infer S> ? S : never;
+	/** Extract the Err error type, or never when no Err branch exists. */
 	export type UnwrapErr<T extends AnyResult> =
 		T extends Err<infer S> ? S : never;
 
+	/** Map a Result tuple or array to its Ok value types. */
 	export type UnwrapOkArray<T extends readonly AnyResult[] | []> = {
 		-readonly [P in keyof T]: UnwrapOk<T[P]>;
 	};
+	/** Map a Result tuple or array to its Err error types. */
 	export type UnwrapErrArray<T extends readonly AnyResult[] | []> = {
 		-readonly [P in keyof T]: UnwrapErr<T[P]>;
 	};
@@ -472,25 +525,36 @@ async function* unwrapSafeAsync<T, E>(
 	return yield* _result.unwrapSafe();
 }
 
+/** Value or existing Result accepted by Result.from. */
 export type ResultResolvable<
 	T,
 	E = any,
 	Success extends boolean = boolean,
 > = Result.Resolvable<T, E, Success>;
 
+/** Result whose branch is known to be successful. */
 export type Ok<T, E = any> = Result.Ok<T, E>;
+/** Result whose branch is known to be an error. */
 export type Err<E, T = any> = Result.Err<E, T>;
+/** Result with unrestricted value and error types. */
 export type AnyResult = Result.Any;
 
+/** Extract a Result’s Ok value type. */
 export type UnwrapOk<T extends AnyResult> = Result.UnwrapOk<T>;
+/** Extract a Result’s Err error type. */
 export type UnwrapErr<T extends AnyResult> = Result.UnwrapErr<T>;
 
+/** Map Result entries to their Ok value types. */
 export type UnwrapOkArray<T extends readonly AnyResult[] | []> =
 	Result.UnwrapOkArray<T>;
+/** Map Result entries to their Err error types. */
 export type UnwrapErrArray<T extends readonly AnyResult[] | []> =
 	Result.UnwrapErrArray<T>;
 
+/** Helpers passed to a safeTry generator. */
 export interface SafeTryOptions {
+	/** Symbol selecting a Result’s safe-unwrapping generator, for yield* result[$]. */
 	$: typeof UnwrapSafeProperty;
+	/** Await a promised Result and delegate its safe unwrap. Use yield* $async(promise) inside an async safeTry body. */
 	$async: <T, E>(result: Promise<Result<T, E>>) => AsyncGenerator<Err<E>, T>;
 }

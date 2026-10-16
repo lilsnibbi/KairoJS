@@ -3,7 +3,9 @@ import type { MessageResolverOptions } from "./resolvers/message";
 
 /** The context for the `'enum'` argument. */
 export interface EnumArgumentContext extends Argument.RunContext {
+	/** Allowed text values. Missing or empty lists fail with ArgumentEnumEmptyError. */
 	readonly enum?: string[];
+	/** Compare enum values without case when true. The original input is returned. Defaults to false. */
 	readonly caseInsensitive?: boolean;
 }
 

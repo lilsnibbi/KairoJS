@@ -13,12 +13,23 @@ export abstract class Task<
 	Task extends TaskName = TaskName, //
 	Options extends Task.Options = Task.Options,
 > extends Module<Options, "tasks"> {
+	/** Optional task metadata passed as constructor options by the loader. */
 	public static override readonly options?: Task.Options;
+	/** Automatic repeat interval in milliseconds, or null when unused. */
 	public readonly interval: number | null;
+	/** Automatic repeat cron expression, or null when unused. */
 	public readonly pattern: string | null;
+	/** Timezone for this module’s cron schedule. Defaults to UTC. */
 	public readonly timezone: string;
+	/** Retry, identity, and retention defaults for this module’s automatic repeated job. */
 	public readonly jobOptions?: TaskJobOptions;
 
+	/**
+	 * Create a task module and validate automatic scheduling settings.
+	 * @param context - Loader metadata and task store.
+	 * @param options - Module and schedule settings; defaults to an empty object.
+	 * @throws For invalid or conflicting interval/cron settings, invalid timezones, or unsupported job options.
+	 */
 	public constructor(context: Task.Context, options: TaskOptionsBase = {}) {
 		super(context, options);
 		this.interval = options.interval ?? null;
@@ -48,6 +59,12 @@ export abstract class Task<
 		}
 	}
 
+	/**
+	 * Execute one task attempt. Jobs can run again after lease loss, so make external effects safe to repeat.
+	 * @param payload - Payload declared for this task.
+	 * @param context - Job and lease-cancellation metadata for queued work; direct run calls may omit it.
+	 * @returns Any value, awaited and included in the success event. Throw to fail the attempt.
+	 */
 	public abstract run(
 		payload: TaskPayload<Task>,
 		context?: TaskRunContext,
@@ -75,7 +92,10 @@ export type ScheduledTaskCustomJobOptions = TaskJobOptions;
 export namespace Task {
 	/** The options for a {@link Task}. */
 	export type Options = TaskOptionsBase;
+	/** Shorthand for {@link Module.Context}. */
 	export type Context = Module.Context<"tasks">;
+	/** Shorthand for {@link Module.JSON}. */
 	export type JSON = Module.JSON;
+	/** Shorthand for {@link Module.LocationJSON}. */
 	export type LocationJSON = Module.LocationJSON;
 }

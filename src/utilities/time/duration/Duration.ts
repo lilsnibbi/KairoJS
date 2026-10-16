@@ -69,7 +69,7 @@ const mappings = new Map([
 
 /** Convert duration strings into ms and future dates */
 export class Duration {
-	/** The offset */
+	/** Parsed duration in milliseconds, or NaN if no recognized units were found. */
 	public offset: number;
 
 	/** The number of nanoseconds extracted from the text. */
@@ -102,7 +102,10 @@ export class Duration {
 	/** The number of years extracted from the text. */
 	public years = 0;
 
-	/** Create a new Duration instance */
+	/**
+	 * Parse recognized number/unit pairs, ignoring commas and treating a/an as one.
+	 * @param pattern - Duration text such as 2h 30m. Unrecognized text is ignored; no recognized unit leaves offset as NaN.
+	 */
 	public constructor(pattern: string) {
 		let result = 0;
 		let valid = false;
@@ -128,12 +131,16 @@ export class Duration {
 		this.offset = valid ? result : NaN;
 	}
 
-	/** Get the date from now */
+	/** New Date offset from the current time by this duration. An invalid duration produces an invalid Date. */
 	public get fromNow(): Date {
 		return this.dateFrom(new Date());
 	}
 
-	/** Get the date from */
+	/**
+	 * Create a date offset by this duration.
+	 * @param date - Base date.
+	 * @returns A new Date; the input is unchanged.
+	 */
 	public dateFrom(date: Date): Date {
 		return new Date(date.getTime() + this.offset);
 	}

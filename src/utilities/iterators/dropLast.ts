@@ -5,7 +5,10 @@ import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow
 import { take } from "./take";
 import { toArray } from "./toArray";
 
-/** Consumes the iterable, creating a new iterator without the last `count` elements from the iterable. */
+/**
+ * Consume input into an array and yield everything except its last count values. Count is truncated and must be
+ * nonnegative; Infinity yields nothing.
+ */
 export function dropLast<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	count: number,

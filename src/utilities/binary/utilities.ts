@@ -1,3 +1,4 @@
+/** Built-in numeric and bigint typed-array views. */
 export type TypedArray =
 	| Int8Array
 	| Uint8Array
@@ -11,7 +12,12 @@ export type TypedArray =
 	| BigInt64Array
 	| BigUint64Array;
 
-/** Convert a {@link TypedArray} to a string. */
+/**
+ * Read the entire underlying buffer as 16-bit UTF-16 code units. The view’s byte offset and length are not applied.
+ * @param buffer - Typed-array view over a buffer with an even byte length.
+ * @returns Text containing those code units.
+ * @throws If the underlying buffer cannot form a Uint16Array.
+ */
 export function toUTF16(buffer: TypedArray) {
 	let result = "";
 	for (const value of new Uint16Array(buffer.buffer)) {
@@ -21,7 +27,11 @@ export function toUTF16(buffer: TypedArray) {
 	return result;
 }
 
-/** Convert a string to a {@link Uint16Array}. */
+/**
+ * Copy a string’s UTF-16 code units into a Uint16Array.
+ * @param buffer - Input text.
+ * @returns One 16-bit word per JavaScript string code unit.
+ */
 export function fromUTF16(buffer: string): Uint16Array {
 	const result = new Uint16Array(buffer.length);
 	for (let i = 0; i < buffer.length; i++) {

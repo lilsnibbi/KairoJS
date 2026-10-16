@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Advances the iterable until it finds the element, returning `true` if it's found and `false` otherwise. */
+/** Check for a value using strict equality, stopping at the first match. Objects compare by identity and NaN does not match itself. */
 export function contains<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	value: ElementType,

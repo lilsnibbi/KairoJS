@@ -1,7 +1,10 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an infinite iterable by cycling through the elements of the input iterable. */
+/**
+ * Yield input once while saving it, then repeat the saved values indefinitely. Empty input ends immediately; the first
+ * pass is retained in memory.
+ */
 export function* cycle<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<ElementType> {

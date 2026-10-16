@@ -1,6 +1,10 @@
 /** The result of a lexicographic comparison. */
 export type LexicographicComparison = -1 | 0 | 1;
 
+/**
+ * Compare two defined values: return a negative number, zero, or a positive number for ascending order. Undefined values
+ * are handled before this callback.
+ */
 export type CompareByComparator<ElementType> = (
 	x: Exclude<ElementType, undefined>,
 	y: Exclude<ElementType, undefined>,

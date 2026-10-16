@@ -1,3 +1,7 @@
+/**
+ * Configure built-in features or add a feature through static client lifecycle hooks.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export type {

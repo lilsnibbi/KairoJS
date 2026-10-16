@@ -1,6 +1,6 @@
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 
-/** Create an empty iterator. */
+/** Create an iterator that immediately reports completion. */
 export function empty<
 	const ElementType = never,
 >(): IterableIterator<ElementType> {

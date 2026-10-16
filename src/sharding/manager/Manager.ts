@@ -102,6 +102,11 @@ export class ShardManager extends ShardMessenger {
 	private get logger() {
 		return this.options.logger ?? (this.ownedLogger ??= createConsoleLogger());
 	}
+	/**
+	 * Validate host credentials, transport settings, and the local child entrypoint. Connections start at start().
+	 * @param options - Local supervisor and coordinator settings.
+	 * @throws For invalid IDs, secrets, URLs, script extensions, or recovery settings.
+	 */
 	public constructor(options: ShardManagerOptions) {
 		super();
 		type({
@@ -204,18 +209,26 @@ export class ShardManager extends ShardMessenger {
 		)
 			throw new TypeError("processCount must be 0..4096.");
 	}
+	/** Configured Discord shard count from the latest coordinator assignment, or zero before the first assignment. */
 	public override get shardCount(): number {
 		return this.count;
 	}
+	/** Whether this host has an authenticated coordinator connection and accepted assignment. */
 	public get isConnected(): boolean {
 		return this.connected;
 	}
+	/** Copies of local process statuses, sorted by stable slot number. Inspect each state for child readiness. */
 	public get processes(): readonly ShardProcessStatus[] {
 		return [...this.statuses.values()]
 			.sort((a, b) => a.slot - b.slot)
 			.map((v) => ({ ...v }));
 	}
-	/** Resolves after authenticated assignment. Child boot/readiness is visible through processes. */
+	/**
+	 * Connect and reconcile the host assignment once, then supervise local Bun children.
+	 * @returns The shared promise, resolved after authenticated assignment rather than child readiness. Recoverable
+	 * connection failures retry by default.
+	 * @throws If closed, a fatal admission error occurs, or reconnection is disabled and startup fails.
+	 */
 	public start(): Promise<void> {
 		if (this.closed)
 			return Promise.reject(new ShardError("CLOSED", "Manager is closed."));
@@ -1152,6 +1165,15 @@ export class ShardManager extends ShardMessenger {
 			this.sendChild(child, message);
 		}
 	}
+	/**
+	 * Route a host request to a Discord shard through the coordinator.
+	 * @param target - Target shard ID.
+	 * @param name - Registered request name.
+	 * @param payload - Plain JSON input.
+	 * @param options - Deadline and cancellation settings.
+	 * @returns The remote handler’s output.
+	 * @throws If preparation, transport, or the remote handler fails.
+	 */
 	protected override async call(
 		target: number,
 		name: string,
@@ -1173,6 +1195,12 @@ export class ShardManager extends ShardMessenger {
 			options,
 		);
 	}
+	/**
+	 * Wait for coordinator availability when requested and return the remaining operation budget.
+	 * @param options - Deadline, cancellation, and wait settings.
+	 * @returns Prepared call settings.
+	 * @throws On closure, disconnection, exhausted wait capacity, cancellation, or timeout.
+	 */
 	protected override prepare(
 		options: ShardCallOptions,
 	): Promise<ShardCallOptions> {
@@ -1337,6 +1365,10 @@ export class ShardManager extends ShardMessenger {
 			clearTimeout(timer);
 		}
 	}
+	/**
+	 * Stop reconnects and restarts, stop owned children, release confirmed leases, and close transport resources.
+	 * @returns One shared shutdown promise. A child with unconfirmed exit cannot be safely restarted.
+	 */
 	public close(): Promise<void> {
 		return (this.closePromise ??= this.stop());
 	}

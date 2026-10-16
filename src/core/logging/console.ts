@@ -137,7 +137,13 @@ function serialize(
 	);
 }
 
-/** Native layouts, call options, streams, themes, filters and file lifecycle belong to @lilsnibbi/logger. */
+/**
+ * Create a logger with KairoJS console formatting and the native logger’s streams, filters, and file lifecycle.
+ * @param name - Logger name; defaults to KairoJS.
+ * @param options - Native logger settings.
+ * @param output - Console formatting and redaction settings.
+ * @returns A new logger. Await close() when its resources are no longer needed.
+ */
 export function createConsoleLogger(
 	name = "KairoJS",
 	options: Partial<LoggerOptions> = {},

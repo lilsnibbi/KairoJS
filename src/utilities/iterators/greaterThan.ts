@@ -5,7 +5,7 @@ import {
 	orderingIsGreater,
 } from "./shared/_compare";
 
-/** Check if the elements of `iterable` are {@link LexicographicComparison lexicographically} greater than those of another. */
+/** Compare sources in string order and return whether the first is greater than the second. Undefined sorts last. */
 export function greaterThan<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	other: IterableResolvable<ElementType>,

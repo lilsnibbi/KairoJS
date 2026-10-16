@@ -2,46 +2,54 @@ import type { Task } from "../Task";
 
 /** Events emitted during the process setting up the scheduler and running a task. You can use these events to trace the progress for debugging purposes. */
 export const TaskEvents = {
-	/** Event that is emitted if a task module is not found in the store */
+	/** A queued job has no enabled task module; receives its name and payload. */
 	ScheduledTaskNotFound: "scheduledTaskNotFound" as const,
-	/** Event that is emitted before a task's "run" method is called */
+	/** A task attempt is about to run; receives the module and payload. */
 	ScheduledTaskRun: "scheduledTaskRun" as const,
-	/** Event that is emitted when a task's "run" method throws an error */
+	/** A task attempt failed; receives the error, module, and payload. */
 	ScheduledTaskError: "scheduledTaskError" as const,
-	/** Event that is emitted when a tasks's "run" method is successful */
+	/** A task attempt succeeded; receives module, payload, result, and elapsed milliseconds. */
 	ScheduledTaskSuccess: "scheduledTaskSuccess" as const,
-	/** Event that is emitted when a task's "run" method finishes, regardless of whether an error occurred or not */
+	/** A task attempt ended; receives module, duration in milliseconds (null on failure), and payload. */
 	ScheduledTaskFinished: "scheduledTaskFinished" as const,
-	/** A claim or completion could not be saved. The backend will retry. */
+	/** The scheduler backend operation failed; receives the storage Error. */
 	StorageError: "taskStorageError" as const,
 };
 
+/** Add scheduler event argument tuples to discord.js. */
 declare module "discord.js" {
+	/** Arguments passed with TaskEvents. */
 	interface ClientEvents {
+		/** A queued job has no enabled task module; receives its name and payload. */
 		[TaskEvents.ScheduledTaskNotFound]: [
 			task: string, //
 			payload: unknown,
 		];
+		/** A task attempt is about to run; receives the module and payload. */
 		[TaskEvents.ScheduledTaskRun]: [
 			task: Task, //
 			payload: unknown,
 		];
+		/** A task attempt failed; receives the error, module, and payload. */
 		[TaskEvents.ScheduledTaskError]: [
 			error: unknown, //
 			task: Task,
 			payload: unknown,
 		];
+		/** A task attempt succeeded; receives module, payload, result, and elapsed milliseconds. */
 		[TaskEvents.ScheduledTaskSuccess]: [
 			task: Task, //
 			payload: unknown,
 			result: unknown,
 			duration: number,
 		];
+		/** A task attempt ended; receives module, duration in milliseconds (null on failure), and payload. */
 		[TaskEvents.ScheduledTaskFinished]: [
 			task: Task, //
 			duration: number | null,
 			payload: unknown,
 		];
+		/** The scheduler backend operation failed; receives the storage Error. */
 		[TaskEvents.StorageError]: [error: Error];
 	}
 }

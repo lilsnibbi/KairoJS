@@ -27,6 +27,10 @@ export class AutocompleteInteractionOptionResolver {
 	/** The name of the subcommand */
 	private readonly subcommand: string | null = null;
 
+	/**
+	 * Read a native Discord autocomplete payload without HTTP requests.
+	 * @param interaction - Native API interaction payload, including any resolved entity tables.
+	 */
 	public constructor(
 		interaction: APIApplicationCommandAutocompleteInteraction,
 	) {
@@ -55,10 +59,23 @@ export class AutocompleteInteractionOptionResolver {
 		}
 	}
 
-	/** Get the selected subcommand */
+	/**
+	 * Read the selected subcommand name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no subcommand was selected.
+	 */
 	public getSubcommand<Required extends boolean = false>(
 		required?: Required,
 	): RequiredIf<Required, string>;
+	/**
+	 * Read the selected subcommand name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no subcommand was selected.
+	 */
 	public getSubcommand(required = true): string | null {
 		if (required && !this.subcommand) {
 			throw new Error("A subcommand was not selected");
@@ -67,10 +84,23 @@ export class AutocompleteInteractionOptionResolver {
 		return this.subcommand;
 	}
 
-	/** Get the selected subcommand group */
+	/**
+	 * Read the selected subcommand group name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no group was selected.
+	 */
 	public getSubcommandGroup<Required extends boolean = false>(
 		required?: Required,
 	): RequiredIf<Required, string>;
+	/**
+	 * Read the selected subcommand group name.
+	 * @param required - Defaults to true at runtime, despite the generic overload’s false default. Pass false to allow
+	 * absence.
+	 * @returns The name, or null when optional and absent.
+	 * @throws If required and no group was selected.
+	 */
 	public getSubcommandGroup(required = true): string | null {
 		if (required && !this.group) {
 			throw new Error("A subcommand group was not selected");

@@ -1,7 +1,7 @@
 import { collect } from "./collect";
 import type { IterableResolvable } from "./from";
 
-/** Consumes the iterable and returns a new iterable with the elements in reverse order. */
+/** Consume the source into an array, then lazily yield its values in reverse order. */
 export function* reverse<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<ElementType> {

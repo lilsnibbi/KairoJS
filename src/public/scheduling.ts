@@ -1,3 +1,7 @@
+/**
+ * Define task modules and schedule jobs with an in-memory or explicitly configured Redis backend.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export * from "../extensions/scheduledTasks/Task";

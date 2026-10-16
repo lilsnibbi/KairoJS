@@ -10,10 +10,15 @@ import { isDMChannel, isGuildBasedChannel } from "../discord/index";
 import { isNullish } from "../index";
 import { createFunctionPrecondition, type FunctionFallback } from "./utils";
 
+/** UserError identifiers thrown by permission decorators. */
 export enum DecoratorIdentifiers {
+	/** Bot permission requirements cannot be used in this DM context. */
 	RequiresClientPermissionsGuildOnly = "requiresClientPermissionsGuildOnly",
+	/** The bot’s guild member lacks a required permission. */
 	RequiresClientPermissionsMissingPermissions = "requiresClientPermissionsMissingPermissions",
+	/** User permission requirements cannot be used in this DM context. */
 	RequiresUserPermissionsGuildOnly = "requiresUserPermissionsGuildOnly",
+	/** The RequiresUserPermissions guild check found missing permissions. */
 	RequiresUserPermissionsMissingPermissions = "requiresUserPermissionsMissingPermissions",
 }
 
@@ -86,7 +91,12 @@ export const RequiresClientPermissions = (
 	});
 };
 
-/** Allows you to set permissions required for individual methods. This is particularly useful for subcommands that require specific permissions. */
+/**
+ * Guard a method with user-facing permission errors. The current guild implementation checks guild.members.me (the bot),
+ * so it does not verify the invoking member.
+ * @param permissionsResolvable - Permission requirements.
+ * @returns A legacy method decorator that throws UserError when its check fails.
+ */
 export const RequiresUserPermissions = (
 	...permissionsResolvable: PermissionResolvable[]
 ): MethodDecorator => {

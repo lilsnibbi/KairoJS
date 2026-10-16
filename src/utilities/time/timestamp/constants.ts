@@ -11,6 +11,7 @@ export enum Time {
 	Year = Day * 365,
 }
 
+/** English weekday names, Sunday first. */
 export const days = [
 	"Sunday",
 	"Monday",
@@ -21,6 +22,7 @@ export const days = [
 	"Saturday",
 ];
 
+/** English month names, January first. */
 export const months = [
 	"January",
 	"February",
@@ -36,6 +38,7 @@ export const months = [
 	"December",
 ];
 
+/** Supported timestamp token letters and their maximum repeated widths. */
 export const tokens = new Map<string, number>([
 	["Y", 4],
 	["Q", 1],

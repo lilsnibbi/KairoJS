@@ -1,6 +1,9 @@
 import { from, type IterableResolvable } from "./from";
 
-/** Create an iterable with the elements of the input iterables zipped together. The opposite of {@linkcode unzip}. */
+/**
+ * Lazily combine corresponding source values into tuples, stopping when any source ends. Earlier sources in a partial
+ * final tuple may already have advanced.
+ */
 export function* zip<
 	const Iterables extends readonly IterableResolvable<any>[],
 >(...iterables: Iterables): ZipIterators<Iterables> {
@@ -19,6 +22,7 @@ export function* zip<
 	}
 }
 
+/** Iterator of tuples containing one value from each supplied source. */
 export type ZipIterators<Iterators extends readonly IterableResolvable<any>[]> =
 	IterableIterator<{
 		-readonly [P in keyof Iterators]: Iterators[P] extends IterableResolvable<

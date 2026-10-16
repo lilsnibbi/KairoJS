@@ -1,7 +1,7 @@
 import { chain } from "./chain";
 import type { IterableResolvable } from "./from";
 
-/** Appends iterables to the end of the first iterable, returning a new iterable combining all of them. It's similar to concatenating arrays or doing `[...a, ...b, ...c]`. */
+/** Lazily yield the first source followed by each additional source. Also exported as concat. */
 export function append<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	...iterables: IterableResolvable<ElementType>[]

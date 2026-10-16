@@ -2,7 +2,10 @@ import { from, type IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Check if the elements of both iterators are equal with respect to the specified equality function. */
+/**
+ * Compare values in order with callbackFn and require equal lengths. Stops at the first difference; callback errors
+ * propagate. Also exported as eqBy.
+ */
 export function equalBy<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	other: IterableResolvable<ElementType>,

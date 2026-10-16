@@ -41,6 +41,7 @@ import {
 	getDefaultGuildIds,
 } from "./registries";
 
+/** Discord application command definitions and routing IDs associated with one command module. */
 export class ApplicationCommandRegistry {
 	/** The module this registry is for. */
 	public readonly commandName: string;
@@ -82,14 +83,28 @@ export class ApplicationCommandRegistry {
 
 	private readonly apiCalls: InternalAPICall[] = [];
 
+	/**
+	 * Create a registry for one command name.
+	 * @param commandName - Local command module name. Prefer ApplicationCommandRegistries.acquire to reuse an existing
+	 * registry.
+	 */
 	public constructor(commandName: string) {
 		this.commandName = commandName;
 	}
 
+	/** Current command module, or undefined if absent. Requires the commands store to be registered. */
 	public get command(): Command<Args, CommandOptions> | undefined {
 		return container.modules.require("commands").get(this.commandName);
 	}
 
+	/**
+	 * Queue a slash command definition for the ready registration phase.
+	 * @param command - Native data, builder, or callback that configures a supplied builder. Callback return values are
+	 * ignored.
+	 * @param options - Guild scope, localization, ID hints, and update behavior.
+	 * @returns This registry.
+	 * @throws For invalid builder data or unavailable/invalid localization settings.
+	 */
 	public registerChatInputCommand(
 		command:
 			| ChatInputApplicationCommandData
@@ -134,6 +149,14 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Queue a user or message context-menu definition for the ready registration phase.
+	 * @param command - Native data, builder, or callback that configures a supplied builder. Callback return values are
+	 * ignored.
+	 * @param options - Guild scope, localization, ID hints, and update behavior.
+	 * @returns This registry.
+	 * @throws For invalid builder data or unavailable/invalid localization settings.
+	 */
 	public registerContextMenuCommand(
 		command:
 			| UserApplicationCommandData
@@ -176,6 +199,11 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Add local slash-command name aliases and log a warning for each. This does not create Discord commands.
+	 * @param names - Names or arrays of names.
+	 * @returns This registry. Prefer numeric ID aliases for stable routing.
+	 */
 	public addChatInputCommandNames(...names: string[] | string[][]) {
 		const flattened = names.flat(Infinity) as string[];
 
@@ -192,6 +220,11 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Add local context-menu name aliases and log a warning for each. This does not create Discord commands.
+	 * @param names - Names or arrays of names.
+	 * @returns This registry. Prefer numeric ID aliases for stable routing.
+	 */
 	public addContextMenuCommandNames(...names: string[] | string[][]) {
 		const flattened = names.flat(Infinity) as string[];
 
@@ -208,6 +241,11 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Add slash-command IDs to local routing. Nonnumeric values are accepted as names with a warning.
+	 * @param commandIds - IDs or arrays of IDs.
+	 * @returns This registry.
+	 */
 	public addChatInputCommandIds(...commandIds: string[] | string[][]) {
 		const flattened = commandIds.flat(Infinity) as string[];
 
@@ -234,6 +272,11 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Add context-menu IDs to local routing. Nonnumeric values are accepted as names with a warning.
+	 * @param commandIds - IDs or arrays of IDs.
+	 * @returns This registry.
+	 */
 	public addContextMenuCommandIds(...commandIds: string[] | string[][]) {
 		const flattened = commandIds.flat(Infinity) as string[];
 
@@ -260,6 +303,14 @@ export class ApplicationCommandRegistry {
 		return this;
 	}
 
+	/**
+	 * Compare and submit queued registrations outside bulk-overwrite mode. Individual failures are logged after all calls
+	 * settle.
+	 * @param applicationCommands - Discord application command manager.
+	 * @param globalCommands - Previously fetched global commands.
+	 * @param guildCommands - Previously fetched commands by guild.
+	 * @throws RangeError if used with the bulk-overwrite default.
+	 */
 	protected async runAPICalls(
 		applicationCommands: ApplicationCommandManager,
 		globalCommands: Collection<string, ApplicationCommand>,
@@ -312,6 +363,12 @@ export class ApplicationCommandRegistry {
 		}
 	}
 
+	/**
+	 * Record a successfully registered command ID in global/guild tracking and local routing.
+	 * @param type - Slash or context-menu registration.
+	 * @param id - Discord command ID.
+	 * @param guildId - Guild ID, or null/undefined for a global command.
+	 */
 	protected handleIdAddition(
 		type: InternalRegistryAPIType,
 		id: string,
@@ -738,11 +795,16 @@ export class ApplicationCommandRegistry {
 	}
 }
 
+/** Types and helpers for {@link ApplicationCommandRegistry}. */
 export namespace ApplicationCommandRegistry {
+	/** Scope and synchronization options for one queued application command. */
 	export interface RegisterOptions {
 		/** Opt in to translation keys for Discord presentation; base names and choice values stay unchanged. */
 		localisation?: CommandLocalisation;
-		/** If this is specified, the application commands will only be registered for these guild ids. */
+		/**
+		 * Nonempty guild IDs select guild registration. Omit to use shared defaults; an explicitly empty array selects global
+		 * API registration.
+		 */
 		guildIds?: string[];
 		/** If we should register the command when it is missing
 		 * @default true */
@@ -759,6 +821,7 @@ export namespace ApplicationCommandRegistry {
 	}
 }
 
+/** Options for queuing a slash or context-menu command registration. */
 export type ApplicationCommandRegistryRegisterOptions =
 	ApplicationCommandRegistry.RegisterOptions;
 

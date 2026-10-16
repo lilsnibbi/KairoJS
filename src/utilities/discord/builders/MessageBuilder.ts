@@ -1,24 +1,26 @@
 import type { MessageCreateOptions } from "discord.js";
 
+/** One file attachment accepted by discord.js message creation. */
 export type MessageBuilderFileResolvable = NonNullable<
 	MessageCreateOptions["files"]
 >[number];
+/** Native message creation options accepted by the builder. */
 export type MessageBuilderResolvable = Omit<
 	MessageCreateOptions,
 	"embed" | "disableMentions" | "reply"
 > & {
+	/** Native message embeds. setEmbeds caps later assignments at ten. */
 	embeds?: MessageCreateOptions["embeds"];
+	/** Native message component rows. */
 	components?: MessageCreateOptions["components"];
 };
 
 /** A message builder class, it implements the {@link MessageCreateOptions} interface. */
 export class MessageBuilder implements MessageCreateOptions {
-	/** Whether the message should be spoken aloud.
-	 * @default false */
+	/** Text-to-speech setting, taken from MessageBuilder.defaults when omitted. Initially undefined. */
 	public tts?: MessageCreateOptions["tts"];
 
-	/** The nonce for the message.
-	 * @default '' */
+	/** Message nonce, taken from MessageBuilder.defaults when omitted. Initially undefined. */
 	public nonce?: MessageCreateOptions["nonce"];
 
 	/** The content for the message. If set to undefined and the builder is used to edit, the content will not be replaced. */
@@ -36,6 +38,10 @@ export class MessageBuilder implements MessageCreateOptions {
 	/** Files to send with the message. This should not be set when editing a message, as Discord does not support editing file attachments. */
 	public files?: MessageCreateOptions["files"];
 
+	/**
+	 * Create mutable message fields using supplied values, then MessageBuilder.defaults for nullish fields.
+	 * @param options - Initial native message options. Arrays and objects are retained by reference.
+	 */
 	public constructor(options?: MessageBuilderResolvable) {
 		this.tts = options?.tts ?? MessageBuilder.defaults.tts;
 		this.nonce = options?.nonce ?? MessageBuilder.defaults.nonce;

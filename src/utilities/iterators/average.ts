@@ -5,7 +5,10 @@ import {
 	toNumberOrThrow,
 } from "./shared/_toNumberOrThrow";
 
-/** Consumes the iterable and returns the average value of all the elements. If the iterable is empty, it returns `null`. */
+/**
+ * Consume numeric-coercible values and return their mean, or null for empty input. NaN, undefined, symbols, and bigints
+ * reject; conversion errors propagate.
+ */
 export function average(
 	iterable: IterableResolvable<NumberResolvable>,
 ): number | null {

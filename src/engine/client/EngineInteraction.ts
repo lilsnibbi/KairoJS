@@ -10,19 +10,33 @@ import {
 import type { RestClient } from "../rest/RestClient";
 import { RestError } from "../rest/RestError";
 
+/** Initial-response state. Unknown means a transport failure left delivery uncertain; another initial response is blocked. */
 export type $InteractionReplyState =
 	"unanswered" | "pending" | "answered" | "unknown";
 
 /** Uses native callback bodies and prevents concurrent initial responses. */
 export class EngineInteraction {
 	private current: $InteractionReplyState = "unanswered";
+	/**
+	 * Wrap a native interaction with initial-response tracking.
+	 * @param data - Native interaction payload.
+	 * @param rest - REST client used to send callbacks.
+	 */
 	public constructor(
+		/** Original native Discord interaction payload. */
 		public readonly data: APIInteraction,
 		private readonly rest: RestClient,
 	) {}
+	/** Current initial-response state: unanswered, pending, answered, or uncertain after a transport failure. */
 	public get replyState(): $InteractionReplyState {
 		return this.current;
 	}
+	/**
+	 * Send a channel-message initial response for a command, component, or modal interaction.
+	 * @param data - Native response message data.
+	 * @returns Completion of the initial response.
+	 * @throws For other interaction types, consumed responses, or REST failures.
+	 */
 	public reply(data: APIInteractionResponseCallbackData): Promise<void> {
 		if (
 			![
@@ -41,6 +55,12 @@ export class EngineInteraction {
 			data,
 		});
 	}
+	/**
+	 * Send one native initial callback. Concurrent or repeated initial callbacks are rejected.
+	 * @param body - Native callback type and data.
+	 * @returns Completion of delivery. A 4xx failure restores unanswered; uncertain failures set unknown.
+	 * @throws If a response is already pending/consumed or REST delivery fails.
+	 */
 	public async respond(
 		body: RESTPostAPIInteractionCallbackJSONBody,
 	): Promise<void> {

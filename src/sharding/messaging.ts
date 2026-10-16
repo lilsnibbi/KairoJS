@@ -11,19 +11,43 @@ import {
 
 /** Named request API shared by client.sharding and the host supervisor. */
 export abstract class ShardMessenger {
+	/** Configured total from the latest assignment; zero before a host receives one. */
 	public abstract get shardCount(): number;
+	/**
+	 * Prepare coordinator availability and the remaining deadline before sending. The base implementation returns options
+	 * unchanged.
+	 * @param options - Call settings.
+	 * @returns Settings for the outgoing operation.
+	 */
 	protected async prepare(
 		options: ShardCallOptions,
 	): Promise<ShardCallOptions> {
 		return options;
 	}
+	/**
+	 * Send a named request through the concrete transport.
+	 * @param target - Target Discord shard ID.
+	 * @param name - Registered request name.
+	 * @param payload - Plain JSON input.
+	 * @param options - Deadline and cancellation settings.
+	 * @returns The remote handler’s output.
+	 */
 	protected abstract call(
 		target: number,
 		name: string,
 		payload: unknown,
 		options: ShardCallOptions,
 	): Promise<unknown>;
-	/** Ask one shard to run a registered handler. Even self requests travel through the coordinator. */
+	/**
+	 * Ask one shard to run a registered handler. Even self requests travel through the coordinator and are never replayed.
+	 * @param shard - Target Discord shard ID.
+	 * @param name - Name declared in ShardRequests.
+	 * @param payload - Plain JSON input matching the contract.
+	 * @param options - Deadline, cancellation, and optional coordinator wait.
+	 * @returns The handler’s JSON output.
+	 * @throws For an unavailable connection or target, invalid payload, capacity limits, cancellation, timeout, or handler
+	 * failure.
+	 */
 	public request<K extends ShardRequestName>(
 		shard: number,
 		name: K,
@@ -33,13 +57,12 @@ export abstract class ShardMessenger {
 		return this.call(shard, name, payload, options) as Promise<ShardOutput<K>>;
 	}
 	/**
-	 * Ask for fresh stats from one shard, or every ID in the current assignment's shard count.
-	 * Always returns the same read-only map shape. Entries, samples, memory and errors are frozen copies.
-	 * Each call goes through the coordinator, including self; cached scaling metrics are never used.
-	 * One timeoutMs budget covers waiting and collection (limits.timeoutMs by default), with at most eight requests at once.
-	 * Failed entries have ok: false and an error such as UNAVAILABLE, TIMEOUT or CAPACITY, with no metrics.
-	 * Invalid arguments or failure to prepare the local coordinator connection reject the promise.
-	 * After collection starts, disconnects and cancellation become per-shard errors; sent requests are never replayed.
+	 * Request fresh live stats from one shard, or every configured ID when omitted. Self requests also use the coordinator.
+	 * @param shardId - Optional target shard ID.
+	 * @param options - One deadline for coordinator waiting and collection; at most eight requests run at once.
+	 * @returns A read-only map of frozen samples or explicit per-shard errors. Cached scaling metrics are never used.
+	 * @throws For invalid arguments or failed local connection preparation. Once collection starts, failures and cancellation
+	 * become per-shard errors.
 	 */
 	public async stats(
 		shardId?: number,
@@ -104,7 +127,14 @@ export abstract class ShardMessenger {
 		);
 		return statsMap(results);
 	}
-	/** Every configured shard, including self. Missing/failed shards have explicit error entries. */
+	/**
+	 * Request the same handler on every configured shard, including self, with at most eight requests at once.
+	 * @param name - Name declared in ShardRequests.
+	 * @param payload - Plain JSON input matching the contract.
+	 * @param options - One deadline for waiting and collection. Sent requests are never replayed.
+	 * @returns Results in shard ID order, with an explicit failure for every shard that cannot answer.
+	 * @throws If the local coordinator connection cannot be prepared or the shard count is unknown.
+	 */
 	public async broadcast<K extends ShardRequestName>(
 		name: K,
 		payload: ShardInput<K>,

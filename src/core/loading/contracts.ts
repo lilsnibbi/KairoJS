@@ -4,6 +4,7 @@ import type { ModuleStore } from "../modules/ModuleStore";
 
 /** The module data information. */
 export interface ModuleData {
+	/** Optional per-startup cache of import promises, keyed by absolute file path. */
 	imports?: Map<string, Promise<any>>;
 	/** The name of the module. */
 	name: string;
@@ -62,9 +63,9 @@ export interface ModuleLoaderHooks<T extends Module> {
 	/** Called after all pieces have been loaded. */
 	onLoadAll(store: ModuleStore<T>): Awaitable<unknown>;
 
-	/** Called after a module has been unloaded or overwritten by a newly loaded module. */
+	/** Run before the module’s onUnload and removal, including cleanup after failed activation. Its result is awaited and ignored. */
 	onUnload(store: ModuleStore<T>, module: T): Awaitable<unknown>;
 
-	/** Called after all pieces have been unloaded. */
+	/** Run after every module cleanup has been attempted. Its result is awaited and ignored. */
 	onUnloadAll(store: ModuleStore<T>): Awaitable<unknown>;
 }

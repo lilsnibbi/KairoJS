@@ -20,7 +20,9 @@ import type { $EngineEvents, $EngineFailure, $EngineOptions } from "./types";
 
 /** Independent Bun engine. Construction opens no network connection. */
 export class EngineClient {
+	/** Resident native entity cache, updated before public dispatch handlers run. */
 	public readonly cache: EngineCache;
+	/** REST client owned by this engine and closed with it. */
 	public readonly rest: RestClient;
 	private readonly events: EventHub<$EngineEvents>;
 	private gateway?: GatewayShard;
@@ -30,6 +32,11 @@ export class EngineClient {
 	private reporting = false;
 	readonly #options: $EngineOptions;
 
+	/**
+	 * Create caches, REST transport, and the event hub without opening network connections.
+	 * @param options - Bot token, intents, cache, and transport settings.
+	 * @throws If token or queue/cache settings are invalid.
+	 */
 	public constructor(options: $EngineOptions) {
 		this.#options = {
 			...options,
@@ -49,18 +56,32 @@ export class EngineClient {
 			},
 		);
 	}
+	/** Gateway lifecycle state, or idle before connect and closed after close. */
 	public get state(): $GatewayState {
 		return this.closed ? "closed" : (this.gateway?.state ?? "idle");
 	}
+	/** Number of unfinished asynchronous event handlers. */
 	public get pendingHandlers(): number {
 		return this.events.pendingCount;
 	}
+	/**
+	 * Listen to an engine event. Handlers start synchronously in registration order; async results are tracked.
+	 * @param name - Event name.
+	 * @param listener - Event callback. Failures go to onError.
+	 * @returns A function that removes the listener.
+	 */
 	public on<K extends keyof $EngineEvents>(
 		name: K,
 		listener: (event: $EngineEvents[K]) => void | Promise<void>,
 	): () => void {
 		return this.events.on(name, listener);
 	}
+	/**
+	 * Discover fresh gateway metadata and connect one gateway shard once.
+	 * @returns The shared promise, resolved when the gateway is ready.
+	 * @throws For closure, metadata/gateway failures, or missing shard configuration when Discord recommends multiple shards.
+	 * Failed startup closes the engine.
+	 */
 	public connect(): Promise<void> {
 		if (this.closed)
 			return Promise.reject(new Error("Engine client is closed."));
@@ -147,7 +168,12 @@ export class EngineClient {
 		}
 		this.events.emit("dispatch", payload);
 	}
-	/** Explicit HTTP read. A concurrent gateway dispatch prevents stale cache writeback. */
+	/**
+	 * Fetch a full member over HTTP and cache it only if no gateway dispatch occurred during the read.
+	 * @param guildId - Guild ID.
+	 * @param userId - Member’s user ID.
+	 * @returns Full native member data; REST failures reject.
+	 */
 	public async fetchMember(
 		guildId: string,
 		userId: string,
@@ -161,6 +187,11 @@ export class EngineClient {
 		}
 		return member;
 	}
+	/**
+	 * Fetch a full channel over HTTP, avoiding stale cache writes after concurrent dispatches.
+	 * @param channelId - Channel ID.
+	 * @returns Full native channel data; REST failures reject.
+	 */
 	public async fetchChannel(channelId: string): Promise<APIChannel> {
 		const version = this.revision;
 		const channel = await this.rest.getChannel(channelId);
@@ -171,6 +202,12 @@ export class EngineClient {
 		}
 		return channel;
 	}
+	/**
+	 * Fetch a full message over HTTP, avoiding stale cache writes after concurrent dispatches.
+	 * @param channelId - Channel ID.
+	 * @param messageId - Message ID.
+	 * @returns Full native message data; REST failures reject.
+	 */
 	public async fetchMessage(
 		channelId: string,
 		messageId: string,
@@ -184,9 +221,14 @@ export class EngineClient {
 		}
 		return message;
 	}
+	/** Wait until all currently tracked asynchronous event handlers settle. Handler errors are reported through onError. */
 	public idle(): Promise<void> {
 		return this.events.idle();
 	}
+	/**
+	 * Permanently stop the gateway, abort REST work, clear caches, and stop accepting event work. Running handlers are not
+	 * cancelled; await idle() to let them finish.
+	 */
 	public close(): void {
 		if (this.closed) return;
 		this.closed = true;

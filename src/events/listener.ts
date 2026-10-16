@@ -9,6 +9,7 @@ export abstract class Listener<
 	E extends keyof ClientEvents | symbol = "",
 	Options extends Listener.Options = Listener.Options,
 > extends Module<Options, "listeners"> {
+	/** Optional listener metadata passed as constructor options by the loader. */
 	public static override readonly options?: Listener.Options;
 	/** The emitter, if any. */
 	public readonly emitter: EventEmitter | null;
@@ -21,6 +22,11 @@ export abstract class Listener<
 
 	private _listener: ((...args: any[]) => void) | null;
 
+	/**
+	 * Select an emitter, event, and once behavior without attaching the callback yet.
+	 * @param context - Loader metadata and listener store.
+	 * @param options - Listener settings. Missing emitters or empty event names disable the module.
+	 */
 	public constructor(
 		context: Listener.Context,
 		options: Options = {} as Options,
@@ -50,10 +56,16 @@ export abstract class Listener<
 		if (this.emitter === null || this._listener === null) this.enabled = false;
 	}
 
+	/**
+	 * Handle the event arguments. Async results are awaited; thrown or rejected work emits ListenerError.
+	 * @param args - Arguments defined by ClientEvents for this event.
+	 * @returns Any result; its value is ignored.
+	 */
 	public abstract run(
 		...args: E extends keyof ClientEvents ? ClientEvents[E] : unknown[]
 	): unknown;
 
+	/** Return module metadata with the event name and once flag. */
 	public override toJSON(): ListenerJSON {
 		return {
 			...super.toJSON(),
@@ -79,19 +91,30 @@ export abstract class Listener<
 	}
 }
 
+/** Emitter and subscription settings for a listener module. */
 export interface ListenerOptions extends Module.Options {
+	/** Emitter instance or client property name. Defaults to the active client. */
 	readonly emitter?: keyof Client | EventEmitter;
+	/** Event name or symbol. Defaults to the module name. */
 	readonly event?: string | symbol;
+	/** Handle only the next event, then unload. Defaults to false. */
 	readonly once?: boolean;
 }
 
+/** Serialized listener metadata. */
 export interface ListenerJSON extends Module.JSON {
+	/** Event name or symbol used by the listener. */
 	event: string | symbol;
+	/** Whether the listener handles just one event. */
 	once: boolean;
 }
 
+/** Types and helpers for {@link Listener}. */
 export namespace Listener {
+	/** Shorthand for {@link ListenerOptions}. */
 	export type Options = ListenerOptions;
+	/** Shorthand for {@link ListenerJSON}. */
 	export type JSON = ListenerJSON;
+	/** Shorthand for {@link Module.Context}. */
 	export type Context = Module.Context<"listeners">;
 }

@@ -7,6 +7,7 @@
  * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
  */
 
+/** Delay settings for trailing-edge debouncing. */
 export interface DebounceSettings {
 	/** The number of milliseconds to delay.
 	 * @default 0 */
@@ -17,6 +18,7 @@ export interface DebounceSettings {
 	maxWait?: number | null;
 }
 
+/** Debounced callback returning the most recent result, with cancellation and immediate-flush helpers. */
 export interface DebouncedFunc<FnArgumentsType extends any[], FnReturnType> {
 	/** Call the original function, but applying the debounce rules. */
 	(...args: FnArgumentsType): FnReturnType | undefined;
@@ -28,7 +30,13 @@ export interface DebouncedFunc<FnArgumentsType extends any[], FnReturnType> {
 	flush(): FnReturnType | undefined;
 }
 
-/** Create a debounced function that delays invoking func until after wait milliseconds have elapsed since the last time the debounced function was invoked. */
+/**
+ * Delay calls until input has been quiet for wait milliseconds, retaining the latest arguments.
+ * @param func - Callback to invoke on the trailing edge.
+ * @param options - wait defaults to 0; maxWait is omitted by default and is never smaller than wait.
+ * @returns A debounced callback with cancel() and flush(). It returns the latest completed invocation result, or
+ * undefined.
+ */
 export function debounce<FnArgumentsType extends any[], FnReturnType>(
 	func: (...args: FnArgumentsType) => FnReturnType,
 	options: DebounceSettings = {},

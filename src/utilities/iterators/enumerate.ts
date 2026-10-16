@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create a new iterable that yields the index and value of each element. */
+/** Lazily yield [zeroBasedIndex, value] pairs. */
 export function* enumerate<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<[number, ElementType]> {

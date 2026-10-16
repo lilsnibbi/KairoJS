@@ -51,6 +51,10 @@ export class PreconditionContainerSingle implements IPreconditionContainer {
 	/** The name of the precondition to run. */
 	public readonly name: string;
 
+	/**
+	 * Create a named check entry with optional stored context.
+	 * @param data - Check name or name/context pair. Stored context overrides invocation context at execution.
+	 */
 	public constructor(data: PreconditionSingleResolvable) {
 		if (typeof data === "string") {
 			this.context = {};

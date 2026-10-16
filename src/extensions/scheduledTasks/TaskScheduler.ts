@@ -31,8 +31,11 @@ import type {
 
 /** Persistent Redis scheduling or a volatile process-local queue. */
 export class TaskScheduler {
+	/** Frozen copy of the supplied scheduler settings; omitted defaults are not filled into this object. */
 	public readonly options: Readonly<TaskSchedulerOptions>;
+	/** Queue namespace. Defaults to scheduled-tasks. */
 	public readonly queue: string;
+	/** Selected backend: process-local memory, or Redis when redis_url was supplied. */
 	public readonly storage: "memory" | "redis";
 	private readonly backend: TaskBackend;
 	private timer?: ReturnType<typeof setInterval>;
@@ -44,6 +47,11 @@ export class TaskScheduler {
 	private readonly operations = new Set<Promise<unknown>>();
 	private connectionFailed = false;
 
+	/**
+	 * Validate settings and select a backend without connecting.
+	 * @param options - Queue and lease settings. Omit for in-memory scheduling.
+	 * @throws If settings are invalid or unsupported.
+	 */
 	constructor(options: TaskSchedulerOptions = {}) {
 		validateSchedulerOptions(options);
 		this.options = Object.freeze({ ...options });
@@ -55,7 +63,11 @@ export class TaskScheduler {
 				: new RedisBackend({ ...options, redis_url: options.redis_url });
 	}
 
-	/** Connect and begin claiming work. Initial connection failures reject. */
+	/**
+	 * Connect to storage, verify claims, and begin polling once.
+	 * @returns This scheduler after startup. Repeated calls share the startup promise.
+	 * @throws If closed or the initial storage/claim operation fails. Startup failure closes the scheduler.
+	 */
 	public start(): Promise<this> {
 		if (this.closed)
 			return Promise.reject(new Error("This task scheduler is closed."));
@@ -88,7 +100,13 @@ export class TaskScheduler {
 		return this.starting;
 	}
 
-	/** Queue a task. Call start(), or log in the owning client, to execute it. */
+	/**
+	 * Store a job; call start() or log in the owning client to execute it.
+	 * @param task - Task name or name/payload reference. Stored payloads must be plain acyclic JSON or undefined.
+	 * @param options - One-off delay in milliseconds, or job/schedule options. Defaults to an immediate one-off job.
+	 * @returns The stored job. Duplicate IDs retain the existing record.
+	 * @throws For closure, invalid names/payloads/options, or storage failure.
+	 */
 	public create<T extends TaskResolvable>(
 		task: T,
 		options: TaskOptions | number = {},
@@ -174,6 +192,12 @@ export class TaskScheduler {
 		});
 	}
 
+	/**
+	 * Register repeated jobs sequentially.
+	 * @param tasks - Explicit task definitions; omitted input uses enabled repeated modules in the active client’s tasks
+	 * store.
+	 * @throws If a definition is invalid, the task store is unavailable, or storage fails.
+	 */
 	public async createRepeated(tasks?: RepeatedTask[]): Promise<void> {
 		const entries =
 			tasks ??
@@ -193,13 +217,27 @@ export class TaskScheduler {
 		for (const task of entries) await this.create(task.name, task.options);
 	}
 
+	/**
+	 * Read a stored job.
+	 * @param id - Job ID.
+	 * @returns A job snapshot, or undefined when absent. Closure and storage failures reject.
+	 */
 	public get(id: string): Promise<TaskRecord | undefined> {
 		return this.operation(() => this.backend.get(id));
 	}
-	/** Cancels future execution. Already-running user code cannot be undone. */
+	/**
+	 * Delete a job to cancel future execution. Already running user code cannot be undone.
+	 * @param id - Job ID.
+	 * @returns Whether a record was removed. Closure and storage failures reject.
+	 */
 	public delete(id: string): Promise<boolean> {
 		return this.operation(() => this.backend.delete(id));
 	}
+	/**
+	 * List stored jobs by scheduled run time, then ID.
+	 * @param options - Optional state filter, order, and inclusive slice.
+	 * @returns Job snapshots. Closure and storage failures reject.
+	 */
 	public list(options: TaskListOptions = {}): Promise<TaskRecord[]> {
 		return this.operation(async () =>
 			this.slice(
@@ -210,6 +248,11 @@ export class TaskScheduler {
 			),
 		);
 	}
+	/**
+	 * List stored repeated jobs by next run time, then ID.
+	 * @param options - Optional order and inclusive slice.
+	 * @returns Repeated job snapshots. Closure and storage failures reject.
+	 */
 	public listRepeated(
 		options: RepeatedTaskListOptions = {},
 	): Promise<RepeatedTaskInfo> {
@@ -220,6 +263,11 @@ export class TaskScheduler {
 			),
 		);
 	}
+	/**
+	 * Delete terminal records older than the selected timestamp.
+	 * @param options - States and timestamp; defaults to completed/failed records before now.
+	 * @returns Number of removed records. Closure and storage failures reject.
+	 */
 	public cleanup(options: TaskCleanupOptions = {}): Promise<number> {
 		return this.operation(() =>
 			this.backend.cleanup(
@@ -229,7 +277,13 @@ export class TaskScheduler {
 		);
 	}
 
-	/** Execute now without storing a job. Thrown errors remain failures. */
+	/**
+	 * Run an enabled task module now, without storing a job or applying queued retry rules.
+	 * @param task - Task name or name/payload reference.
+	 * @param context - Optional caller-supplied run context.
+	 * @returns Elapsed milliseconds.
+	 * @throws If closed, the task is missing/disabled, or its handler throws. Lifecycle events are still emitted.
+	 */
 	public run(task: TaskResolvable, context?: TaskRunContext): Promise<number> {
 		return this.operation(() => this.runTask(task, context));
 	}
@@ -267,7 +321,10 @@ export class TaskScheduler {
 		}
 	}
 
-	/** Stop claiming, await running jobs, then release the connection and timers. */
+	/**
+	 * Stop claiming jobs, await running work and storage operations, then close the backend.
+	 * @returns One shared close promise. Running handlers are awaited rather than forcibly interrupted.
+	 */
 	public close(): Promise<void> {
 		this.closed = true;
 		clearInterval(this.timer);

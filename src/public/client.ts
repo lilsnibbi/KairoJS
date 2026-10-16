@@ -1,3 +1,7 @@
+/**
+ * Create the KairoJS Discord client, access shared services, and configure framework logging.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export { type Container, container } from "../core/Container";

@@ -5,7 +5,10 @@ import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toIntegerOrThrow } from "./shared/_toIntegerOrThrow";
 import { toArray } from "./toArray";
 
-/** Create `count` independent iterators from the input iterable. */
+/**
+ * Create count independent iterators over one source. All pulled values are retained in shared memory, so uneven readers
+ * can grow the buffer. Count is truncated and must be finite and nonnegative.
+ */
 export function tee<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	count: number,

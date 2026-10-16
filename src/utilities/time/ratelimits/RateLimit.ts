@@ -1,5 +1,6 @@
 import type { RateLimitManager } from "./RateLimitManager";
 
+/** One fixed-window usage bucket. consume() resets expired buckets before consuming a use. */
 export class RateLimit<K = string> {
 	/** The remaining amount of times this entry can be dripped before the bucket is empty. */
 	public remaining!: number;
@@ -10,6 +11,10 @@ export class RateLimit<K = string> {
 	/** The {@link RateLimitManager} this entry is for. */
 	private manager: RateLimitManager<K>;
 
+	/**
+	 * Create a full bucket using its manager’s limit and reset interval.
+	 * @param manager - Owning rate-limit settings.
+	 */
 	public constructor(manager: RateLimitManager<K>) {
 		this.manager = manager;
 		this.reset();

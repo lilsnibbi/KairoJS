@@ -1,6 +1,7 @@
 import type { LogLevel } from "@lilsnibbi/logger";
 import { dataProperty, safeContext, safeText } from "./redact";
 
+/** Console output settings used when KairoJS creates a logger. */
 export interface ConsoleLogOptions {
 	/** Overrides KAIRO_LOG_FORMAT. Default: text. */
 	format?: "text" | "json";
@@ -13,11 +14,17 @@ export interface ConsoleLogOptions {
 	/** Compact native displays by default; full includes every safe field and correlation ID. DEBUG defaults to full. */
 	detail?: "compact" | "full";
 }
+/** Structured framework log entry, exported as ConsoleLogEntry. */
 export interface LogEntry {
+	/** Short name of the part of the application reporting the event. */
 	component: string;
+	/** Stable event name used to group related log records. */
 	event: string;
+	/** Short explanation of what happened. */
 	message: string;
+	/** Optional metadata. The console formatter filters and redacts unsafe values. */
 	context?: Record<string, unknown>;
+	/** Optional thrown value. The console formatter summarizes its cause and source locations. */
 	error?: unknown;
 }
 export interface ConsoleRecord {

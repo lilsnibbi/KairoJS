@@ -2,7 +2,10 @@ import type { IterableResolvable } from "./from";
 import { maxBy } from "./maxBy";
 import { defaultCompare } from "./shared/comparators";
 
-/** Consumes the iterable and returns the highest number element. */
+/**
+ * Consume input and return the greatest value by string ordering, or null when empty. Equal values choose the last;
+ * undefined sorts last.
+ */
 export function max<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): ElementType | null {

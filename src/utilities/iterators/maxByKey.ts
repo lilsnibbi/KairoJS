@@ -8,7 +8,10 @@ import {
 import { defaultCompare } from "./shared/comparators";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Return the element that gives the maximum value from the specified function. */
+/**
+ * Map each value to a key and return the value with the greatest key, or null when empty. Ties choose the last. Defaults
+ * to string key comparison with undefined last.
+ */
 export function maxByKey<const ElementType, const MappedType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (element: ElementType, index: number) => MappedType,

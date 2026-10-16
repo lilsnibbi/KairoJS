@@ -27,44 +27,78 @@ import { container } from "../../../core/Container";
 import { fallbackLogger } from "../../../core/logging/console";
 import { writeEvent } from "../../../core/logging/diagnostics";
 
+/** Container-layout placeholder replaced with the current page’s text. */
 const DATA: unique symbol = Symbol("paginationData");
+/** Container-layout placeholder replaced with pagination controls. */
 const BUTTONS: unique symbol = Symbol("paginationButtons");
+/** Native component allowed inside a Discord container. */
 type ContainerChild = APIContainerComponent["components"][number];
+/** Container text, an encodable child component, or the DATA/BUTTONS placeholders. */
 export type PaginationLayoutItem =
 	string | JSONEncodable<ContainerChild> | typeof DATA | typeof BUTTONS;
+/** Message to reply to, or interaction whose reply is created/edited. */
 export type PaginationTarget = Message | RepliableInteraction;
+/** Built-in or custom reason passed to the end callback. */
 export type PaginationEndReason =
 	"idle" | "stopped" | "empty" | "singlePage" | "deleted" | "error" | string;
+/** Optional label, emoji, and visual style for one pagination button. */
 export interface PaginationButtonOptions {
+	/** Button text. Defaults to the action’s built-in label or current page/count for jump. */
 	label?: string;
+	/** Optional button emoji accepted by discord.js. */
 	emoji?: string;
+	/** Non-link button style. Defaults to ButtonStyle.Secondary. */
 	style?:
 		| ButtonStyle.Primary
 		| ButtonStyle.Secondary
 		| ButtonStyle.Success
 		| ButtonStyle.Danger;
 }
+/** Page sizing, controls, timeouts, text replacements, and callbacks. */
 export interface PaginationBaseOptions {
+	/** Positive integer entries per page. Defaults to 5. */
 	entriesPerPage?: number;
+	/** Positive collector idle timeout in milliseconds. Defaults to 60000. */
 	idleTimeout?: number;
+	/** Positive time to wait for each page-jump modal in milliseconds. Defaults to 60000. */
 	modalTimeout?: number;
+	/** Make a fresh interaction reply ephemeral when true. Defaults to false; existing replies keep their visibility. */
 	ephemeral?: boolean;
+	/** Show first/last page buttons when true. Defaults to false. */
 	showSkipButtons?: boolean;
+	/** Text for an empty list. Defaults to No data to show. */
 	emptyContent?: string;
+	/** Literal nonempty text replacements applied to page text in object-entry order. */
 	replacements?: Readonly<Record<string, string>>;
+	/** Optional button settings by action: first, back, jump, next, or last. */
 	buttons?: Partial<
 		Record<"first" | "back" | "jump" | "next" | "last", PaginationButtonOptions>
 	>;
+	/** Called once after controls stop, with the stop reason. Its async result is awaited; a rejection rejects stop(). */
 	onEnd?: (reason: PaginationEndReason) => unknown | Promise<unknown>;
+	/** Optional error reporter for failed actions. Its failures are logged with the original error; absent callbacks use framework logging. */
 	onError?: (error: unknown) => unknown | Promise<unknown>;
 }
+/** Choose embed output or a Discord Components V2 container, plus shared pagination settings. */
 export type PaginationOptions = PaginationBaseOptions &
 	(
-		| { type: "embed"; embed?: EmbedBuilder }
 		| {
+				/** Output mode: embed or container. */
+				type: "embed";
+				/** Embed template copied at construction. Its description is replaced by page text. Defaults to a new empty embed. */
+				embed?: EmbedBuilder
+		  }
+		| {
+				/** Output mode: embed or container. */
 				type: "container";
+				/**
+				 * Container layout with exactly one DATA and one BUTTONS placeholder. Defaults to [DATA, BUTTONS]. Text becomes
+				 * TextDisplay components.
+				 */
 				layout?: readonly PaginationLayoutItem[];
+				/** Optional Discord container accent color. */
 				accentColor?: number;
+				/** Optional Discord container spoiler flag. */
 				spoiler?: boolean;
 		  }
 	);
@@ -83,7 +117,9 @@ type Mode =
 
 /** One list, one message, and controls scoped to its original user. */
 export class Pagination {
+	/** Container-layout placeholder for the current page text. */
 	static readonly DATA: typeof DATA = DATA;
+	/** Container-layout placeholder for navigation controls. */
 	static readonly BUTTONS: typeof BUTTONS = BUTTONS;
 	private readonly entries: readonly string[];
 	private readonly options: PaginationBaseOptions;
@@ -102,6 +138,13 @@ export class Pagination {
 	private stopping?: Promise<void>;
 	private readonly modals = new Set<() => void>();
 
+	/**
+	 * Copy a list and output settings for one pagination message.
+	 * @param entries - Text entries, joined with newlines on each page.
+	 * @param options - Output mode and controls; defaults to embed output with five entries per page.
+	 * @throws For invalid sizes/timeouts/layouts or empty/oversized rendered pages. Embed text is capped at 4096 characters;
+	 * container text at 4000.
+	 */
 	constructor(
 		entries: readonly string[],
 		options: PaginationOptions = { type: "embed" },
@@ -167,14 +210,22 @@ export class Pagination {
 	get page(): number {
 		return this.pageIndex + 1;
 	}
+	/** Number of pages, always at least one even for an empty list. */
 	get pageCount(): number {
 		return this.pages;
 	}
+	/** Whether this instance has ended and will accept no further page changes. */
 	get stopped(): boolean {
 		return this.ended;
 	}
 
-	/** Send once. Fresh interactions are deferred before rendering. */
+	/**
+	 * Send this instance once, scoping controls to the triggering message author or interaction user. Fresh interactions are
+	 * deferred first.
+	 * @param target - Message to reply to, or interaction reply to create/edit.
+	 * @returns The response message. Empty and single-page lists stop immediately after sending.
+	 * @throws For repeated sends, a stopped instance, or Discord send/edit failures.
+	 */
 	async send(target: PaginationTarget): Promise<Message> {
 		if (this.sent || this.ended)
 			throw new Error("A Pagination instance can only be sent once.");
@@ -229,7 +280,11 @@ export class Pagination {
 		}
 	}
 
-	/** Stop collectors and disable controls after any queued update finishes. */
+	/**
+	 * End collectors, wait for queued updates, and disable controls. Repeated calls share one promise.
+	 * @param reason - End reason; defaults to stopped.
+	 * @returns Completion of cleanup and onEnd. Rendering failures are reported; onEnd failures reject.
+	 */
 	stop(reason: PaginationEndReason = "stopped"): Promise<void> {
 		if (this.stopping) return this.stopping;
 		this.ended = true;

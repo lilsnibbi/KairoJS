@@ -50,6 +50,13 @@ export class EventIterator<
 	/** The push handler with context bound to the instance. */
 	readonly #push: (this: EventIterator<V>, ...value: V) => void;
 
+	/**
+	 * Attach an event listener and queue argument tuples for asynchronous iteration.
+	 * @param emitter - Source event emitter.
+	 * @param event - Event name to collect.
+	 * @param options - Optional filter, idle timeout, and accepted-value limit. The idle timer refreshes when a queued value
+	 * is accepted by next().
+	 */
 	public constructor(
 		emitter: EventEmitter,
 		event: string,

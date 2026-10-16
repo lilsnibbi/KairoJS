@@ -12,26 +12,43 @@ import { type $RouteKey, RateLimits, routeKey } from "./RateLimits";
 import { RequestQueue } from "./RequestQueue";
 import { RestError } from "./RestError";
 
+/** Fetch-compatible HTTP transport returning a Response promise. It must honor the supplied abort signal. */
 export type $Fetch = (
 	input: string | URL,
 	init?: RequestInit,
 ) => Promise<Response>;
+/** Discord REST transport, queue, retry, and response limits. */
 export interface $RestOptions {
+	/** Discord API base URL. Defaults to https://discord.com/api/v10; TLS is required outside loopback tests. */
 	baseURL?: string;
+	/** HTTP transport. Defaults to global fetch. */
 	fetch?: $Fetch;
+	/** Clock and timer hooks. Defaults to native engine timing. */
 	clock?: $Clock;
+	/** Positive integer cap on queued and running requests, including retries. Defaults to 1024. */
 	maxPendingRequests?: number;
+	/** Positive integer cap on concurrent requests. Defaults to 8. */
 	maxConcurrentRequests?: number;
+	/** Nonnegative retry limit for transport failures and 5xx responses on GET, PUT, and DELETE. Defaults to 2. */
 	maxRetries?: number;
+	/** Nonnegative retry limit after rate-limit responses. Defaults to 5; applies to all methods. */
 	maxRateLimitRetries?: number;
+	/** Positive integer network deadline per attempt, in milliseconds. Queueing and retry waits are separate. Defaults to 15000. */
 	timeoutMs?: number;
+	/** Positive integer cap on response body bytes. Defaults to 8388608. */
 	maxResponseBytes?: number;
 }
+/** One JSON request relative to the configured Discord API base URL. */
 export interface $RestRequest {
+	/** HTTP method used for the API call. */
 	method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+	/** Absolute API path beginning with one slash. Traversal, fragments, backslashes, and embedded newlines are rejected. */
 	path: string;
+	/** Optional JSON-serializable body, serialized when the request is queued. */
 	body?: unknown;
+	/** Send the bot token unless false. Defaults to true; interaction callbacks use false. */
 	auth?: boolean;
+	/** Optional cancellation signal for the full operation, including queue and retry waits. */
 	signal?: AbortSignal;
 }
 
@@ -90,6 +107,12 @@ export class RestClient {
 	private readonly maximumPending: number;
 	private pending = 0;
 
+	/**
+	 * Create an HTTP client without opening connections.
+	 * @param token - Nonempty Discord bot token.
+	 * @param options - Transport, queue, retry, and response settings.
+	 * @throws For an empty token, invalid endpoint, or invalid limits.
+	 */
 	public constructor(token: string, options: $RestOptions = {}) {
 		this.#token = token;
 		if (!token.trim()) throw new TypeError("A bot token is required.");
@@ -121,13 +144,22 @@ export class RestClient {
 			1,
 		);
 	}
+	/** Number of operations still queued or running, including retry waits. */
 	public get pendingRequests(): number {
 		return this.pending;
 	}
+	/** Permanently abort queued and running requests. Later calls reject. */
 	public close(): void {
 		this.lifetime.abort(new Error("REST client closed."));
 	}
 
+	/**
+	 * Queue a Discord JSON request with route and global rate-limit handling.
+	 * @param request - Method, API path, body, authentication, and cancellation settings.
+	 * @returns Parsed JSON cast to T, or undefined for an empty successful response.
+	 * @throws For invalid paths or JSON, exhausted queue capacity, cancellation, transport/response failures, or RestError
+	 * for a rejected HTTP response. POST/PATCH transport failures are not retried.
+	 */
 	public request<T>(request: $RestRequest): Promise<T> {
 		if (
 			!request.path.startsWith("/") ||
@@ -251,11 +283,23 @@ export class RestClient {
 			this.clock.clearTimeout(timer);
 		}
 	}
+	/**
+	 * Fetch Discord’s gateway URL, recommended shard count, and current session-start limits.
+	 * @param signal - Optional cancellation signal.
+	 * @returns Native gateway metadata; REST failures reject.
+	 */
 	public getGatewayBot(
 		signal?: AbortSignal,
 	): Promise<RESTGetAPIGatewayBotResult> {
 		return this.request({ method: "GET", path: Routes.gatewayBot(), signal });
 	}
+	/**
+	 * Fetch a member from Discord.
+	 * @param guildId - Guild ID.
+	 * @param userId - Member’s user ID.
+	 * @param signal - Optional cancellation signal.
+	 * @returns Native member data; REST failures reject.
+	 */
 	public getMember(
 		guildId: string,
 		userId: string,
@@ -267,6 +311,12 @@ export class RestClient {
 			signal,
 		});
 	}
+	/**
+	 * Fetch a channel from Discord.
+	 * @param channelId - Channel ID.
+	 * @param signal - Optional cancellation signal.
+	 * @returns Native channel data; REST failures reject.
+	 */
 	public getChannel(
 		channelId: string,
 		signal?: AbortSignal,
@@ -277,6 +327,13 @@ export class RestClient {
 			signal,
 		});
 	}
+	/**
+	 * Fetch a message from Discord.
+	 * @param channelId - Channel ID.
+	 * @param messageId - Message ID.
+	 * @param signal - Optional cancellation signal.
+	 * @returns Native message data; REST failures reject.
+	 */
 	public getMessage(
 		channelId: string,
 		messageId: string,
@@ -288,6 +345,13 @@ export class RestClient {
 			signal,
 		});
 	}
+	/**
+	 * Send a message to a channel.
+	 * @param channelId - Destination channel ID.
+	 * @param body - Native message body.
+	 * @param signal - Optional cancellation signal.
+	 * @returns The created message; REST failures reject.
+	 */
 	public createMessage(
 		channelId: string,
 		body: RESTPostAPIChannelMessageJSONBody,
@@ -300,6 +364,14 @@ export class RestClient {
 			signal,
 		});
 	}
+	/**
+	 * Send a native initial interaction callback without bot-token authentication.
+	 * @param id - Interaction ID.
+	 * @param token - Interaction token.
+	 * @param body - Native callback body.
+	 * @param signal - Optional cancellation signal.
+	 * @returns Completion of the callback; REST failures reject.
+	 */
 	public interactionCallback(
 		id: string,
 		token: string,

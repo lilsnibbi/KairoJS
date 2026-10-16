@@ -7,6 +7,12 @@ import {
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Look up a cached channel by ID or mention in the current guild, or the client cache for DMs.
+ * @param parameter - Channel ID or mention.
+ * @param messageOrInteraction - Invocation that selects the channel cache.
+ * @returns The cached channel, or ArgumentChannelError. No HTTP fetch is performed.
+ */
 export function resolveChannel(
 	parameter: string,
 	messageOrInteraction: Message | CommandInteraction,

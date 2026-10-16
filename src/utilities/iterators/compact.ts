@@ -1,7 +1,7 @@
 import { filter } from "./filter";
 import type { IterableResolvable } from "./from";
 
-/** Create a new iterable that yields all the non-nullish values (`null` and `undefined`) from the iterable. */
+/** Lazily remove null and undefined values; other falsy values are retained. */
 export function compact<const ElementType>(
 	iterable: IterableResolvable<ElementType | null | undefined>,
 ): IterableIterator<ElementType> {

@@ -2,7 +2,10 @@ import { type IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterable with the results of calling a provided function on each element of the input iterables as the function's parameters. */
+/**
+ * Lazily spread each nested source into callbackFn arguments and yield its result. Each nested source is consumed before
+ * the call; errors propagate.
+ */
 export function* starMap<
 	const ElementType extends IterableResolvable<any>,
 	const MappedType,
@@ -17,6 +20,7 @@ export function* starMap<
 	}
 }
 
+/** Callback argument tuple, or homogeneous argument list, inferred from one nested iterable. */
 export type StarMapParameters<ElementType> = ElementType extends readonly [
 	...infer ElementTypeEntry,
 ]

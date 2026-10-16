@@ -10,6 +10,10 @@ import { type Err, err, type Ok, ok, Result } from "./Result";
 const ValueProperty = Symbol.for("kairojs/result:Option.value");
 const ExistsProperty = Symbol.for("kairojs/result:Option.exists");
 
+/**
+ * Some(value) or None. Some can contain null or undefined explicitly; from() converts nullish values to None. Ordinary
+ * callbacks run synchronously and propagate exceptions.
+ */
 export class Option<T, Exists extends boolean = boolean> {
 	/** Branded value to ensure `Success` is typed correctly.
 	 * @internal */
@@ -28,9 +32,11 @@ export class Option<T, Exists extends boolean = boolean> {
 		return this[ExistsProperty];
 	}
 
-	/** Return `true` if the option is a `Some` and the value inside of it matches a predicate. */
+	/** Return true only for Some whose value passes the callback. A type-guard callback narrows the value type. */
 	public isSomeAnd<R extends T>(cb: (value: T) => value is R): this is Some<R>;
+	/** Return true only for Some whose value passes the callback. A type-guard callback narrows the value type. */
 	public isSomeAnd<R extends boolean>(cb: (value: T) => R): this is Some<R> & R;
+	/** Return true only for Some whose value passes the callback. A type-guard callback narrows the value type. */
 	public isSomeAnd<R extends boolean>(
 		cb: (value: T) => R,
 	): this is Some<R> & R {
@@ -42,50 +48,55 @@ export class Option<T, Exists extends boolean = boolean> {
 		return !this[ExistsProperty];
 	}
 
-	/** Return `true` if the option is a `None` value or the value inside of it matches a predicate. */
+	/** Return true for None, or test a Some value with the callback. */
 	public isNoneOr<R extends T>(
 		cb: (value: T) => value is R,
 	): this is None | Some<R>;
+	/** Return true for None, or test a Some value with the callback. */
 	public isNoneOr<R extends boolean>(cb: (value: T) => R): If<Exists, R, true>;
+	/** Return true for None, or test a Some value with the callback. */
 	public isNoneOr<R extends boolean>(cb: (value: T) => R): If<Exists, R, true> {
 		return this.match({ some: (value) => cb(value), none: () => true });
 	}
 
-	/** Return the contained `Some` value. */
+	/**
+	 * Return the Some value.
+	 * @param message - Message for the OptionError thrown for None.
+	 */
 	public expect(message: string): If<Exists, T, never> {
 		if (this.isNone()) throw new OptionError(message);
 		// @ts-expect-error Complex types
 		return this[ValueProperty];
 	}
 
-	/** Return the contained `Some` value.  If the value is an `Err`, it throws an {@link OptionError} with the message. @seealso {@link unwrapOr} @seealso {@link unwrapOrElse} */
+	/** Return the Some value, or throw OptionError for None. */
 	public unwrap(): If<Exists, T, never> {
 		if (this.isNone()) throw new OptionError("Unwrap failed");
 		// @ts-expect-error Complex types
 		return this[ValueProperty];
 	}
 
-	/** Return the contained `Some` value or a provided default.  Arguments passed to `unwrapOr` are eagerly evaluated; if you are passing the result of a function call, it is recommended to use {@link unwrapOrElse}, which is lazily evaluated. */
+	/** Return the Some value, or the supplied default for None. */
 	public unwrapOr<OutputValue>(
 		defaultValue: OutputValue,
 	): If<Exists, T, OutputValue> {
 		return this.match({ some: (value) => value, none: () => defaultValue });
 	}
 
-	/** Return the contained Some value or computes it from a closure. */
+	/** Return the Some value, or call cb and return its result for None. */
 	public unwrapOrElse<OutputValue>(
 		cb: () => OutputValue,
 	): If<Exists, T, OutputValue> {
 		return this.match({ some: (value) => value, none: cb });
 	}
 
-	/** Maps an `Option<T>` to `Option<U>` by applying a function to a contained value. */
+	/** Map a Some value into a new Some; keep None unchanged. The callback’s result is stored without awaiting it. */
 	public map<U>(cb: (value: T) => U): Option<U, Exists> {
 		// @ts-expect-error Complex types
 		return this.match({ some: (value) => some(cb(value)), none: returnThis });
 	}
 
-	/** Maps a `Some<T>` to the returned `Option<U>` by applying a function to a contained value, leaving `None` untouched. */
+	/** Replace Some with the Option returned by cb; keep None unchanged. */
 	public mapInto<OutputOption extends AnyOption>(
 		cb: (value: T) => OutputOption,
 	): OutputOption {
@@ -93,7 +104,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		return this.match({ some: (value) => cb(value), none: returnThis });
 	}
 
-	/** Return the provided default result (if none), or applies a function to the contained value (if any). */
+	/** Map Some with cb, or return the supplied default for None. */
 	public mapOr<MappedOutputValue, DefaultOutputValue>(
 		defaultValue: DefaultOutputValue,
 		cb: (value: T) => MappedOutputValue,
@@ -101,7 +112,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		return this.match({ some: (value) => cb(value), none: () => defaultValue });
 	}
 
-	/** Calculate a default function result (if none), or applies a different function to the contained value (if any). */
+	/** Map Some with cb, or call defaultValue for None. Return the selected result directly. */
 	public mapOrElse<OutputValue, OutputNone>(
 		defaultValue: () => OutputNone,
 		cb: (value: T) => OutputValue,
@@ -112,20 +123,20 @@ export class Option<T, Exists extends boolean = boolean> {
 		});
 	}
 
-	/** Maps a `None` to the returned `Option<U>` by applying a function to a contained value, leaving `Some<T>` untouched. */
+	/** Keep Some, or call cb to create a replacement Option for None. */
 	public mapNoneInto<OutputOption extends AnyOption>(
 		cb: () => OutputOption,
 	): If<Exists, Some<T>, OutputOption> {
 		return this.match({ some: returnThis, none: cb });
 	}
 
-	/** Calls the provided closure with a reference to the contained value (if `Some`). */
+	/** Call cb for Some, ignore its return value, and return this Option. */
 	public inspect(cb: (value: T) => void): this {
 		if (this.isSome()) cb(this[ValueProperty]);
 		return this;
 	}
 
-	/** Calls the provided closure with a reference to the contained value (if `Some`). */
+	/** Await cb for Some, then return this Option. Callback errors reject. */
 	public async inspectAsync(
 		cb: (value: T) => Awaitable<unknown>,
 	): Promise<this> {
@@ -133,33 +144,33 @@ export class Option<T, Exists extends boolean = boolean> {
 		return this;
 	}
 
-	/** Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(err)`. */
+	/** Turn Some(value) into Ok(value), or None into Err(error). */
 	public okOr<ErrorValue>(
 		error: ErrorValue,
 	): If<Exists, Ok<T>, Err<ErrorValue>> {
 		return this.match({ some: (value) => ok(value), none: () => err(error) });
 	}
 
-	/** Transforms the `Option<T>` into a `Result<T, E>`, mapping `Some(v)` to `Ok(v)` and `None` to `Err(err())`. */
+	/** Turn Some(value) into Ok(value), or call cb to create the Err error for None. */
 	public okOrElse<ErrorValue>(
 		cb: () => ErrorValue,
 	): If<Exists, Ok<T>, Err<ErrorValue>> {
 		return this.match({ some: (value) => ok(value), none: () => err(cb()) });
 	}
 
-	/** Return an iterator over the possibly contained value.  The iterator yields one value if the result is `Some`, otherwise none. */
+	/** Yield the Some value once, or yield nothing for None. */
 	public *iter(): Generator<T> {
 		if (this.isSome()) yield this[ValueProperty];
 	}
 
-	/** Return `None` if the option is `None`, otherwise returns `option`. */
+	/** Return the supplied Option for Some, or keep None. */
 	public and<OutputOption extends AnyOption>(
 		option: OutputOption,
 	): If<Exists, OutputOption, None> {
 		return this.match({ some: () => option, none: returnThis });
 	}
 
-	/** Calls `cb` if the result is `Ok`, otherwise returns the `Err` value of self.  This function can be used for control flow based on `Result` values. */
+	/** Call cb with the Some value and return its Option; keep None. */
 	public andThen<OutputOption extends AnyOption>(
 		cb: (value: T) => OutputOption,
 	): OutputOption {
@@ -167,21 +178,21 @@ export class Option<T, Exists extends boolean = boolean> {
 		return this.match({ some: (value) => cb(value), none: returnThis });
 	}
 
-	/** Return the option if it contains a value, otherwise returns `option`. */
+	/** Keep Some, or return the supplied Option for None. */
 	public or<OutputOption extends AnyOption>(
 		option: OutputOption,
 	): If<Exists, Some<T>, OutputOption> {
 		return this.match({ some: returnThis, none: () => option });
 	}
 
-	/** Calls `cb` if the result is `Ok`, otherwise returns the `Err` value of self.  This function can be used for control flow based on `Result` values. */
+	/** Keep Some, or call cb to create a replacement for None. */
 	public orElse<OutputOption extends AnyOption>(
 		cb: () => OutputOption,
 	): If<Exists, Some<T>, OutputOption> {
 		return this.match({ some: returnThis, none: () => cb() });
 	}
 
-	/** Return `Some` if exactly one of self or `option` is `Some`, otherwise returns `None`. */
+	/** Return the only Some when exactly one operand is Some; return None when both or neither are Some. */
 	public xor<OtherValue, OtherExists extends boolean>(
 		option: Option<OtherValue, OtherExists>,
 	): If<
@@ -204,21 +215,23 @@ export class Option<T, Exists extends boolean = boolean> {
 		});
 	}
 
-	/** Return None if the option is None, otherwise calls `predicate` with the wrapped value and returns:  - `Some(t)` if `predicate` returns `true` (where t is the wrapped value), and - `None` if `predicate` returns `false`. */
+	/** Keep Some only if its value passes the predicate; otherwise return None. A type-guard predicate narrows the kept type. */
 	public filter<R extends T>(predicate: (value: T) => value is R): Option<R>;
+	/** Keep Some only if its value passes the predicate; otherwise return None. A type-guard predicate narrows the kept type. */
 	public filter(predicate: (value: T) => boolean): Option<T>;
+	/** Keep Some only if its value passes the predicate; otherwise return None. A type-guard predicate narrows the kept type. */
 	public filter(predicate: (value: T) => boolean): Option<T> {
 		return this.isSomeAnd(predicate) ? this : none;
 	}
 
-	/** Return `true` if the option is a `Some` value containing the given value. */
+	/** Check whether this is Some with a strictly equal value. Objects compare by identity. */
 	public contains<const Value extends T>(
 		value: If<Exists, Value, unknown>,
 	): this is Some<Value> {
 		return this.isSomeAnd((inner) => inner === value);
 	}
 
-	/** Zips self with another `Option`.  If self is `Some(s)` and `other` is `Some(o)`, this method returns `Some([s, o])`. Otherwise, `None` is returned. */
+	/** Return Some([left, right]) when both Options are Some; otherwise return None. */
 	public zip<OtherValue, OtherExists extends boolean>(
 		other: Option<OtherValue, OtherExists>,
 	): Option<[T, OtherValue], If<Exists, OtherExists, false>> {
@@ -228,7 +241,7 @@ export class Option<T, Exists extends boolean = boolean> {
 			: none;
 	}
 
-	/** Zips self and another `Option` with function `f`.  If self is `Some(s)` and other is `Some(o)`, this method returns `Some(f(s, o))`. Otherwise, `None` is returned. */
+	/** Combine two Some values with f and wrap its result in Some; otherwise return None. */
 	public zipWith<OtherValue, OtherExists extends boolean, ReturnValue>(
 		other: Option<OtherValue, OtherExists>,
 		f: (value0: T, value1: OtherValue) => ReturnValue,
@@ -239,7 +252,7 @@ export class Option<T, Exists extends boolean = boolean> {
 			: none;
 	}
 
-	/** Unzips an option containing a tuple of two options.  If self is `Some([a, b])` this method returns `[Some(a), Some(b)]`. Otherwise, `[None, None]` is returned. */
+	/** Split Some([left, right]) into two Some values; None becomes [None, None]. */
 	public unzip<Value0, Value1, Exists extends boolean>(
 		this: Option<readonly [Value0, Value1], Exists>,
 	): [Option<Value0, Exists>, Option<Value1, Exists>] {
@@ -250,7 +263,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		});
 	}
 
-	/** Transposes an `Option` of a `Result` into a `Result` of an `Option`.  `none` will be mapped to `ok(none)`. `some(ok(v))` and `some(err(e))` will be mapped to `ok(some(v))` and `err(e)`. */
+	/** Turn Some(Ok(value)) into Ok(Some(value)), Some(Err(error)) into Err(error), and None into Ok(None). */
 	public transpose<
 		ResultValue,
 		ResultError,
@@ -272,14 +285,14 @@ export class Option<T, Exists extends boolean = boolean> {
 		});
 	}
 
-	/** Convert from `Result<Result<T, E>, E>` to `Result<T, E>`. */
+	/** Remove one nested Option layer from Some; preserve None. */
 	public flatten<InnerOption extends AnyOption, Exists extends boolean>(
 		this: Option<InnerOption, Exists>,
 	): If<Exists, InnerOption, None> {
 		return this.match({ some: (inner) => inner, none: returnThis });
 	}
 
-	/** Return a `Promise` object with the awaited value (if `Some`). */
+	/** Await the Some value and wrap it in Some, or resolve None. A rejected inner promise rejects the result. */
 	public intoPromise(): Promise<Option<Awaited<T>, Exists>> {
 		// @ts-expect-error Complex types
 		return this.match({
@@ -288,7 +301,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		});
 	}
 
-	/** Check whether `other` equals with self. */
+	/** Check presence and strict equality of stored values. Objects compare by identity. */
 	public eq<OtherValue extends T, OtherExists extends boolean>(
 		other: Option<OtherValue, OtherExists>,
 	): this is Option<OtherValue, OtherExists> {
@@ -299,14 +312,16 @@ export class Option<T, Exists extends boolean = boolean> {
 		);
 	}
 
-	/** Check whether `other` doesn't equal with self. */
+	/** Return the opposite of eq. */
 	public ne(other: Option<T, boolean>): boolean {
 		return !this.eq(other);
 	}
 
-	/** Runs `ok` function if self is `Ok`, otherwise runs `err` function. */
+	/** Call the matching callback with this Option as its this value. Some also receives its stored value. Return the callback’s result. */
 	public match<SomeValue, NoneValue>(branches: {
+		/** Called for Some with its value and the Some Option as this. */
 		some(this: Some<T>, value: T): SomeValue;
+		/** Called for None with the None Option as this. */
 		none(this: None): NoneValue;
 	}): If<Exists, SomeValue, NoneValue> {
 		// @ts-expect-error Complex types
@@ -315,18 +330,22 @@ export class Option<T, Exists extends boolean = boolean> {
 			: branches.none.call(this);
 	}
 
-	/** Return an iterator over the possibly contained value.  The iterator yields one value if the result is `Some`, otherwise none. */
+	/** Yield the Some value once, or yield nothing for None. */
 	public [Symbol.iterator](): Generator<T> {
 		return this.iter();
 	}
 
+	/** Some or None, used by Object.prototype.toString. */
 	public get [Symbol.toStringTag](): If<Exists, "Some", "None"> {
 		return this.match({ some: () => "Some", none: () => "None" });
 	}
 
+	/** Shared empty Option. Prefer this value over constructing Options directly. */
 	public static readonly none = new Option<any, false>(null, false);
 
+	/** Create Some(value), including explicit nullish values. Omitting value stores undefined. */
 	public static some<T = undefined>(this: void, value?: T): Some<T>;
+	/** Create Some(value), including explicit nullish values. Omitting value stores undefined. */
 	public static some<T>(this: void, value: T): Some<T> {
 		return new Option<T, true>(value, true);
 	}
@@ -352,7 +371,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		return Option[Symbol.hasInstance](instance);
 	}
 
-	/** Create a {@link Result} out of a callback.    */
+	/** Convert a value, existing Option, or synchronous callback result into an Option. Nullish values and thrown errors become None. */
 	public static from<T>(
 		this: void,
 		op: OptionResolvable<T> | (() => OptionResolvable<T>),
@@ -364,7 +383,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		}
 	}
 
-	/** Create a {@link Result} out of a promise or async callback.    */
+	/** Await a value, existing Option, or callback result. Nullish values, thrown errors, and rejected promises become None. */
 	public static async fromAsync<T>(
 		this: void,
 		op: Awaitable<OptionResolvable<T>> | (() => Awaitable<OptionResolvable<T>>),
@@ -376,7 +395,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		}
 	}
 
-	/** Create an {@link Ok} that is the combination of all collected {@link Ok} values as an array, or the first {@link Err} encountered. */
+	/** Collect Some values in order, stopping at the first None. Empty input returns Some([]). */
 	public static all<const Entries extends readonly AnyOption[]>(
 		this: void,
 		results: Entries,
@@ -391,7 +410,7 @@ export class Option<T, Exists extends boolean = boolean> {
 		return some(values as UnwrapSomeArray<Entries>);
 	}
 
-	/** Return the first encountered {@link Some}, or a {@link None} if none was found. */
+	/** Return the first Some, or None when no entry is Some. Empty input returns None. */
 	public static any<const Entries extends readonly AnyOption[]>(
 		this: void,
 		results: Entries,
@@ -404,14 +423,21 @@ export class Option<T, Exists extends boolean = boolean> {
 	}
 }
 
+/** Types and helpers for {@link Option}. */
 export namespace Option {
+	/** Option whose branch is known to contain a value, including explicit nullish values. */
 	export type Some<T> = Option<T, true>;
+	/** Option whose branch is known to be empty. */
 	export type None<T = any> = Option<T, false>;
+	/** Option with an unrestricted value type and unknown presence. */
 	export type Any = Option<any>;
+	/** Value, nullish value, or existing Option accepted by Option.from. */
 	export type Resolvable<T, Exists extends boolean = boolean> =
 		T | null | undefined | Option<T, Exists>;
+	/** Extract a Some value type, or never for None. */
 	export type UnwrapSome<T extends AnyOption> =
 		T extends Some<infer S> ? S : never;
+	/** Map an Option tuple or array to its Some value types. */
 	export type UnwrapSomeArray<T extends readonly AnyOption[] | []> = {
 		-readonly [P in keyof T]: UnwrapSome<T[P]>;
 	};
@@ -425,15 +451,21 @@ function resolve<T>(value: Option.Resolvable<T>): Option<T> {
 	return some(value);
 }
 
+/** Value, nullish value, or existing Option accepted by Option.from. */
 export type OptionResolvable<
 	T,
 	Exists extends boolean = boolean,
 > = Option.Resolvable<T, Exists>;
 
+/** Option whose value is known to be present. */
 export type Some<T> = Option.Some<T>;
+/** Option known to have no value. */
 export type None<T = any> = Option.None<T>;
+/** Option with an unrestricted value type. */
 export type AnyOption = Option.Any;
 
+/** Extract an Option’s Some value type. */
 export type UnwrapSome<T extends AnyOption> = Option.UnwrapSome<T>;
+/** Map Option entries to their Some value types. */
 export type UnwrapSomeArray<T extends readonly AnyOption[] | []> =
 	Option.UnwrapSomeArray<T>;

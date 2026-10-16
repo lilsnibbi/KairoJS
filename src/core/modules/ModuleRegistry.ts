@@ -30,7 +30,9 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 	private readonly discovery = new Map<ModuleKind, ModuleGlob>();
 	private loadPromise?: Promise<void>;
 	private startup?: Promise<void>;
+	/** Optional hook awaited once before discovery starts. A rejection fails startup. */
 	public beforeLoad?: () => Promise<void>;
+	/** Optional cleanup awaited after startup fails. Cleanup errors are combined with the original failure. */
 	public onFailure?: () => Promise<void>;
 
 	/** Configure exactly which files belong to each kind of module. */
@@ -133,14 +135,33 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 		await this.startup?.catch(() => undefined);
 	}
 
-	/** Get an optional store using normal Collection semantics. */
+	/**
+	 * Look up a module store, preserving its declared store type for known keys.
+	 * @param key - Store name.
+	 * @returns The registered store, or undefined.
+	 */
 	public override get<K extends ModuleKind>(
 		key: K,
 	): ModuleStores[K] | undefined;
+	/**
+	 * Look up a module store, preserving its declared store type for known keys.
+	 * @param key - Store name.
+	 * @returns The registered store, or undefined.
+	 */
 	public override get(key: string): ModuleStoreValue | undefined;
+	/**
+	 * Look up a module store, preserving its declared store type for known keys.
+	 * @param key - Store name.
+	 * @returns The registered store, or undefined.
+	 */
 	public override get(key: string): ModuleStoreValue | undefined {
 		return super.get(key as ModuleKind);
 	}
+	/**
+	 * Check whether a store name is registered.
+	 * @param key - Store name.
+	 * @returns Whether a store exists.
+	 */
 	public override has(key: string): boolean {
 		return super.has(key as ModuleKind);
 	}
@@ -189,7 +210,11 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 		return this;
 	}
 
-	/** Capture only registrations owned by one synchronous extension setup. */
+	/**
+	 * Capture stores and registrations added during extension setup.
+	 * @returns A function that ends tracking and returns an async rollback callback. Rollback unloads only captured
+	 * additions.
+	 */
 	public trackRegistrations(): () => () => Promise<void> {
 		const stores = new Map(this);
 		const entries = new Map(
@@ -259,13 +284,21 @@ export class ModuleRegistry extends Collection<ModuleKind, ModuleStoreValue> {
 		};
 	}
 
-	/** Deregister a store. */
+	/**
+	 * Remove this store’s registry entry without unloading its modules.
+	 * @param store - Store whose name is removed.
+	 * @returns This registry.
+	 */
 	public deregister<T extends Module>(store: ModuleStore<T>): this {
 		this.delete(store.name as ModuleKind);
 		return this;
 	}
 
-	/** If the store was {@link ModuleRegistry.register registered}, this method will call the store's {@linkcode ModuleStore.addModule() addModule()} method.  If it was called, the entry will be loaded immediately without queueing. */
+	/**
+	 * Register a class in its store, or queue it until the store is registered.
+	 * @param entry - Store key, name, and module class.
+	 * @throws If the value is not a class, is incompatible with an existing store, or fails activation.
+	 */
 	public async addModule<StoreName extends ModuleKind>(
 		entry: RegistryModuleRegistration<StoreName>,
 	) {
@@ -296,13 +329,21 @@ export type ModuleStoreValue = ModuleStores[ModuleKind];
 
 /** The {@link ModuleRegistry}'s registry, use module augmentation against this interface when adding new modules. */
 export interface ModuleStores {
+	/** Argument resolvers used by message commands. */
 	arguments: ArgumentStore;
+	/** Commands and their aliases. */
 	commands: CommandStore;
+	/** Component and interaction handlers. */
 	interactions: InteractionHandlerStore;
+	/** Discord and framework event listeners. */
 	listeners: ListenerStore;
+	/** Command checks. */
 	preconditions: PreconditionStore;
+	/** Regex message commands; requires the patternCommands extension. */
 	patterns: PatternCommandStore;
+	/** Shared service modules; requires the services extension. */
 	services: ServiceStore;
+	/** Scheduled task modules; requires the scheduledtasks extension. */
 	tasks: TaskStore;
 }
 
@@ -310,6 +351,7 @@ export interface ModuleStores {
 export interface RegistryModuleRegistration<
 	StoreName extends ModuleKind,
 > extends ModuleRegistration<StoreName> {
+	/** Store that owns this module class. */
 	store: StoreName;
 }
 
@@ -325,5 +367,5 @@ export type ModuleOf<StoreName extends ModuleKind> = ModuleKind extends never
 		? PieceType
 		: Module<Module.Options, StoreName>;
 
-/** Glob patterns keyed by a registered module kind. */
+/** Bun glob patterns by module store. Only configured paths are scanned. */
 export type ModulePaths = Partial<Record<ModuleKind, ModulePatterns>>;

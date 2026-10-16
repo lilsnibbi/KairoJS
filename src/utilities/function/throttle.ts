@@ -1,8 +1,16 @@
+/** Throttled function returning its last invocation result. It also provides a timer reset helper. */
 export type ThrottleFn<T extends (...args: any[]) => any> = T & {
+	/** Reset the last-invocation timestamp so a later call can run immediately; does not invoke the callback. */
 	flush: () => void;
 };
 
-/** Create a throttled function that only invokes `func` at most once per every `wait` milliseconds. The throttled function comes with a `flush` method to reset the last time the throttled function was invoked. */
+/**
+ * Run func only when more than wait milliseconds have elapsed since its last invocation; suppressed calls return the
+ * previous result.
+ * @param func - Callback to limit.
+ * @param wait - Minimum interval in milliseconds.
+ * @returns A function with flush() to reset the interval; no trailing call is scheduled.
+ */
 export function throttle<T extends (...args: any[]) => any>(
 	func: T,
 	wait: number,

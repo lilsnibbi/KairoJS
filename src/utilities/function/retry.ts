@@ -1,6 +1,12 @@
 import type { Awaitable } from "../types";
 
-/** Asynchronously calls the callback function until it either succeeds or it runs out of retries. For a synchronous variant, see [retrySync](./retrySync.d.ts). */
+/**
+ * Call cb until it succeeds or the supplied attempt count is exhausted. Each result is awaited.
+ * @param cb - Operation to attempt.
+ * @param retries - Total attempt count; 0 still calls once. Negative values throw RangeError.
+ * @returns The first successful result.
+ * @throws The last failure after all attempts fail.
+ */
 export async function retry<T>(
 	cb: () => Awaitable<T>,
 	retries: number,

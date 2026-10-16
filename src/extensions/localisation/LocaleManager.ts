@@ -34,16 +34,28 @@ import type {
 
 /** Startup-only JSON resources and an isolated i18next engine. */
 export class LocaleManager {
+	/** Whether startup resources and formatters finished initializing. */
 	public languagesLoaded = false;
 	private initialization?: Promise<void>;
+	/** Namespace names discovered in loaded resources. */
 	public namespaces = new Set<string>();
+	/** Loaded language codes and their fixed i18next translation functions. */
 	public readonly languages = new Map<string, TFunction>();
+	/** i18next instance owned by this manager. */
 	public readonly instance = i18next.createInstance();
+	/** Resource and command-localization diagnostics accumulated by report(). */
 	public readonly diagnostics: LocalisationDiagnostic[] = [];
+	/** Original locale settings supplied to the manager. */
 	public readonly options: InternationalizationOptions;
+	/** Absolute primary language directory, resolved against the active client’s module root. */
 	public readonly languagesDirectory: string;
 	private readonly directories: { path: string; optional: boolean }[];
 
+	/**
+	 * Configure startup resources without scanning them yet.
+	 * @param options - Locale directories, i18next settings, and Discord presentation rules.
+	 * @throws For removed backend/HMR options, invalid paths, or unsupported Discord locale settings.
+	 */
 	public constructor(options: InternationalizationOptions = {}) {
 		this.options = options;
 		if ("hmr" in options)
@@ -101,9 +113,17 @@ export class LocaleManager {
 			this.fetchLanguage = options.fetchLanguage;
 	}
 
+	/** Custom language hook. Defaults to returning null so invocation locale, guild preference, and defaultName can select the language. */
 	public fetchLanguage: (
 		context: InternationalizationContext,
 	) => Awaitable<string | null> = () => null;
+	/**
+	 * Load startup resources and initialize i18next once. Bad file resources are reported and skipped; inline resources
+	 * replace matching file namespaces.
+	 * @returns One shared initialization promise.
+	 * @throws For invalid inline resources, unsupported i18next backends/resource writes, initialization failures, or thrown
+	 * diagnostic callbacks.
+	 */
 	public init(): Promise<void> {
 		this.initialization ??= this.initialize();
 		return this.initialization;
@@ -183,6 +203,12 @@ export class LocaleManager {
 		this.languagesLoaded = true;
 	}
 
+	/**
+	 * Get the fixed translation function for a loaded language.
+	 * @param locale - Loaded language code.
+	 * @returns Its i18next translator.
+	 * @throws Before init completes or when the language is not loaded.
+	 */
 	public getT(locale: string) {
 		if (!this.languagesLoaded)
 			throw new Error(
@@ -267,7 +293,10 @@ export class LocaleManager {
 	>(
 		locale: string,
 		key: string | string[],
-		options: TOpt & $Dictionary & { defaultValue: string },
+		options: TOpt & $Dictionary & {
+			/** Fallback text used when no translation is found. */
+			defaultValue: string
+		},
 	): TFunctionReturnOptionalDetails<Ret, TOpt>;
 
 	/** Localizes a content given one or more keys and i18next options. */
@@ -344,6 +373,12 @@ export class LocaleManager {
 		>;
 	}
 
+	/**
+	 * Scan a resource directory without adding it to the manager.
+	 * @param directory - Resource root with language subdirectories and JSON namespace files.
+	 * @returns Discovered language codes and namespace names.
+	 * @throws If the directory cannot be scanned.
+	 */
 	public async walkRootDirectory(directory: PathLike) {
 		const path =
 			directory instanceof URL

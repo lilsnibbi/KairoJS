@@ -19,6 +19,10 @@ export class ModalInteractionOptionResolver {
 	/** Bottom-level components from the modal submission */
 	private readonly hoistedComponents: ModalSubmitComponent[];
 
+	/**
+	 * Read a native Discord modal submission payload without HTTP requests.
+	 * @param interaction - Native API interaction payload, including any resolved entity tables.
+	 */
 	public constructor(interaction: APIModalSubmitInteraction) {
 		this.resolved =
 			"resolved" in interaction.data

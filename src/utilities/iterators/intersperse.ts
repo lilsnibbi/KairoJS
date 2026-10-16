@@ -1,7 +1,7 @@
 import { from, type IterableResolvable } from "./from";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 
-/** Create a new iterator which places `separator` between adjacent items of the original iterator. */
+/** Lazily insert separator between input values. Empty and single-value sources receive no separator. */
 export function intersperse<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	separator: ElementType,

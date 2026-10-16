@@ -2,9 +2,13 @@ const TO_TITLE_CASE = /[A-Za-zÀ-ÖØ-öø-ÿ]\S*/g;
 
 /** The variants that will not strictly follow the `toTitleCase` algorithm and will instead return the value matched with the key. */
 export const toTitleCaseDiscordJsVariants: Record<string, string> = {
+	/** Readable replacement used by toTitleCase for the Discord type name. */
 	textchannel: "TextChannel",
+	/** Readable replacement used by toTitleCase for the Discord type name. */
 	voicechannel: "VoiceChannel",
+	/** Readable replacement used by toTitleCase for the Discord type name. */
 	categorychannel: "CategoryChannel",
+	/** Readable replacement used by toTitleCase for the Discord type name. */
 	guildmember: "GuildMember",
 };
 

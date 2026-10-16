@@ -24,11 +24,17 @@ export interface SubcommandCooldownPreconditionContext extends CooldownPrecondit
 
 /** The subcommand cooldown precondition. This differs from the cooldown precondition in framework by using a separate bucket as well as resolving the id differently to ensure it is specific to a subcommand. */
 export class SubcommandCooldownCheck extends AllFlowsPrecondition {
+	/** Cooldown managers keyed by parent command instance; bucket IDs also include the mapped subcommand/group name. */
 	public subcommandBuckets = new WeakMap<
 		Subcommand,
 		RateLimitManager<string>
 	>();
 
+	/**
+	 * Check and consume the mapped subcommand’s scoped cooldown bucket. Exempt users, external checks, and falsy delays skip
+	 * consumption.
+	 * @returns Ok when allowed, or a SubcommandPreconditionCooldown error when limited.
+	 */
 	public override messageRun(
 		message: Message,
 		subcommand: Subcommand,
@@ -45,6 +51,11 @@ export class SubcommandCooldownCheck extends AllFlowsPrecondition {
 		);
 	}
 
+	/**
+	 * Check and consume the mapped subcommand’s scoped cooldown bucket. Exempt users, external checks, and falsy delays skip
+	 * consumption.
+	 * @returns Ok when allowed, or a SubcommandPreconditionCooldown error when limited.
+	 */
 	public override chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		subcommand: Subcommand,
@@ -61,6 +72,11 @@ export class SubcommandCooldownCheck extends AllFlowsPrecondition {
 		);
 	}
 
+	/**
+	 * Check and consume the mapped subcommand’s scoped cooldown bucket. Exempt users, external checks, and falsy delays skip
+	 * consumption.
+	 * @returns Ok when allowed, or a SubcommandPreconditionCooldown error when limited.
+	 */
 	public override contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		subcommand: Command,

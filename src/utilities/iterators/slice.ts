@@ -6,7 +6,10 @@ import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow
 import { take } from "./take";
 import { takeLast } from "./takeLast";
 
-/** Produces an iterable with the elements from the `start` index to the `end` index (exclusive). */
+/**
+ * Select start-inclusive/end-exclusive positions. Positive starts are skipped immediately; negative bounds may buffer the
+ * source. Negative start with a nonnegative explicit end currently throws. NaN bounds throw.
+ */
 export function slice<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	start?: number,

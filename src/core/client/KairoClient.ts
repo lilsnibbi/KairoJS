@@ -42,10 +42,17 @@ container.applicationCommandRegistries = { acquire };
 /** A prefix string, a list of prefixes, or null for mentions only. */
 export type Prefix = string | readonly string[] | null;
 
+/**
+ * Choose regular prefixes for one message. Null disables regular prefixes; configured mention and regex prefixes can still
+ * match.
+ * @param message - Message being parsed.
+ * @returns Prefixes to try, immediately or asynchronously.
+ */
 export type PrefixHook = (message: Message) => Awaitable<Prefix>;
 
+/** KairoJS options added to discord.js ClientOptions. */
 export interface KairoClientOptions {
-	/** Optional features, initialized in this order. */
+	/** Configure built-in features and custom extensions. Built-ins run first, in the documented extension order. */
 	extensions?: ExtensionOptions;
 	/** Base directory for module patterns. Defaults to cwd. */
 	root?: string | URL;
@@ -60,8 +67,7 @@ export interface KairoClientOptions {
 	 * @default false */
 	caseInsensitivePrefixes?: boolean | null;
 
-	/** The default prefix, in case of `null`, only mention prefix will trigger the bot's commands.
-	 * @default null */
+	/** Regular message prefixes used by the default fetchPrefix hook. Defaults to null; configured mention and regex prefixes still apply. */
 	defaultPrefix?: Prefix;
 
 	/** The regex prefix, an alternative to a mention or regular prefix to allow creating natural language command messages */
@@ -71,8 +77,7 @@ export interface KairoClientOptions {
 	 * @default () => client.options.defaultPrefix */
 	fetchPrefix?: PrefixHook;
 
-	/** The client's ID, this is automatically set by the CoreReady event.
-	 * @default this.client.user?.id ?? null */
+	/** Initial bot user ID, or null when omitted. The ready listener fills it from client.user if still unset. */
 	id?: Snowflake;
 
 	/** Supply your logger instance directly. Its identity and settings are preserved. */
@@ -101,17 +106,17 @@ export interface KairoClientOptions {
 	 * @default false */
 	typing?: boolean;
 
-	/** Set the default cooldown time for all commands.
-	 * @default "No cooldown options" */
+	/** Default command cooldown settings. Omitted settings use a user bucket, a limit of one, and no delay. */
 	defaultCooldown?: CooldownOptions;
 	/** Controls whether the bot has mention as a prefix disabled
 	 * @default false */
 	disableMentionPrefix?: boolean;
 
-	/** Whenever starting the bot process KairoJS may report errors when failing to fetch guild commands. */
+	/** Suppress command-fetch failure logs for these guild IDs, or all guilds with true. Fetching still runs. */
 	preventFailedToFetchLogForGuilds?: string[] | true;
 }
 
+/** Cleanup callback awaited during rollback or shutdown. Its return value is ignored. */
 type Disposer = () => Awaitable<unknown>;
 interface FeatureState {
 	extension: typeof Extension;
@@ -126,15 +131,24 @@ let activeClient: KairoClient | undefined;
 export class KairoClient<
 	Ready extends boolean = boolean,
 > extends Client<Ready> {
+	/** Bot user ID used for mention prefixes, or null before it is known. */
 	public override id: Snowflake | null = null;
+	/** Resolve prefixes for each message. Defaults to returning options.defaultPrefix or null. */
 	public override fetchPrefix: PrefixHook;
+	/** The supplied logger, or a console logger owned and closed by this client. */
 	public override logger: LoggerLike;
+	/** Registry of this client’s module stores and configured module paths. */
 	public override modules: ModuleRegistry;
+	/** Disable mention prefixes when true. Undefined leaves them enabled. */
 	public disableMentionPrefix?: boolean;
+	/** Frozen extension class list, with enabled built-ins first and duplicate custom classes removed. */
 	public readonly extensions: readonly (typeof Extension)[];
 	/** Coordinator-routed messaging and fresh shard stats. Also available through container.sharding. */
 	public readonly sharding: ShardLink;
-	/** Managed shards remain in maintenance until their coordinator assignment is reconciled. */
+	/**
+	 * Whether managed coordinator assignment is unreconciled. Sharding updates this flag; the Discord connection may stay
+	 * open during maintenance.
+	 */
 	public maintenance = false;
 	private readonly managedGateway?: ManagedGateway;
 	private closePromise?: Promise<void>;
@@ -147,6 +161,12 @@ export class KairoClient<
 	private currentFeature?: FeatureState;
 	private phase?: Promise<void>;
 
+	/**
+	 * Create the shared client, register stores, and run synchronous extension setup. Discord connects at login.
+	 * @param options - Discord client options, including intents and KairoJS settings.
+	 * @throws If options are invalid, another KairoClient is active, or required setup fails. Managed children reject
+	 * conflicting shard options.
+	 */
 	public constructor(options: ClientOptions) {
 		clientOptionsSchema.assert(options);
 		const managed = shardConfig();
@@ -325,13 +345,23 @@ export class KairoClient<
 		}
 	}
 
-	/** Load configured TypeScript modules once. Connections start at login. */
+	/**
+	 * Load configured TypeScript modules once. Repeated calls share the same promise.
+	 * @returns Completion of module loading, before Discord connects.
+	 * @throws If the client is closed or startup cannot finish.
+	 */
 	public load(): Promise<void> {
 		if (this.closed)
 			return Promise.reject(new Error("This KairoClient is closed."));
 		return this.modules.load();
 	}
 
+	/**
+	 * Load modules, connect managed sharding, run extension hooks, and log in to Discord once.
+	 * @param token - Bot token; omitted tokens use the discord.js default.
+	 * @returns The login token. Repeated calls share the same promise.
+	 * @throws On startup or login failure; the client is destroyed before the rejection.
+	 */
 	public override login(token?: string): Promise<string> {
 		if (this.closed)
 			return Promise.reject(new Error("This KairoClient is closed."));
@@ -364,7 +394,11 @@ export class KairoClient<
 		}
 	}
 
-	/** Own a resource so failed hooks and shutdown can release it. */
+	/**
+	 * Register cleanup for the current extension, or the client outside a hook. Cleanup runs in reverse order.
+	 * @param dispose - Callback awaited during rollback or shutdown. Its result is ignored.
+	 * @throws If this client is closed.
+	 */
 	public addDisposer(dispose: Disposer): void {
 		this.assertOpen();
 		(this.currentFeature?.disposers ?? this.disposers).push(dispose);
@@ -501,6 +535,11 @@ export class KairoClient<
 			);
 	}
 
+	/**
+	 * Close sharding, await active hooks, release resources, unload modules, and disconnect Discord.
+	 * @returns One shared shutdown promise. Supplied logger instances are left open.
+	 * @throws An AggregateError after cleanup if any resource could not close.
+	 */
 	public override destroy(): Promise<void> {
 		this.closed = true;
 		this.managedGateway?.stop();
@@ -562,21 +601,34 @@ export class KairoClient<
 	}
 }
 
+/** Defaults used when commands build their cooldown preconditions. */
 export interface CooldownOptions {
+	/** Bucket key scope. Defaults to BucketScope.User. */
 	scope?: BucketScope;
+	/** Time in milliseconds before a bucket resets. Defaults to 0, which disables cooldowns. */
 	delay?: number;
+	/** Uses allowed in one bucket. Defaults to 1. */
 	limit?: number;
+	/** User IDs exempt from cooldowns. Defaults to an empty list. */
 	filteredUsers?: Snowflake[];
+	/** Command names exempt from the default cooldown. Defaults to an empty list. */
 	filteredCommands?: string[];
 }
 
+/** Add KairoJS client properties and options to discord.js types. */
 declare module "discord.js" {
+	/** Framework services available on a KairoClient. */
 	interface Client {
+		/** Bot user ID used for mention prefixes, or null before it is known. */
 		id: Snowflake | null;
+		/** Logger used by the framework. */
 		logger: LoggerLike;
+		/** Registry of module stores owned by the active client. */
 		modules: ModuleRegistry;
+		/** Callback that selects prefixes for a message. */
 		fetchPrefix: PrefixHook;
 	}
 
+	/** Discord client options with KairoJS configuration. */
 	interface ClientOptions extends KairoClientOptions {}
 }

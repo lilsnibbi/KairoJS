@@ -1,9 +1,20 @@
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Parse with Number() and check optional inclusive bounds. NaN fails; this resolver does not require finiteness.
+ * @param parameter - Input text.
+ * @param options - Optional resolver settings.
+ * @returns Number, or a parse/too-small/too-large identifier.
+ */
 export function resolveFloat(
 	parameter: string,
-	options?: { minimum?: number; maximum?: number },
+	options?: {
+		/** Inclusive minimum numeric value. Omit for no lower bound. */
+		minimum?: number;
+		/** Inclusive maximum numeric value. Omit for no upper bound. */
+		maximum?: number
+	},
 ): Result<
 	number,
 	| Identifiers.ArgumentFloatError

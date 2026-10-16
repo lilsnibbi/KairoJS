@@ -15,7 +15,11 @@ export class AsyncQueue {
 	/** The promises array */
 	private readonly promises: AsyncQueueEntry[] = [];
 
-	/** Waits for last promise and queues a new one */
+	/**
+	 * Wait until this entry reaches the head. Pair admitted work with shift() in finally to release the next waiter.
+	 * @param options - Optional cancellation for queued work.
+	 * @returns Admission to the queue head; later signal aborts or abortAll reject queued entries.
+	 */
 	public wait(options?: Readonly<AsyncQueueWaitOptions>): Promise<void> {
 		const entry = new AsyncQueueEntry(this);
 
@@ -59,6 +63,8 @@ export class AsyncQueue {
 	}
 }
 
+/** Cancellation settings for an entry waiting behind the queue head. */
 export interface AsyncQueueWaitOptions {
+	/** Abort a queued wait when this signal later aborts. Already-aborted signals and an immediately admitted head are not rejected. */
 	signal?: AbortSignal | undefined | null;
 }

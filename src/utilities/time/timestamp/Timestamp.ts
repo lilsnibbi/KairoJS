@@ -145,10 +145,14 @@ const tokenResolvers = new Map<string, TokenResolver>([
 	],
 ]);
 
+/** Date, Unix-millisecond timestamp, or date string accepted by new Date(). */
 export type TimeResolvable = Date | number | string;
 
+/** One parsed timestamp token or literal text fragment. */
 export interface TimestampTemplateEntry {
+	/** Token text, or literal for a text fragment. */
 	type: string;
+	/** Literal output text, or null when a token resolver supplies the output. */
 	content: string | null;
 }
 

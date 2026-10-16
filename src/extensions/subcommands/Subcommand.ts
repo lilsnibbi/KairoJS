@@ -30,6 +30,7 @@ export class Subcommand<
 	PreParseReturn extends Args = Args,
 	Options extends Subcommand.Options = Subcommand.Options,
 > extends Command<PreParseReturn, Options> {
+	/** Optional class metadata passed as constructor options by the loader. */
 	public static override readonly options?: Subcommand.Options;
 	/** The preconditions to be run for each specified subcommand. */
 	public readonly subcommandPreconditions = new Map<
@@ -43,6 +44,11 @@ export class Subcommand<
 	/** Whether to use case insensitive subcommands. This is only relevant for message-command styled commands as chat input commands are always lowercase. This can be enabled through `clientOptions.caseInsensitiveCommands`. */
 	public caseInsensitiveSubcommands = false;
 
+	/**
+	 * Build subcommand mappings and their checks. Client case-insensitive settings normalize mapping names in place.
+	 * @param context - Loader metadata and command store.
+	 * @param options - Command settings with optional subcommand mappings.
+	 */
 	public constructor(context: Subcommand.Context, options: Options) {
 		// #region Base parsing
 		super(context, options);
@@ -214,6 +220,7 @@ export class Subcommand<
 		// #endregion
 	}
 
+	/** Adopt a truthy subcommandMappings property as the runtime mapping list, or an empty list if that property is not an array. */
 	public override onLoad() {
 		super.onLoad();
 
@@ -673,25 +680,36 @@ export class Subcommand<
 	}
 }
 
+/** Command options with grouped message/slash subcommand mappings. */
 export interface SubcommandOptions extends Command.Options {
+	/** Subcommands and optional groups. Defaults to an empty list. */
 	subcommands?: SubcommandMappingArray;
 	/** Whether to add aliases for subcommands with dashes in them  When this option is enabled *and* the subcommand implements `messageRun`, dashless aliases will be added.
 	 * @default false */
 	generateDashLessAliases?: boolean;
 }
 
+/** Types and helpers for {@link Subcommand}. */
 export namespace Subcommand {
+	/** Shorthand for {@link SubcommandOptions}. */
 	export type Options = SubcommandOptions;
+	/** Shorthand for {@link Command.JSON}. */
 	export type JSON = Command.JSON;
+	/** Shorthand for {@link Command.Context}. */
 	export type Context = Command.Context;
+	/** Shorthand for {@link Command.RunInTypes}. */
 	export type RunInTypes = Command.RunInTypes;
+	/** Shorthand for {@link Command.ChatInputCommandInteraction}. */
 	export type ChatInputCommandInteraction<
 		Cached extends CacheType = CacheType,
 	> = Command.ChatInputCommandInteraction<Cached>;
+	/** Shorthand for {@link Command.ContextMenuCommandInteraction}. */
 	export type ContextMenuCommandInteraction<
 		Cached extends CacheType = CacheType,
 	> = Command.ContextMenuCommandInteraction<Cached>;
+	/** Shorthand for {@link Command.AutocompleteInteraction}. */
 	export type AutocompleteInteraction<Cached extends CacheType = CacheType> =
 		Command.AutocompleteInteraction<Cached>;
+	/** Shorthand for {@link Command.Registry}. */
 	export type Registry = Command.Registry;
 }

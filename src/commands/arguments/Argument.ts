@@ -15,6 +15,7 @@ export type AwaitableArgumentResult<T> = Awaitable<ArgumentResult<T>>;
 /** Defines an asynchronous result of an {@link Argument}, check {@link Argument.Result} for the synchronous version. */
 export type AsyncArgumentResult<T> = Promise<ArgumentResult<T>>;
 
+/** Named resolver that turns argument text into a typed Result. */
 export interface IArgument<T> {
 	/** The name of the argument, this is used to make the identification of an argument easier. */
 	readonly name: string;
@@ -34,7 +35,13 @@ export abstract class Argument<
 	extends AliasModule<Options, "arguments">
 	implements IArgument<T>
 {
+	/** Optional argument module metadata passed to the constructor by the loader. */
 	public static override readonly options?: Argument.Options;
+	/**
+	 * Create an argument module.
+	 * @param context - Loader metadata and argument store.
+	 * @param options - Module settings; defaults to an empty object.
+	 */
 	public constructor(
 		context: Argument.Context,
 		options: Options = {} as Options,
@@ -42,6 +49,12 @@ export abstract class Argument<
 		super(context, options);
 	}
 
+	/**
+	 * Resolve one argument string.
+	 * @param parameter - Text to parse.
+	 * @param context - Invocation metadata and resolver options.
+	 * @returns Ok with a typed value or Err with an ArgumentError, immediately or asynchronously.
+	 */
 	public abstract run(
 		parameter: string,
 		context: Argument.RunContext<T>,
@@ -60,27 +73,44 @@ export abstract class Argument<
 	}
 }
 
+/** Name, aliases, and enabled state for an argument module. */
 export interface ArgumentOptions extends AliasModule.Options {}
 
+/** Invocation metadata and extra settings passed to an argument resolver. */
 export interface ArgumentContext<T = unknown> extends Record<
 	PropertyKey,
 	unknown
 > {
+	/** Resolver being called. */
 	argument: IArgument<T>;
+	/** Argument reader for the current invocation. */
 	args: Args;
+	/** Triggering message. */
 	message: Message;
+	/** Command being invoked. */
 	command: MessageCommand;
+	/** Matched prefix and command metadata. */
 	commandContext: MessageCommand.RunContext;
+	/** Optional lower bound: number value, date timestamp in milliseconds, or string length, depending on the resolver. */
 	minimum?: number;
+	/** Optional upper bound in the same units as minimum. */
 	maximum?: number;
+	/** Extra context available to custom resolvers. Built-in number, date, and string bounds are inclusive regardless of this flag. */
 	inclusive?: boolean;
 }
 
+/** Types and helpers for {@link Argument}. */
 export namespace Argument {
+	/** Shorthand for {@link ArgumentOptions}. */
 	export type Options = ArgumentOptions;
+	/** Shorthand for {@link ArgumentContext}. */
 	export type RunContext<T = unknown> = ArgumentContext<T>;
+	/** Shorthand for {@link AliasModule.Context}. */
 	export type Context = AliasModule.Context<"arguments">;
+	/** Shorthand for {@link ArgumentResult}. */
 	export type Result<T> = ArgumentResult<T>;
+	/** Shorthand for {@link AwaitableArgumentResult}. */
 	export type AwaitableResult<T> = AwaitableArgumentResult<T>;
+	/** Shorthand for {@link AsyncArgumentResult}. */
 	export type AsyncResult<T> = AsyncArgumentResult<T>;
 }

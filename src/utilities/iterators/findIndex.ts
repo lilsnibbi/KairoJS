@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Advances the iterable until it finds the element, returning its index if it's found and `-1` otherwise. */
+/** Return the zero-based index of the first value accepted by callbackFn, or -1. Callback errors propagate. */
 export function findIndex<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (element: ElementType, index: number) => boolean,

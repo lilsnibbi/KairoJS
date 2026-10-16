@@ -3,7 +3,10 @@ import { assertPositive } from "./shared/_assertPositive";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow";
 
-/** Create an iterator starting at the same point, but stepping by the given amount at each iteration. */
+/**
+ * Yield every step-th value, starting with the first. Each next() also consumes the skipped values. Step is truncated and
+ * must be positive; invalid numeric inputs throw.
+ */
 export function stepBy<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	step: number,

@@ -15,7 +15,14 @@ const DOMException: typeof globalThis.DOMException =
 	// DOMException was only made a global in Node v17.0.0, but this library supports Node v16.0.0 and up
 	AbortSignal.abort().reason.constructor;
 
-/** Run a function {@link cb} and validates the result with function {@link cbCondition}, and repeats this until {@link cbCondition} returns `true` or the {@link timeout} is reached.  For an asynchronous variant, see [poll](./poll.d.ts). */
+/**
+ * Call cb synchronously until its condition passes or its retry budget runs out. Delays block the calling thread.
+ * @param cb - Operation to call.
+ * @param cbCondition - Test for an acceptable result.
+ * @param options - Retry count, delay, optional timeout, and logging settings.
+ * @returns The last result, even if the retry limit is reached first.
+ * @throws For invalid options, callback failures, or AbortError when a retry would pass the timeout.
+ */
 export function pollSync<T>(
 	cb: () => T,
 	cbCondition: (value: T) => boolean,

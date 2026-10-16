@@ -18,6 +18,7 @@ export function defaultCompare<const ElementType>(
 }
 
 export { defaultCompare as ascString };
+/** Compare String(x) and String(y) in descending order. */
 export const descString = swap(defaultCompare);
 
 /** Compares two elements using the default comparison algorithm. */
@@ -28,4 +29,5 @@ export function ascNumber(
 	// @ts-expect-error: The subtraction is intentional
 	return ((x > y) - (x < y)) as LexicographicComparison;
 }
+/** Compare values with JavaScript relational operators in descending order. String pairs compare lexically. */
 export const descNumber = swap(ascNumber);

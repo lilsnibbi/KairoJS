@@ -1,14 +1,25 @@
 import type { Awaitable } from "../../utilities/index";
 import type { KairoClient } from "../client/KairoClient";
 
-/** An optional client feature. Select extensions on each client. */
+/** Base class for client features. Override static hooks; KairoJS uses the class without constructing it. */
 export abstract class Extension {
-	/** Set this when a hook failure leaves your application unable to operate. */
+	/** Fail client startup when a hook fails if true. Otherwise disable this feature and clean up its registrations. Defaults to false. */
 	static readonly critical: boolean = false;
-	/** Register modules and services. This hook is synchronous. */
+	/**
+	 * Register stores, modules, and resources synchronously during client construction.
+	 * @param _client - Client being configured. Use addDisposer for owned resources.
+	 */
 	static setup(_client: KairoClient): void {}
-	/** Prepare services after modules load, before Discord connects. */
+	/**
+	 * Prepare services after modules and managed sharding load, before Discord login. Hooks run in extension order.
+	 * @param _client - Client being started.
+	 * @returns Completion of this phase.
+	 */
 	static beforeLogin(_client: KairoClient): Awaitable<void> {}
-	/** Start work that needs a connected client. */
+	/**
+	 * Start work after Discord login finishes. Hooks run in extension order.
+	 * @param _client - Connected client.
+	 * @returns Completion of this phase.
+	 */
 	static afterLogin(_client: KairoClient): Awaitable<void> {}
 }

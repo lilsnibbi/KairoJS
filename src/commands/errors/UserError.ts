@@ -6,18 +6,23 @@ export class UserError extends Error {
 	/** User-provided context. */
 	public readonly context: unknown;
 
-	/** Create an UserError. */
+	/**
+	 * Create a user-facing command failure.
+	 * @param options - Identifier, message, context, and any source metadata.
+	 */
 	public constructor(options: UserError.Options) {
 		super(options.message);
 		this.identifier = options.identifier;
 		this.context = options.context ?? null;
 	}
 
+	/** The error name, UserError. */
 	public override get name(): string {
 		return "UserError";
 	}
 }
 
+/** Types and helpers for {@link UserError}. */
 export namespace UserError {
 	/** The options for {@link UserError}. */
 	export interface Options {

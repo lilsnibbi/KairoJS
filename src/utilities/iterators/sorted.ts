@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toArray } from "./toArray";
 
-/** Consumes the iterable and returns a new iterable with the elements sorted. */
+/** Consume input into an array and return its sorted iterator. Uses native Array.sort; omitted compareFn uses string ordering. */
 export function sorted<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	compareFn?: (a: ElementType, b: ElementType) => number,

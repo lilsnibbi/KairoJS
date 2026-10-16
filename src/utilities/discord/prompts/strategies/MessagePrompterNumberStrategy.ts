@@ -12,6 +12,7 @@ import type { IMessagePrompterExplicitNumberReturn } from "../ExplicitReturnType
 import type { IMessagePrompterNumberStrategyOptions } from "../strategyOptions";
 import { MessagePrompterBaseStrategy } from "./MessagePrompterBaseStrategy";
 
+/** Prompt strategy that waits for a number selected from emoji reactions. Timeout and Discord failures reject. */
 export class MessagePrompterNumberStrategy
 	extends MessagePrompterBaseStrategy
 	implements IMessagePrompterNumberStrategyOptions

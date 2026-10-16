@@ -2,7 +2,10 @@ import { assertNotNegative } from "./shared/_assertNotNegative";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toNumberOrThrow } from "./shared/_toNumberOrThrow";
 
-/** Create an iterable that repeats the input iterable `count` times. */
+/**
+ * Yield the same value repeatedly without copying it. Nonnegative count is required; fractional counts round up in
+ * practice and Infinity repeats forever.
+ */
 export function repeat<const ElementType>(
 	value: ElementType,
 	count: number,

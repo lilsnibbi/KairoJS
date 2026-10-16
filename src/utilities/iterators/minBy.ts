@@ -7,7 +7,7 @@ import {
 } from "./shared/_compare";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Return the element that gives the minimum value with respect to the specified comparison function. */
+/** Consume input and return the least value according to comparator, or null when empty. Ties choose the last; undefined sorts last. */
 export function minBy<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	comparator: CompareByComparator<ElementType>,

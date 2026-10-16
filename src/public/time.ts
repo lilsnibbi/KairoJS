@@ -1,3 +1,7 @@
+/**
+ * Durations, timestamps, timers, rate limits, and stopwatches.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export * from "../utilities/time/index";

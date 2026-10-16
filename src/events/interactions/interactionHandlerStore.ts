@@ -8,14 +8,22 @@ import {
 	InteractionHandlerTypes,
 } from "./interactionHandler";
 
+/** Store that filters, parses, and runs matching interaction handlers. Several handlers may accept one interaction. */
 export class InteractionHandlerStore extends ModuleStore<
 	InteractionHandler,
 	"interactions"
 > {
+	/** Create an empty interaction-handler store. */
 	public constructor() {
 		super(InteractionHandler, { name: "interactions" });
 	}
 
+	/**
+	 * Parse matching handlers in store order, start accepted handlers, and await them all.
+	 * @param interaction - Discord interaction to dispatch.
+	 * @returns True if at least one handler ran, even if it failed; false when all were skipped. Failures emit the
+	 * corresponding handler events.
+	 */
 	public async run(interaction: Interaction) {
 		// Early-exit for optimization
 		if (this.size === 0) return false;
@@ -124,6 +132,7 @@ export class InteractionHandlerStore extends ModuleStore<
 	}
 }
 
+/** Mutable category filters used before handler.parse. A missing category filter skips its handlers. */
 export const InteractionHandlerFilters = new Map<
 	InteractionHandlerTypes,
 	(interaction: Interaction) => boolean

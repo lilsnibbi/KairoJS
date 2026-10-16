@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Consumes the iterable until it's exhausted, returning the last element. */
+/** Consume the input and return its final value, or undefined for empty input. */
 export function last<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): ElementType | undefined {

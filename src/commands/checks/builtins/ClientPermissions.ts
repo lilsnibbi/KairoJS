@@ -13,11 +13,14 @@ import type { Command } from "../../Command";
 import { Identifiers } from "../../errors/Identifiers";
 import { AllFlowsPrecondition } from "../Precondition";
 
+/** Permissions required by a bot or user permission check. */
 export interface PermissionPreconditionContext
 	extends AllFlowsPrecondition.RunContext {
+	/** Required bitfield. Omit to require no additional permissions. */
 	permissions?: PermissionsBitField;
 }
 
+/** Require the bot’s configured permissions. Available through CorePreconditions. */
 export class ClientPermissionsCheck extends AllFlowsPrecondition {
 	private readonly dmChannelPermissions = new PermissionsBitField(
 		~new PermissionsBitField([
@@ -32,6 +35,10 @@ export class ClientPermissionsCheck extends AllFlowsPrecondition {
 		]).bitfield & PermissionsBitField.All,
 	).freeze();
 
+	/**
+	 * Check a message invocation. Require the bot’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public async messageRun(
 		message: Message,
 		_: Command,
@@ -52,6 +59,10 @@ export class ClientPermissionsCheck extends AllFlowsPrecondition {
 		return this.sharedRun(required, permissions, "message");
 	}
 
+	/**
+	 * Check a slash invocation. Require the bot’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public async chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		_: Command,
@@ -65,6 +76,10 @@ export class ClientPermissionsCheck extends AllFlowsPrecondition {
 		return this.sharedRun(required, availablePermissions, "chat input");
 	}
 
+	/**
+	 * Check a context-menu invocation. Require the bot’s configured permissions.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public async contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		_: Command,
@@ -143,6 +158,7 @@ export class ClientPermissionsCheck extends AllFlowsPrecondition {
 		return interaction.appPermissions;
 	}
 
+	/** Readable labels used when reporting missing Discord permissions. */
 	public static readonly readablePermissions: Record<
 		PermissionsString,
 		string

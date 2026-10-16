@@ -80,6 +80,11 @@ export class PreconditionContainerArray implements IPreconditionContainer {
 	/** The {@link PreconditionRunCondition} that defines how entries must be handled. */
 	public readonly runCondition: PreconditionRunCondition;
 
+	/**
+	 * Create a group of checks. Nested groups alternate AND and OR; plain arrays inherit their parent’s run mode.
+	 * @param data - Entries, or entries with an explicit mode. Defaults to an empty sequential AND group.
+	 * @param parent - Optional parent used to select the opposite condition and inherited mode.
+	 */
 	public constructor(
 		data: PreconditionArrayResolvable = [],
 		parent: PreconditionContainerArray | null = null,
@@ -109,15 +114,30 @@ export class PreconditionContainerArray implements IPreconditionContainer {
 		return this;
 	}
 
+	/**
+	 * Append a named check, contextful entry, or existing group.
+	 * @param entry - Entry to append.
+	 * @returns This group.
+	 */
 	public append(
 		keyOrEntries:
 			| SimplePreconditionSingleResolvableDetails
 			| SimplePreconditionKeys
 			| PreconditionContainerArray,
 	): this;
+	/**
+	 * Append a named check, contextful entry, or existing group.
+	 * @param entry - Entry to append.
+	 * @returns This group.
+	 */
 	public append<K extends PreconditionKeys>(
 		entry: PreconditionSingleResolvableDetails<K>,
 	): this;
+	/**
+	 * Append a named check, contextful entry, or existing group.
+	 * @param entry - Entry to append.
+	 * @returns This group.
+	 */
 	public append(
 		entry: PreconditionContainerArray | PreconditionSingleResolvable,
 	): this {

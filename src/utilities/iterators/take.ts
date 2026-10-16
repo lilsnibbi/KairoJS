@@ -4,7 +4,10 @@ import { assertNotNegative } from "./shared/_assertNotNegative";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow";
 
-/** Create an iterable with the first `count` elements. */
+/**
+ * Lazily read at most count values without copying them. Count is truncated and must be nonnegative; 0 reads nothing and
+ * Infinity keeps the entire source.
+ */
 export function take<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	count: number,

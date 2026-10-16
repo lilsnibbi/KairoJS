@@ -26,13 +26,17 @@ import {
 	type ModuleStores,
 } from "./ModuleRegistry";
 
+/** Name and loader strategy for a module store. */
 export interface ModuleStoreOptions<
 	T extends Module,
 	StoreName extends ModuleKind = ModuleKind,
 > {
+	/** Registry key for this kind of module. */
 	readonly name: StoreName;
+	/** File loading and lifecycle hooks. Defaults to ModuleStore.defaultStrategy. */
 	readonly strategy?: ModuleLoaderHooks<T>;
 }
+/** Receive a module trace message synchronously. The return value is ignored. */
 export type ModuleStoreLogger = (value: string) => void;
 
 /** Owns the modules of one kind and awaits their lifecycle hooks. */
@@ -40,8 +44,11 @@ export class ModuleStore<
 	T extends Module,
 	StoreName extends ModuleKind = ModuleKind,
 > extends Collection<string, T> {
+	/** Base class accepted by this store. */
 	public readonly Constructor: AbstractConstructor<T>;
+	/** Registry key for this store. */
 	public readonly name: StoreName;
+	/** File loader and store lifecycle hooks. */
 	public readonly strategy: ModuleLoaderHooks<T>;
 	private readonly [RegisteredModules] = new Map<
 		string,
@@ -53,6 +60,11 @@ export class ModuleStore<
 	readonly #insertions = new Map<string, Promise<T>>();
 	readonly #unloads = new WeakMap<T, Promise<T>>();
 
+	/**
+	 * Create an empty store.
+	 * @param pieceConstructor - Base class all modules must extend.
+	 * @param options - Registry name and optional loader strategy.
+	 */
 	constructor(
 		pieceConstructor: AbstractConstructor<T>,
 		options: ModuleStoreOptions<T, StoreName>,
@@ -62,11 +74,16 @@ export class ModuleStore<
 		this.name = options.name;
 		this.strategy = options.strategy ?? ModuleStore.defaultStrategy;
 	}
+	/** Shared framework services. */
 	get container(): Container {
 		return container;
 	}
 
-	/** Register a class directly. Built-ins use this too. */
+	/**
+	 * Register a class directly, activating it if loading has started. The first registration keeps its name.
+	 * @param entry - Module name and class.
+	 * @throws If the class is incompatible or activation fails.
+	 */
 	async addModule(entry: ModuleRegistration<StoreName>): Promise<void> {
 		if (
 			!isClass(entry.module) ||
@@ -107,7 +124,13 @@ export class ModuleStore<
 		else this.warnDuplicate(entry.name, "explicit registration");
 	}
 
-	/** Stage candidates in registration, file and export-name order. */
+	/**
+	 * Construct registered modules, then classes from the given files. Invalid candidates are logged and skipped.
+	 * @param files - Ordered absolute module paths.
+	 * @param root - Root used for module metadata.
+	 * @param imports - Optional import cache shared between stores.
+	 * @returns Candidates awaiting activation.
+	 */
 	async prepare(
 		files: string[],
 		root: string,
@@ -160,7 +183,11 @@ export class ModuleStore<
 		return modules;
 	}
 
-	/** Activate once. Bad modules are isolated; failed cleanup remains fatal. */
+	/**
+	 * Activate prepared modules once, then run onLoadAll. Invalid modules are isolated; failed rollback rejects.
+	 * @param modules - Candidates in activation order.
+	 * @returns The shared initialization promise.
+	 */
 	initialize(modules: T[]): Promise<void> {
 		if (!this.#initialization) this.#preparedModules = modules;
 		this.#initialization ??= Promise.resolve().then(async () => {
@@ -205,6 +232,12 @@ export class ModuleStore<
 			});
 	}
 
+	/**
+	 * Await loader and module cleanup once, then remove the instance even if cleanup failed.
+	 * @param name - Registered name or compatible instance.
+	 * @returns The unloaded module.
+	 * @throws If resolution or cleanup fails.
+	 */
 	async unload(name: string | T): Promise<T> {
 		const module = this.resolve(name);
 		let pending = this.#unloads.get(module);
@@ -238,6 +271,11 @@ export class ModuleStore<
 		return module;
 	}
 
+	/**
+	 * Wait for pending insertions, unload every stored module, then run onUnloadAll.
+	 * @returns Unloaded modules when all cleanup succeeds.
+	 * @throws An AggregateError after attempting every cleanup if any failed.
+	 */
 	async unloadAll(): Promise<T[]> {
 		// Runtime registrations may still be activating when the client starts closing.
 		await Promise.allSettled([...this.#insertions.values()]);
@@ -262,6 +300,12 @@ export class ModuleStore<
 		);
 	}
 
+	/**
+	 * Resolve a name or accept a compatible module instance.
+	 * @param name - Name to look up or instance to check.
+	 * @returns The resolved instance.
+	 * @throws ModuleLoadError for a missing name or incompatible value.
+	 */
 	resolve(name: string | T): T {
 		if (typeof name === "string") {
 			const module = this.get(name);
@@ -279,6 +323,12 @@ export class ModuleStore<
 		);
 	}
 
+	/**
+	 * Activate a module after earlier insertions with the same name. The first active instance keeps that name.
+	 * @param module - Instance to activate. Disabled modules are skipped.
+	 * @returns The accepted instance, or the disabled candidate.
+	 * @throws If activation or cleanup fails.
+	 */
 	insert(module: T): Promise<T> {
 		const previous = this.#insertions.get(module.name) ?? Promise.resolve();
 		const pending = previous
@@ -340,6 +390,13 @@ export class ModuleStore<
 		}
 	}
 
+	/**
+	 * Construct a module using its static options when present.
+	 * @param Ctor - Compatible module class.
+	 * @param data - File or virtual registration metadata.
+	 * @returns A new module, before activation.
+	 * @throws If construction fails or the resulting name is empty.
+	 */
 	construct(Ctor: ILoaderResultEntry<T>, data: HydratedModuleData): T {
 		const context = {
 			store: this as unknown as Module.Context["store"],
@@ -356,19 +413,29 @@ export class ModuleStore<
 			throw new TypeError("Module names must be non-empty strings.");
 		return module;
 	}
+	/** Loader used by new stores without a custom strategy. Defaults to a TypeScript ModuleLoader. */
 	static defaultStrategy: ModuleLoaderHooks<any> = new ModuleLoader();
+	/** Optional synchronous module trace sink. Defaults to null; the active client sets it when traceModules is enabled. */
 	static logger: ModuleStoreLogger | null = null;
 }
 
+/** A named module class registered without scanning a file. */
 export interface ModuleRegistration<StoreName extends ModuleKind> {
+	/** Name used for the module’s loading context. */
 	name: string;
+	/** Class compatible with the selected store. */
 	module: ModuleStores[StoreName] extends ModuleStore<infer Module>
 		? Constructor<Module>
 		: never;
 }
+/** Types and helpers for {@link ModuleStore}. */
 export namespace ModuleStore {
+	/** ModuleRegistry class, also available through the ModuleStore namespace. */
 	export const Registry = ModuleRegistry;
+	/** Shorthand for {@link ModuleStoreOptions}. */
 	export type Options<T extends Module> = ModuleStoreOptions<T>;
+	/** Shorthand for {@link ModuleStoreLogger}. */
 	export type Logger = ModuleStoreLogger;
+	/** Shorthand for {@link ModuleStores}. */
 	export type RegistryEntries = ModuleStores;
 }

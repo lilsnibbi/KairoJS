@@ -5,7 +5,7 @@ import {
 	orderingIsGreater,
 } from "./shared/_compare";
 
-/** Check if the elements of `iterable` are {@link LexicographicComparison lexicographically} less or equal than those of another. */
+/** Compare sources in string order and return whether the first is less than or equal to the second. Undefined sorts last. */
 export function lessOrEqualThan<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	other: IterableResolvable<ElementType>,

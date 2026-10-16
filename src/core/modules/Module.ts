@@ -9,7 +9,7 @@ export interface ModuleContext<StoreName extends ModuleKind = ModuleKind> {
 	/** The root directory the module was loaded from. */
 	readonly root: string;
 
-	/** The path the module was loaded from, relative to {@link ModuleContext.root}. */
+	/** Absolute path to the module file, or the virtual path for a direct class registration. */
 	readonly path: string;
 
 	/** The module's name extracted from the path. */
@@ -21,16 +21,14 @@ export interface ModuleContext<StoreName extends ModuleKind = ModuleKind> {
 
 /** The options for the {@link Module}. */
 export interface ModuleOptions {
-	/** The name for the module.
-	 * @default '' */
+	/** Override the context name. Defaults to the name supplied by the loader or registration. */
 	readonly name?: string;
 
-	/** Whether the module should be enabled. If set to false, the module will be unloaded.
-	 * @default true */
+	/** Allow this module to activate. Defaults to true; changing the flag alone does not unload an active module. */
 	readonly enabled?: boolean;
 }
 
-/** The module to be stored in {@link ModuleStore} instances. */
+/** Base module with an owning store, file metadata, and awaited load/unload hooks. */
 export class Module<
 	Options extends ModuleOptions = ModuleOptions,
 	StoreName extends ModuleKind = ModuleKind,
@@ -52,6 +50,11 @@ export class Module<
 	/** The raw options passed to this {@link Module} */
 	public readonly options: Options;
 
+	/**
+	 * Keep the module’s context and options. Lifecycle hooks run when the store activates it.
+	 * @param context - Loader metadata and owning store.
+	 * @param options - Module settings; defaults to an empty object.
+	 */
 	public constructor(
 		context: Module.Context<StoreName>,
 		options: ModuleOptions = {},
@@ -68,17 +71,26 @@ export class Module<
 		return container;
 	}
 
-	/** Per-module listener that is called when the module is loaded into the store. Useful to set-up asynchronous initialization tasks. */
+	/**
+	 * Initialize this module before it enters the store. The store awaits the result.
+	 * @returns Optional initialization work; its value is ignored.
+	 */
 	public onLoad(): Awaitable<unknown> {
 		return undefined;
 	}
 
-	/** Per-module listener that is called when the module is unloaded from the store. Useful to set-up clean-up tasks. */
+	/**
+	 * Release this module’s resources before the store removes it, including after failed activation.
+	 * @returns Optional cleanup work; its value is ignored.
+	 */
 	public onUnload(): Awaitable<unknown> {
 		return undefined;
 	}
 
-	/** Unloads and disables the module. */
+	/**
+	 * Unload this instance if it is still stored, then disable it.
+	 * @throws If the store’s cleanup hooks fail; the enabled flag is then left unchanged.
+	 */
 	public async unload() {
 		if (this.store.get(this.name) === this)
 			await (this.store as ModuleStore<Module>).unload(this);
@@ -98,17 +110,27 @@ export class Module<
 
 /** The return type of {@link Module.toJSON}. */
 export interface ModuleJSON {
+	/** Serialized file location. */
 	location: ModuleLocationJSON;
+	/** Registered module name. */
 	name: string;
+	/** Current enabled flag. */
 	enabled: boolean;
+	/** Options supplied when the module was constructed. */
 	options: ModuleOptions;
 }
 
+/** Types and helpers for {@link Module}. */
 export namespace Module {
+	/** ModuleLocation class exposed through the Module namespace. */
 	export const Location = ModuleLocation;
+	/** Shorthand for {@link ModuleOptions}. */
 	export type Options = ModuleOptions;
+	/** Shorthand for {@link ModuleContext}. */
 	export type Context<StoreName extends ModuleKind = ModuleKind> =
 		ModuleContext<StoreName>;
+	/** Shorthand for {@link ModuleJSON}. */
 	export type JSON = ModuleJSON;
+	/** Shorthand for {@link ModuleLocationJSON}. */
 	export type LocationJSON = ModuleLocationJSON;
 }

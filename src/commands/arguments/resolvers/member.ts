@@ -7,6 +7,13 @@ import { isNullish } from "../../../utilities/index";
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Fetch a guild member by ID or mention, with an optional one-result name query fallback.
+ * @param parameter - User ID, mention, or name query.
+ * @param guild - Guild to search.
+ * @param performFuzzySearch - Allow the name query after ID resolution fails. Defaults to false.
+ * @returns The member, or ArgumentMemberError when no fetch succeeds.
+ */
 export async function resolveMember(
 	parameter: string,
 	guild: Guild,

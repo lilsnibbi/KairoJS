@@ -43,7 +43,7 @@ export class TimerManager extends null {
 		this.storedIntervals.delete(interval);
 	}
 
-	/** Clears running timeouts and intervals created through this class so NodeJS can gracefully exit */
+	/** Clear every timeout and interval created through this manager, then empty both tracking sets. */
 	public static destroy(): void {
 		for (const i of this.storedTimeouts) clearTimeout(i);
 		for (const i of this.storedIntervals) clearInterval(i);

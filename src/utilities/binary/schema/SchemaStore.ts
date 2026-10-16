@@ -3,8 +3,9 @@ import { UnalignedUint16Array } from "../buffer/UnalignedUint16Array";
 import { Pointer } from "../shared/Pointer";
 import { Schema, type SerializeValue, type UnwrapSchema } from "./Schema";
 
+/** Collection of schemas keyed by their encoded IDs, with automatic schema selection during decoding. */
 export class SchemaStore<Entries extends object = object> {
-	/** The default maximum array length for schemas */
+	/** Word capacity supplied when serializing variable-size schemas. Defaults to 100. */
 	public defaultMaximumArrayLength: number;
 
 	readonly #schemas = new Map<number, Schema>();
@@ -14,7 +15,11 @@ export class SchemaStore<Entries extends object = object> {
 		this.defaultMaximumArrayLength = defaultMaximumArrayLength;
 	}
 
-	/** Adds a schema to the store */
+	/**
+	 * Register a schema ID and return this store with the added schema in its type.
+	 * @param schema - Schema to register.
+	 * @throws If the ID is already registered.
+	 */
 	public add<const Id extends number, const SchemaType extends object>(
 		schema: Schema<Id, SchemaType>,
 	): Merge<Entries, Id, typeof schema> {
@@ -26,7 +31,12 @@ export class SchemaStore<Entries extends object = object> {
 		return this as unknown as Merge<Entries, Id, typeof schema>;
 	}
 
-	/** Get a schema from the store */
+	/**
+	 * Get a registered schema.
+	 * @param id - Schema ID.
+	 * @returns The schema.
+	 * @throws If the ID is absent.
+	 */
 	public get<const Id extends KeyOfStore<this>>(id: Id): Entries[Id] {
 		const schema = this.#schemas.get(id) as Entries[Id];
 		if (!schema) throw new Error(`Schema with id ${id} does not exist`);
@@ -50,7 +60,11 @@ export class SchemaStore<Entries extends object = object> {
 		return schema.serializeRaw(value, this.defaultMaximumArrayLength);
 	}
 
-	/** Deserializes a buffer */
+	/**
+	 * Read the schema ID, select its schema, and decode the remaining fields.
+	 * @param buffer - Codec text or buffer.
+	 * @returns The schema ID and decoded data. Unknown IDs and codec errors propagate.
+	 */
 	public deserialize(
 		buffer: string | DuplexBuffer,
 	): DeserializationResult<Entries> {
@@ -99,6 +113,10 @@ export class SchemaStore<Entries extends object = object> {
 	}
 }
 
+/**
+ * Type of a store after adding a new schema ID; duplicate IDs resolve to never.
+ * @internal
+ */
 type Merge<
 	Entries extends object,
 	Id extends number,
@@ -109,22 +127,28 @@ type Merge<
 			[K in Id | keyof Entries]: K extends keyof Entries ? Entries[K] : Type;
 		}>;
 
+/** Numeric IDs of schemas registered in a SchemaStore. */
 export type KeyOfStore<SchemaStoreValue extends object> =
 	SchemaStoreValue extends SchemaStore<infer Schemas>
 		? keyof Schemas & number
 		: never;
+/** Union of schemas registered in a SchemaStore. */
 export type ValueOfStore<SchemaStoreValue extends object> =
 	SchemaStoreValue extends SchemaStore<infer Schemas>
 		? Schemas[keyof Schemas & number]
 		: never;
+/** Union of [schema ID, schema] pairs in a SchemaStore. */
 export type EntryOfStore<SchemaStoreValue extends object> =
 	SchemaStoreValue extends SchemaStore<infer Schemas>
 		? { [K in keyof Schemas]: readonly [K & number, Schemas[K]] }[keyof Schemas]
 		: never;
 
+/** Union of decoded { id, data } results for every registered schema. */
 export type DeserializationResult<SchemaStoreEntries extends object> = {
 	[K in keyof SchemaStoreEntries]: {
+		/** Decoded schema ID, narrowing the matching data type. */
 		id: K;
+		/** Decoded fields belonging to this schema ID. */
 		data: UnwrapSchema<SchemaStoreEntries[K] & object>;
 	};
 }[keyof SchemaStoreEntries];

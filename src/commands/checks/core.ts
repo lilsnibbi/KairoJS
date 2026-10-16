@@ -19,35 +19,72 @@ import { GuildVoiceOnlyCheck as GuildVoiceOnly } from "./builtins/GuildVoiceOnly
 import { NSFWCheck as NSFW } from "./builtins/NSFW";
 import { RunInCheck as RunIn } from "./builtins/RunIn";
 import { UserPermissionsCheck as UserPermissions } from "./builtins/UserPermissions";
+/** Built-in precondition classes. Normal command use selects these by their registered names. */
 export const CorePreconditions = {
+	/** Require the bot’s configured permissions. */
 	ClientPermissions,
+	/** Consume a command’s cooldown bucket unless the caller is exempt. */
 	Cooldown,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Require a direct-message invocation.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	DMOnly,
+	/** Require command.enabled to be true. */
 	Enabled,
+	/** Require the invocation channel type to appear in the configured list. */
 	RunIn,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Require a guild announcement channel or announcement thread.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildNewsOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Apply the legacy announcement-thread check.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildNewsThreadOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Require a guild invocation.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Apply the legacy private-thread check.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildPrivateThreadOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Apply the legacy public-thread check.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildPublicThreadOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Require a guild text channel, public thread, or private thread.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildTextOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Require a guild voice channel.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildVoiceOnly,
-	/** @deprecated Use {@link RunIn} instead. */
+	/**
+	 * Apply the legacy thread check.
+	 * @deprecated Use the RunIn check with explicit channel types.
+	 */
 	GuildThreadOnly,
+	/** Require the invocation channel’s nsfw field to be true. */
 	NSFW,
+	/** Require the invoking user’s configured permissions. */
 	UserPermissions,
 };
 
+/** Types and helpers for {@link CorePreconditions}. */
 export namespace CorePreconditions {
+	/** Shorthand for {@link PermissionPreconditionContext}. */
 	export type UserPermissionsPreconditionContext =
 		PermissionPreconditionContext;
+	/** Shorthand for {@link CooldownPreconditionContext}. */
 	export type CooldownContext = CooldownPreconditionContext;
 }

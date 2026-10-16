@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterator which ends after the first `done` result from the original iterator. */
+/** Wrap an iterator so every next() after its first done result also reports completion. */
 export function fuse<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<ElementType> {

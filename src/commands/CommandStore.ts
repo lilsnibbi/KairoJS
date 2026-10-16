@@ -5,6 +5,7 @@ import { registries } from "./registration/registries";
 
 /** Stores command modules and their aliases. */
 export class CommandStore extends AliasModuleStore<Command, "commands"> {
+	/** Create an empty command store with alias support. */
 	public constructor() {
 		super(Command, { name: "commands" });
 	}
@@ -16,6 +17,11 @@ export class CommandStore extends AliasModuleStore<Command, "commands"> {
 		return [...categories] as string[];
 	}
 
+	/**
+	 * Activate a command and keep its registry in the shared registry map.
+	 * @param module - Command to activate.
+	 * @returns The accepted command. The first active command keeps a duplicate name.
+	 */
 	public override async insert(module: Command): Promise<Command> {
 		const accepted = await super.insert(module);
 		// Another staged candidate may have removed this name's shared registry during failed activation.
@@ -24,6 +30,12 @@ export class CommandStore extends AliasModuleStore<Command, "commands"> {
 		return accepted;
 	}
 
+	/**
+	 * Remove a command’s routing aliases and registry, then await its cleanup.
+	 * @param name - Command name, alias, or instance.
+	 * @returns The unloaded command.
+	 * @throws If resolution or cleanup fails.
+	 */
 	public override unload(
 		name: string | Command,
 	): Promise<Command<Args, Command.Options>> {

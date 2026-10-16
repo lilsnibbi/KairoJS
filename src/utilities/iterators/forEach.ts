@@ -2,7 +2,7 @@ import type { IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Run a provided function once for each iterable element. */
+/** Consume input, calling callbackFn(value, zeroBasedIndex) for each value. Callback results are ignored and promises are not awaited. */
 export function forEach<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (element: ElementType, index: number) => void,

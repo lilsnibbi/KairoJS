@@ -46,6 +46,7 @@ export function setDefaultBehaviorWhenNotIdentical(
 	defaultBehaviorWhenNotIdentical = behavior ?? RegisterBehavior.Overwrite;
 }
 
+/** Return the shared update behavior, initially RegisterBehavior.Overwrite. */
 export function getDefaultBehaviorWhenNotIdentical() {
 	return defaultBehaviorWhenNotIdentical;
 }
@@ -57,6 +58,7 @@ export function setDefaultGuildIds(
 	defaultGuildIds = guildIds ?? undefined;
 }
 
+/** Return the fallback guild ID array, or undefined for global registration. */
 export function getDefaultGuildIds() {
 	return defaultGuildIds;
 }
@@ -71,6 +73,7 @@ export function setBulkOverwriteRetries(newAmountOfRetries: number | null) {
 	bulkOVerwriteRetries = newAmountOfRetries;
 }
 
+/** Return the maximum bulk-overwrite attempt count, initially 1. */
 export function getBulkOverwriteRetries() {
 	return bulkOVerwriteRetries;
 }

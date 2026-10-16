@@ -5,7 +5,7 @@ import {
 	toNumberOrThrow,
 } from "./shared/_toNumberOrThrow";
 
-/** Consumes the iterable and returns the sum of all the elements. */
+/** Consume numeric-coercible values and return their sum, starting at 0. Invalid numeric conversions throw. */
 export function sum(iterable: IterableResolvable<NumberResolvable>) {
 	let sum = 0;
 	for (const value of map(iterable, toNumberOrThrow)) {

@@ -4,6 +4,12 @@ import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 import { resolveChannel } from "./channel";
 
+/**
+ * Resolve a cached channel by ID or mention and require a non-partial DM channel.
+ * @param parameter - Channel ID or mention.
+ * @param messageOrInteraction - Invocation selecting the cache.
+ * @returns A full DM channel, or a not-found/type-mismatch identifier.
+ */
 export function resolveDMChannel(
 	parameter: string,
 	messageOrInteraction: Message | CommandInteraction,

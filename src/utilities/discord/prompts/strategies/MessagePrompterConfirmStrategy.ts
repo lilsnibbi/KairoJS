@@ -12,6 +12,7 @@ import type { IMessagePrompterExplicitConfirmReturn } from "../ExplicitReturnTyp
 import type { IMessagePrompterConfirmStrategyOptions } from "../strategyOptions";
 import { MessagePrompterBaseStrategy } from "./MessagePrompterBaseStrategy";
 
+/** Prompt strategy that waits for a confirmation or cancellation reaction. Timeout and Discord failures reject. */
 export class MessagePrompterConfirmStrategy
 	extends MessagePrompterBaseStrategy
 	implements IMessagePrompterConfirmStrategyOptions

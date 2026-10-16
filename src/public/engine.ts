@@ -1,3 +1,7 @@
+/**
+ * Native Discord gateway, REST, cache, message, and interaction APIs, with shared logging helpers.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export { createConsoleLogger } from "../core/logging/console";

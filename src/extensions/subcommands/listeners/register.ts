@@ -6,6 +6,7 @@ import { MessageNoMatchListener as MessageSubcommandNoMatch } from "./messageNoM
 import { MissingChatInputHandlerListener as SubcommandMappingIsMissingChatInputCommandHandler } from "./missingChatInputHandler";
 import { MissingMessageHandlerListener as SubcommandMappingIsMissingMessageCommandHandler } from "./missingMessageHandler";
 
+/** Register built-in subcommand error listeners with the shared module registry. */
 export function loadListeners() {
 	const store = "listeners" as const;
 	void container.modules.addModule({

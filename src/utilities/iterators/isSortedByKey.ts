@@ -8,7 +8,10 @@ import {
 import { defaultCompare } from "./shared/comparators";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Check if the elements of this iterator are sorted using the given key extraction function. */
+/**
+ * Map values to keys with callbackFn(value, zeroBasedIndex), then check adjacent keys. Defaults to string comparison, with
+ * undefined last.
+ */
 export function isSortedByKey<const ElementType, const MappedType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (a: ElementType, index: number) => MappedType,

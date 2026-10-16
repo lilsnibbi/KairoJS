@@ -5,6 +5,10 @@ export class MissingModuleError extends ModuleLoadError {
 	/** The path of the module that did not have exports. */
 	public readonly path: string;
 
+	/**
+	 * Report a file with no compatible class export.
+	 * @param path - Path of the module file.
+	 */
 	public constructor(path: string) {
 		super(
 			ModuleLoadErrorType.EmptyModule,

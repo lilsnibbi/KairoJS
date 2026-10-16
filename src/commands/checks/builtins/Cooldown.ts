@@ -13,20 +13,31 @@ import { BucketScope } from "../../enums";
 import { Identifiers } from "../../errors/Identifiers";
 import { AllFlowsPrecondition } from "../Precondition";
 
+/** Settings for one command’s cooldown check. */
 export interface CooldownPreconditionContext
 	extends AllFlowsPrecondition.RunContext {
+	/** Bucket key scope. Defaults to BucketScope.User. */
 	scope?: BucketScope;
+	/** Reset interval in milliseconds. A falsy value skips the cooldown. */
 	delay: number;
+	/** Uses per bucket. Defaults to 1. */
 	limit?: number;
+	/** User IDs that skip this cooldown. */
 	filteredUsers?: Snowflake[];
 }
 
+/** Consume a command’s cooldown bucket unless the caller is exempt. Available through CorePreconditions. */
 export class CooldownCheck extends AllFlowsPrecondition {
+	/** Cooldown managers keyed by command instance. Each manager owns that command’s scoped buckets. */
 	public buckets: WeakMap<Command, RateLimitManager<string>> = new WeakMap<
 		Command,
 		RateLimitManager<string>
 	>();
 
+	/**
+	 * Check a message invocation. Consume a command’s cooldown bucket unless the caller is exempt.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public messageRun(
 		message: Message,
 		command: Command,
@@ -43,6 +54,10 @@ export class CooldownCheck extends AllFlowsPrecondition {
 		);
 	}
 
+	/**
+	 * Check a slash invocation. Consume a command’s cooldown bucket unless the caller is exempt.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		command: Command,
@@ -59,6 +74,10 @@ export class CooldownCheck extends AllFlowsPrecondition {
 		);
 	}
 
+	/**
+	 * Check a context-menu invocation. Consume a command’s cooldown bucket unless the caller is exempt.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		command: Command,

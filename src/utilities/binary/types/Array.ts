@@ -1,6 +1,11 @@
 import { isArrayLike } from "../shared/_common";
 import type { IType } from "./base/IType";
 
+/**
+ * Create an array codec with a 16-bit element-count prefix. Keep arrays below 65536 elements.
+ * @param type - Element codec.
+ * @returns A variable-size codec. Invalid array-like inputs and element/buffer errors propagate.
+ */
 export function ArrayType<ValueType, ValueBitSize extends number | null>(
 	type: IType<ValueType, ValueBitSize>,
 ): IType<ValueType[], null> {

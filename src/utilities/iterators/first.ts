@@ -1,6 +1,6 @@
 import { from, type IterableResolvable } from "./from";
 
-/** Consumes the first element of the iterable, returning it if it's found and `undefined` otherwise. */
+/** Read the next iterator result’s value. Normally undefined when exhausted; this helper does not inspect the done flag. */
 export function first<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): ElementType | undefined {

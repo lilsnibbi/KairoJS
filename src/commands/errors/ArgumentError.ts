@@ -3,9 +3,15 @@ import { UserError } from "./UserError";
 
 /** Errors thrown by the argument parser */
 export class ArgumentError<T = unknown> extends UserError {
+	/** Resolver that rejected the input. */
 	public readonly argument: IArgument<T>;
+	/** Original argument text that failed resolution. */
 	public readonly parameter: string;
 
+	/**
+	 * Create a resolver failure.
+	 * @param options - Identifier, message, context, and any source metadata.
+	 */
 	public constructor(options: ArgumentError.Options<T>) {
 		super({
 			...options,
@@ -15,11 +21,13 @@ export class ArgumentError<T = unknown> extends UserError {
 		this.parameter = options.parameter;
 	}
 
+	/** The error name, ArgumentError. */
 	public override get name(): string {
 		return "ArgumentError";
 	}
 }
 
+/** Types and helpers for {@link ArgumentError}. */
 export namespace ArgumentError {
 	/** The options for {@link ArgumentError}. */
 	export interface Options<T> extends Omit<UserError.Options, "identifier"> {

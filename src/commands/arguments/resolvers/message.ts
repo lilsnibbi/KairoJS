@@ -25,7 +25,7 @@ import type { Awaitable } from "../../../utilities/index";
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
-/** Options to resolve a message from a string, given a certain context. */
+/** Invocation and lookup settings for resolveMessage. */
 export interface MessageResolverOptions {
 	/** Channel to resolve the message in.
 	 * @default message.channel */
@@ -37,6 +37,14 @@ export interface MessageResolverOptions {
 	scan?: boolean;
 }
 
+/**
+ * Resolve a message ID, message link, or channel/message pair. Links must belong to the invoking guild; cross-channel
+ * lookups check visibility.
+ * @param parameter - Message lookup text.
+ * @param options - Invocation, channel override, and cache-scan settings.
+ * @returns The message, or ArgumentMessageError for an unresolved input.
+ * @throws If an attempted Discord message fetch rejects.
+ */
 export async function resolveMessage(
 	parameter: string,
 	options: MessageResolverOptions,

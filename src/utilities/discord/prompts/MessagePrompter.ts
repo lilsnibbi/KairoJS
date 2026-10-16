@@ -28,24 +28,39 @@ import type {
 	IMessagePrompterStrategyOptions,
 } from "./strategyOptions";
 
+/** Response types for each named prompt strategy. Explicit mode adds response metadata. */
 export interface StrategyReturns {
+	/** Confirmation/cancellation reaction result. */
 	confirm: IMessagePrompterExplicitConfirmReturn | boolean;
+	/** Message reply result. */
 	message: IMessagePrompterExplicitMessageReturn | Message;
+	/** Numeric emoji selection result. */
 	number: IMessagePrompterExplicitNumberReturn | number;
+	/** Configured reaction selection result. */
 	reaction: IMessagePrompterExplicitReturnBase | string | EmojiResolvable;
 }
 
+/** Configuration accepted by each named prompt strategy. */
 export interface StrategyOptions {
+	/** Confirmation/cancellation reaction settings. */
 	confirm: IMessagePrompterConfirmStrategyOptions;
+	/** Message reply settings. */
 	message: IMessagePrompterStrategyOptions;
+	/** Numeric emoji selection settings. */
 	number: IMessagePrompterNumberStrategyOptions;
+	/** Configured reaction selection settings. */
 	reaction: IMessagePrompterReactionStrategyOptions;
 }
 
+/** Collector argument tuples supplied to filters for each named prompt strategy. */
 export interface StrategyFilters {
+	/** Confirmation/cancellation reaction filter arguments. */
 	confirm: [MessageReaction, User];
+	/** Message reply filter arguments. */
 	message: [Message];
+	/** Numeric emoji selection filter arguments. */
 	number: [MessageReaction, User];
+	/** Configured reaction selection filter arguments. */
 	reaction: [MessageReaction, User];
 }
 

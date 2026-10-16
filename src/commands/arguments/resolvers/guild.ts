@@ -4,6 +4,11 @@ import { SnowflakeRegex } from "../../../utilities/discord/constants/index";
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Fetch a guild by snowflake.
+ * @param parameter - Guild ID.
+ * @returns The guild, or ArgumentGuildError for invalid input or a failed fetch.
+ */
 export async function resolveGuild(
 	parameter: string,
 ): Promise<Result<Guild, Identifiers.ArgumentGuildError>> {

@@ -15,6 +15,7 @@ import type {
 import type { IMessagePrompterExplicitReturnBase } from "../ExplicitReturnTypes";
 import type { IMessagePrompterStrategyOptions } from "../strategyOptions";
 
+/** Base prompt strategy with timeout, explicit metadata, and reaction collection helpers. */
 export abstract class MessagePrompterBaseStrategy {
 	/** The type of strategy that was used */
 	public type: string;
@@ -56,11 +57,25 @@ export abstract class MessagePrompterBaseStrategy {
 		this.message = message;
 	}
 
+	/**
+	 * Send or edit a prompt and collect a response accepted by the user/filter.
+	 * @param channel - Prompt channel.
+	 * @param authorOrFilter - Allowed user or custom collector filter.
+	 * @returns The strategy’s selected value or explicit metadata. Timeout and Discord failures reject.
+	 */
 	public abstract run(
 		channel: MessagePrompterChannelTypes,
 		authorOrFilter: User | CollectorFilter<unknown[]>,
 	): Awaitable<unknown>;
 
+	/**
+	 * Send/edit the prompt, add the accepted reactions, and wait for one non-bot response.
+	 * @param channel - Text-capable prompt channel.
+	 * @param authorOrFilter - Allowed user or custom reaction filter.
+	 * @param reactions - Accepted emoji IDs/names.
+	 * @returns Prompt and reaction metadata.
+	 * @throws On collector end without a response or Discord send/reaction failures.
+	 */
 	protected async collectReactions(
 		channel: MessagePrompterChannelTypes,
 		authorOrFilter: User | CollectorFilter<[MessageReaction, User]>,

@@ -8,17 +8,25 @@ import { SubcommandsExtension } from "../../extensions/subcommands/extension";
 import type { CooldownOptions } from "../client/KairoClient";
 import { Extension } from "../lifecycle/Extension";
 
+/** Settings for subcommand handling. */
 export interface SubcommandsOptions {
+	/** Register the built-in subcommand error listeners. Defaults to true. */
 	logErrors?: boolean;
+	/** Default cooldown settings for subcommands. Individual subcommands can override them. */
 	defaultCooldown?: CooldownOptions;
 }
 
 /** Built-ins are available by default. Pass false to turn one off. */
 export interface ExtensionOptions {
+	/** Configure locale loading and translation helpers, or false to disable them. Enabled by default. */
 	localisation?: false | InternationalizationOptions;
+	/** Configure the task scheduler, or false to disable it. Enabled with an in-memory backend by default. */
 	scheduledtasks?: false | TaskSchedulerOptions;
+	/** Enable regex message commands with an empty object, or disable them with false. Enabled by default. */
 	patternCommands?: false | Record<string, never>;
+	/** Configure subcommand dispatch and error listeners, or false to disable the extension. Enabled by default. */
 	subcommands?: false | SubcommandsOptions;
+	/** Enable service modules with an empty object, or disable them with false. Enabled by default. */
 	services?: false | Record<string, never>;
 	/** Custom classes run after built-ins, once each, in this order. */
 	custom?: readonly (typeof Extension)[];

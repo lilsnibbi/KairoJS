@@ -12,12 +12,19 @@ import type {
 } from "../../types";
 import { AllFlowsPrecondition, type Preconditions } from "../Precondition";
 
+/** Allowed channel context for the RunIn check. */
 export interface RunInPreconditionContext
 	extends AllFlowsPrecondition.RunContext {
+	/** Allowed shared or per-handler channel lists. Omit to allow every channel type. */
 	types?: Preconditions["RunIn"]["types"];
 }
 
+/** Require the invocation channel type to appear in the configured list. Available through CorePreconditions. */
 export class RunInCheck extends AllFlowsPrecondition {
+	/**
+	 * Check a message invocation. Require the invocation channel type to appear in the configured list.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public override messageRun(
 		message: Message<boolean>,
 		_: MessageCommand,
@@ -39,6 +46,10 @@ export class RunInCheck extends AllFlowsPrecondition {
 			: this.makeSharedError(context, commandType);
 	}
 
+	/**
+	 * Check a slash invocation. Require the invocation channel type to appear in the configured list.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public override async chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		_: ChatInputCommand,
@@ -61,6 +72,10 @@ export class RunInCheck extends AllFlowsPrecondition {
 			: this.makeSharedError(context, commandType);
 	}
 
+	/**
+	 * Check a context-menu invocation. Require the invocation channel type to appear in the configured list.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public override async contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		_: ContextMenuCommand,

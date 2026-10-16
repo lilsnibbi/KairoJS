@@ -9,6 +9,11 @@ export class ModuleLocation {
 	/** The root directory the file was found from. */
 	public readonly root: string;
 
+	/**
+	 * Describe a module’s source location.
+	 * @param full - Absolute file path, or the virtual registration path.
+	 * @param root - Base directory used for relative paths.
+	 */
 	public constructor(full: string, root: string) {
 		this.full = full;
 		this.root = root;
@@ -48,9 +53,14 @@ export class ModuleLocation {
 
 /** The return type of {@link ModuleLocation.toJSON}. */
 export interface ModuleLocationJSON {
+	/** Folder names between the root and file; empty for virtual registrations. */
 	directories: string[];
+	/** Full source path, or the virtual registration path. */
 	full: string;
+	/** File basename including its extension, or the virtual path. */
 	name: string;
+	/** Source path relative to root, or the virtual path. */
 	relative: string;
+	/** Base directory used to describe the source path. */
 	root: string;
 }

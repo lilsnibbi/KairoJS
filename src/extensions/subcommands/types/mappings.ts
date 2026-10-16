@@ -1,11 +1,13 @@
 import { type Command } from "../../../commands/Command";
 
+/** A subcommand method mapping or a group of method mappings. */
 export type SubcommandMapping =
 	SubcommandMappingMethod | SubcommandMappingGroup;
 
+/** Ordered list of method and group mappings. */
 export type SubcommandMappingArray = SubcommandMapping[];
 
-/** Describes the mapping of all the subcommands to their respective implementations for this command. */
+/** Name and optional kind shared by subcommand mappings. */
 interface SubcommandMappingBase {
 	/** The name of this subcommand, or subcommand group */
 	name: string;
@@ -41,20 +43,23 @@ export interface SubcommandMappingMethod
 	chatInputRun?: string | Command["chatInputRun"];
 }
 
+/** Named group of method mappings. */
 export interface SubcommandMappingGroup extends SubcommandMappingBase {
-	/** This subcommand mapping describes a subcommand group and can therefore only ever be `'group'` */
+	/** Marks this mapping as a group. */
 	type: "group";
-	/** The {@link SubcommandMappingMethod}s that are contained within this subcommand group. */
+	/** Method mappings belonging to this group. */
 	entries: SubcommandMappingMethod[];
 }
 
 // Type aliases
+/** Subcommand method mapping with a required messageRun handler reference. */
 export type MessageSubcommandMappingMethod = Omit<
 	SubcommandMappingMethod,
 	"messageRun"
 > &
 	Required<Pick<SubcommandMappingMethod, "messageRun">>;
 
+/** Subcommand method mapping with a required chatInputRun handler reference. */
 export type ChatInputCommandSubcommandMappingMethod = Omit<
 	SubcommandMappingMethod,
 	"chatInputRun"

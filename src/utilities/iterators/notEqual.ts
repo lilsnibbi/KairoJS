@@ -1,7 +1,7 @@
 import { equal } from "./equal";
 import type { IterableResolvable } from "./from";
 
-/** Check if the elements of both iterators are not equal. */
+/** Return the opposite of equal, using strict value equality and matching lengths. Also exported as ne. */
 export function notEqual<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	other: IterableResolvable<ElementType>,

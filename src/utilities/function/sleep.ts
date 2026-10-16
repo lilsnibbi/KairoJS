@@ -1,3 +1,4 @@
+/** Cancellation and event-loop settings for sleep. */
 export interface SleepOptions {
 	/** When provided the corresponding `AbortController` can be used to cancel an asynchronous action. */
 	signal?: AbortSignal | undefined;
@@ -7,7 +8,13 @@ export interface SleepOptions {
 	ref?: boolean | undefined;
 }
 
-/** Sleeps for the specified number of milliseconds. For a synchronous variant, see [sleepSync](./sleepSync.d.ts). */
+/**
+ * Wait for a timer and return a supplied value.
+ * @param ms - Delay in milliseconds.
+ * @param value - Value to resolve with; defaults to undefined.
+ * @param options - Optional abort signal and timer ref setting.
+ * @returns A promise that rejects with signal.reason when aborted.
+ */
 export function sleep<T = undefined>(
 	ms: number,
 	value?: T,

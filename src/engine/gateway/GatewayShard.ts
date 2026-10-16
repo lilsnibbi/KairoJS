@@ -8,6 +8,7 @@ import { Heartbeat } from "./Heartbeat";
 import { decodeFrame, gatewayURL } from "./protocol";
 import type { $GatewayDispatch } from "./types";
 
+/** WebSocket members needed by one engine shard. Custom factories must provide browser-style callbacks and send/close methods. */
 export type $GatewaySocket = Pick<
 	WebSocket,
 	| "binaryType"
@@ -19,6 +20,7 @@ export type $GatewaySocket = Pick<
 	| "send"
 	| "close"
 >;
+/** Lifecycle state of a gateway shard, from idle through connection, recovery, and closure. */
 export type $GatewayState =
 	| "idle"
 	| "connecting"
@@ -27,22 +29,45 @@ export type $GatewayState =
 	| "ready"
 	| "reconnecting"
 	| "closed";
+/** Authentication, transport, and recovery settings for one gateway shard. */
 export interface $GatewayOptions {
+	/** Discord bot token used for IDENTIFY and RESUME. */
 	token: string;
+	/** Gateway WebSocket URL. TLS is required outside loopback test servers. */
 	url: string;
+	/** Nonnegative safe integer bitfield of Discord gateway intents. */
 	intents: number;
+	/** Tuple of zero-based shard ID and total shard count. Defaults to [0, 1]. */
 	shard?: readonly [number, number];
+	/** Clock and timer hooks. Defaults to performance.now, Math.random, and native timers. */
 	clock?: $Clock;
+	/** Create a WebSocket for the supplied gateway URL. Defaults to new WebSocket(url). */
 	socket?: (url: string) => $GatewaySocket;
+	/** Wait for an identify permit. Called before each fresh IDENTIFY; reject or observe the signal to cancel. */
 	identify: (signal: AbortSignal) => Promise<void>;
+	/** Positive integer deadline in milliseconds for each handshake stage. Defaults to 15000. */
 	handshakeTimeoutMs?: number;
+	/** Nonnegative consecutive recovery limit. Defaults to 10; 0 disables recovery attempts. */
 	maxReconnectAttempts?: number;
+	/** Maximum inbound frame size in bytes. Defaults to 8388608. */
 	maxFrameBytes?: number;
 }
+/** Synchronous callbacks invoked by a gateway shard. */
 export interface $GatewayCallbacks {
+	/**
+	 * Handle a native dispatch in gateway order.
+	 * @param payload - Decoded Discord dispatch.
+	 */
 	dispatch(payload: $GatewayDispatch): void;
+	/** Discard state tied to the previous session when it cannot be resumed or the shard stops. */
 	reset(): void;
+	/**
+	 * Report a gateway failure.
+	 * @param error - Failure cause.
+	 * @param fatal - True when the shard has stopped permanently.
+	 */
 	failure(error: Error, fatal: boolean): void;
+	/** Observe each lifecycle state change synchronously, when supplied. */
 	state?(state: $GatewayState): void;
 }
 
@@ -72,6 +97,12 @@ export class GatewayShard {
 	private resolveStart?: () => void;
 	private rejectStart?: (error: Error) => void;
 
+	/**
+	 * Create one gateway shard without connecting.
+	 * @param options - Token, shard tuple, transport, and recovery settings.
+	 * @param callbacks - Synchronous dispatch and lifecycle callbacks.
+	 * @throws If the URL, intents, shard tuple, or numeric limits are invalid.
+	 */
 	public constructor(
 		options: $GatewayOptions,
 		private readonly callbacks: $GatewayCallbacks,
@@ -106,9 +137,15 @@ export class GatewayShard {
 			() => this.retry(new Error("Gateway heartbeat was not acknowledged.")),
 		);
 	}
+	/** Current gateway lifecycle state. */
 	public get state(): $GatewayState {
 		return this.current;
 	}
+	/**
+	 * Connect once and recover temporary failures within the configured retry limit.
+	 * @returns The shared startup promise, resolved at READY or RESUMED.
+	 * @throws If already stopped or a fatal connection failure occurs.
+	 */
 	public start(): Promise<void> {
 		if (this.stopped) return Promise.reject(new Error("Gateway is closed."));
 		if (this.startPromise) return this.startPromise;
@@ -337,6 +374,10 @@ export class GatewayShard {
 		this.stop(error);
 		this.callbacks.failure(error, true);
 	}
+	/**
+	 * Permanently stop the shard, cancel timers, abort identification, and reset its session. Repeated calls do nothing.
+	 * @param reason - Error used to reject unfinished startup; defaults to a gateway-closed error.
+	 */
 	public stop(reason = new Error("Gateway closed.")): void {
 		if (this.stopped) return;
 		this.stopped = true;

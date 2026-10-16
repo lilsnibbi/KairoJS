@@ -109,6 +109,7 @@ export const GuildLimits = {
 
 /** Namespace containing limits related to premium Discord guilds. */
 export const PremiumGuildLimits = {
+	/** Bundled limits for this guild boost tier. */
 	TierOne: {
 		/** Maximum static emojis allowed in a guild. */
 		MaximumStaticEmojis: 100,
@@ -122,6 +123,7 @@ export const PremiumGuildLimits = {
 		/** Maximum stickers allowed in a guild. */
 		MaximumStickers: 15,
 	},
+	/** Bundled limits for this guild boost tier. */
 	TierTwo: {
 		/** Maximum static emojis allowed in a guild. */
 		MaximumStaticEmojis: 150,
@@ -135,6 +137,7 @@ export const PremiumGuildLimits = {
 		/** Maximum stickers allowed in a guild. */
 		MaximumStickers: 30,
 	},
+	/** Bundled limits for this guild boost tier. */
 	TierThree: {
 		/** Maximum static emojis allowed in a guild. */
 		MaximumStaticEmojis: 250,

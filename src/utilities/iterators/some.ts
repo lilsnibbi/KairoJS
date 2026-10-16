@@ -2,7 +2,10 @@ import type { IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Advances the iterable until it finds a matching element, returning `true` if it's found and `false` otherwise. */
+/**
+ * Test values with callbackFn(value, zeroBasedIndex), stopping at the first true result. Empty input returns false.
+ * Callback errors propagate.
+ */
 export function some<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (element: ElementType, index: number) => boolean,

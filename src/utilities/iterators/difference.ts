@@ -2,7 +2,10 @@ import { filter } from "./filter";
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterable with the elements of the first iterable that are not in the second iterable. */
+/**
+ * Consume second into a Set, then lazily yield first values absent from that set. Duplicates in first are preserved. Also
+ * exported as except and omit.
+ */
 export function difference<const ElementType>(
 	first: IterableResolvable<ElementType>,
 	second: IterableResolvable<ElementType>,

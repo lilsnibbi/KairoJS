@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Advances the iterable until it finds the element, returning its index if it's found and `-1` otherwise. */
+/** Return the zero-based index of the first strictly equal value, or -1. Objects compare by identity. */
 export function indexOf<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	value: ElementType,

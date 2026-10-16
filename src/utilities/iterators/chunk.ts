@@ -3,7 +3,10 @@ import { assertPositive } from "./shared/_assertPositive";
 import { toIntegerOrThrow } from "./shared/_toIntegerOrThrow";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Chunks the iterable into arrays of at most `size` elements. */
+/**
+ * Lazily collect consecutive values into arrays of the requested size, including a shorter final chunk. Size is truncated;
+ * nonpositive, NaN, or infinite sizes throw.
+ */
 export function* chunk<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	size: number,

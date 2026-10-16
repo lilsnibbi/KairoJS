@@ -11,14 +11,27 @@ import {
 
 /** Handles Cron strings and generates dates based on the cron string provided. */
 export class Cron {
+	/** Original expression normalized to lowercase. */
 	public cron: string;
+	/** Expression after aliases, month/day names, and supported special tokens are expanded. */
 	public normalized: string;
+	/** Allowed minute values. */
 	public minutes: number[];
+	/** Allowed UTC hour values. */
 	public hours: number[];
+	/** Allowed day-of-month values. */
 	public days: number[];
+	/** Allowed month values, from 1 through 12. */
 	public months: number[];
+	/** Allowed UTC weekday values, Sunday 0 through Saturday 6. */
 	public dows: number[];
 
+	/**
+	 * Parse a five-field UTC cron expression or predefined alias.
+	 * @param cron - Minute, hour, day, month, and weekday expression.
+	 * @throws If the expression cannot be parsed. This standalone helper is separate from the scheduler’s cron-parser
+	 * backend.
+	 */
 	public constructor(cron: string) {
 		this.cron = cron.toLowerCase();
 		this.normalized = Cron.normalize(this.cron);

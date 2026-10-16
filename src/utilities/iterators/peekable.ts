@@ -1,6 +1,6 @@
 import { from, type IterableResolvable } from "./from";
 
-/** Create an iterator that allows you to peek at the next element without advancing the iterator.  @template ElementType The type of elements in the iterable. */
+/** Wrap a source with one-result lookahead. Repeated peek() calls reuse the saved result until next() consumes it. */
 export function peekable<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): Peekable<ElementType> {
@@ -25,6 +25,8 @@ export function peekable<const ElementType>(
 	};
 }
 
+/** Iterable iterator with one-result lookahead. */
 export interface Peekable<T> extends IterableIterator<T> {
+	/** Read and save the next result without consuming it from this wrapper. Repeated peeks return the same saved result. */
 	peek(): IteratorResult<T>;
 }

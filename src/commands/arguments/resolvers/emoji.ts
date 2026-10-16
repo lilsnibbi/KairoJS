@@ -8,6 +8,11 @@ import { Identifiers } from "../../errors/Identifiers";
 
 const TwemojiRegex = createTwemojiRegex();
 
+/**
+ * Find a Unicode emoji or parse a custom Discord emoji.
+ * @param parameter - Input text.
+ * @returns Emoji metadata, or ArgumentEmojiError when none can be parsed.
+ */
 export function resolveEmoji(
 	parameter: string,
 ): Result<EmojiObject, Identifiers> {
@@ -35,8 +40,12 @@ export function resolveEmoji(
 	return Result.err(Identifiers.ArgumentEmojiError);
 }
 
+/** Parsed Unicode or custom Discord emoji. */
 export interface EmojiObject {
+	/** Unicode emoji text or custom emoji name, or null when unavailable. */
 	name: string | null;
+	/** Custom emoji ID, or null for Unicode emoji. */
 	id: string | null;
+	/** Whether a custom emoji is animated, when known. */
 	animated?: boolean;
 }

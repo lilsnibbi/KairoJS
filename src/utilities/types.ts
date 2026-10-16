@@ -1,8 +1,11 @@
+/** JavaScript primitive value, including null and undefined. */
 export type Primitive =
 	string | number | boolean | bigint | symbol | undefined | null;
 
+/** Primitive, function, Date, Error, or RegExp left intact by the deep utility types. */
 export type Builtin = Primitive | Function | Date | Error | RegExp;
 
+/** Recursively make object fields and collection values read-only at the type level. Built-ins and callable types are preserved. */
 export type DeepReadonly<T> = T extends Builtin
 	? T
 	: // Skip class constructors and functions
@@ -24,6 +27,7 @@ export type DeepReadonly<T> = T extends Builtin
 									? { readonly [K in keyof T]: DeepReadonly<T[K]> }
 									: unknown;
 
+/** Recursively require properties and remove nullish values, including collection entries and promised values. */
 export type DeepRequired<T> = T extends Builtin
 	? NonNullable<T>
 	: T extends Map<infer K, infer V>
@@ -44,12 +48,15 @@ export type DeepRequired<T> = T extends Builtin
 									? { [K in keyof T]-?: DeepRequired<T[K]> }
 									: NonNullable<T>;
 
+/** Require every property except K, whose properties become optional. */
 export type RequiredExcept<T, K extends keyof T> = Partial<Pick<T, K>> &
 	Required<Omit<T, K>>;
 
+/** Require the properties in K and make all other properties optional. */
 export type PartialRequired<T, K extends keyof T> = Partial<Omit<T, K>> &
 	Required<Pick<T, K>>;
 
+/** Recursively make object properties optional, including elements inside arrays. */
 export type DeepPartial<T> = {
 	[P in keyof T]?: T[P] extends Array<infer U>
 		? Array<DeepPartial<U>>
@@ -58,6 +65,7 @@ export type DeepPartial<T> = {
 			: DeepPartial<T[P]>;
 };
 
+/** Extract a function’s parameter tuple. */
 export type ArgumentTypes<F extends (...args: any[]) => unknown> = F extends (
 	...args: infer A
 ) => any
@@ -78,10 +86,10 @@ export type AbstractCtor<
 	R = any,
 > = abstract new (...args: A) => R;
 
-/** A generic constructor without parameters */
+/** Class constructor producing T, with any constructor arguments. */
 export type Constructor<T> = new (...args: any[]) => T;
 
-/** A generic abstract constructor without parameters */
+/** Abstract class constructor producing T, with any constructor arguments. */
 export type AbstractConstructor<T> = abstract new (...args: any[]) => T;
 
 /** Get the first argument of any given function */
@@ -104,7 +112,7 @@ export type SecondArgument<T> = T extends (
 /** ReturnType for a function that can return either a value or a `Promise` with that value */
 export type Awaitable<T> = PromiseLike<T> | T;
 
-/** Type union for the full 2 billion dollar mistake in the JavaScript ecosystem */
+/** Either null or undefined. */
 export type Nullish = null | undefined;
 
 /** Similar to the built in {@link NonNullable}, but properly removes `null` from all keys in the class or interface This does not recurse deeply, for that use {@link DeepRequired} */

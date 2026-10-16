@@ -1,3 +1,7 @@
+/**
+ * Listen for framework events and dispatch Discord interactions through module handlers.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export * from "../events/events";

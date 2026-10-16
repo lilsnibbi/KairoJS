@@ -19,6 +19,10 @@ export class ContextMenuInteractionOptionResolver {
 		| APIUserInteractionDataResolved
 		| null = null;
 
+	/**
+	 * Read a native Discord context-menu payload without HTTP requests.
+	 * @param interaction - Native API interaction payload, including any resolved entity tables.
+	 */
 	public constructor(interaction: APIContextMenuInteraction) {
 		this.interaction = interaction;
 
@@ -41,10 +45,21 @@ export class ContextMenuInteractionOptionResolver {
 		];
 	}
 
-	/** Get the target member for a context menu interaction */
+	/**
+	 * Read resolved guild-member data for a user context-menu target.
+	 * @param required - Throw when member data is missing. Defaults to false.
+	 * @returns Member data, or null when optional and unavailable.
+	 * @throws For a non-user context menu, missing required member, or malformed resolved payload.
+	 */
 	public getTargetMember<Required extends boolean = false>(
 		required?: Required,
 	): RequiredIf<Required, APIInteractionDataResolvedGuildMember>;
+	/**
+	 * Read resolved guild-member data for a user context-menu target.
+	 * @param required - Throw when member data is missing. Defaults to false.
+	 * @returns Member data, or null when optional and unavailable.
+	 * @throws For a non-user context menu, missing required member, or malformed resolved payload.
+	 */
 	public getTargetMember(
 		required = false,
 	): APIInteractionDataResolvedGuildMember | null {

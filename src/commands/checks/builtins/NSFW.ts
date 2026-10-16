@@ -6,7 +6,12 @@ import type {
 import { Identifiers } from "../../errors/Identifiers";
 import { AllFlowsPrecondition } from "../Precondition";
 
+/** Require the invocation channel’s nsfw field to be true. Available through CorePreconditions. */
 export class NSFWCheck extends AllFlowsPrecondition {
+	/**
+	 * Check a message invocation. Require the invocation channel’s nsfw field to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public messageRun(message: Message): AllFlowsPrecondition.Result {
 		// `nsfw` is undefined in DMChannel, doing `=== true`
 		// will result on it returning `false`.
@@ -18,6 +23,10 @@ export class NSFWCheck extends AllFlowsPrecondition {
 				});
 	}
 
+	/**
+	 * Check a slash invocation. Require the invocation channel’s nsfw field to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public async chatInputRun(
 		interaction: ChatInputCommandInteraction,
 	): AllFlowsPrecondition.AsyncResult {
@@ -34,6 +43,10 @@ export class NSFWCheck extends AllFlowsPrecondition {
 				});
 	}
 
+	/**
+	 * Check a context-menu invocation. Require the invocation channel’s nsfw field to be true.
+	 * @returns Ok to allow or a precondition error to deny. Any failed Discord fetch rejects.
+	 */
 	public async contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 	): AllFlowsPrecondition.AsyncResult {

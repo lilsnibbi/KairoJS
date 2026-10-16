@@ -10,6 +10,7 @@ export type MessagePrompterMessage = ArgumentTypes<
 	PartialTextBasedChannelFields["send"]
 >[0];
 
+/** Supported prompt channel types, excluding voice/stage and category channels. Runtime strategies also verify they can send text. */
 export type MessagePrompterChannelTypes = Exclude<
 	ChannelTypes,
 	VoiceBasedChannelTypes | CategoryChannel

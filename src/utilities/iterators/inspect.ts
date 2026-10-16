@@ -2,7 +2,7 @@ import { from, type IterableResolvable } from "./from";
 import { assertFunction } from "./shared/_assertFunction";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 
-/** Does something with each element of an iterator, passing the value on. */
+/** Lazily call callbackFn(value, zeroBasedIndex) for each value, then yield that same value. Callback errors propagate. */
 export function inspect<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	callbackFn: (element: ElementType, index: number) => void,

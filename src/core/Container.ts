@@ -9,20 +9,32 @@ import { ModuleRegistry } from "./modules/ModuleRegistry";
 
 /** Shared client services. Add your own properties by augmenting kairojs. */
 export interface Container {
+	/** The current module registry; initialized even before a client is created. */
 	modules: ModuleRegistry;
+	/** The active KairoClient. Available after construction and removed on shutdown. */
 	client: KairoClient;
 	/** The active client's shard messaging and live stats API. */
 	readonly sharding: ShardLink;
+	/** The active client’s logger. Assigned during client construction. */
 	logger: LoggerLike;
-	applicationCommandRegistries: { acquire: typeof acquire };
+	/** Access to named application command registries. */
+	applicationCommandRegistries: {
+		/** Get the registry for a command name, creating it when needed. */
+		acquire: typeof acquire
+	};
+	/** Locale manager, present while the localisation extension is enabled. */
 	i18n: LocaleManager;
+	/** Task scheduler, present while the scheduledtasks extension is enabled. */
 	tasks: TaskScheduler;
+	/** Service lookup, present while the services extension is enabled. */
 	services: Services;
 }
 
-/** Services for the active client. Optional features fill their own entries. */
+/** Shared framework services. Client-specific entries are populated by KairoClient and enabled extensions. */
 export const container = {
+	/** Initial shared registry, replaced by the active client’s module registry. */
 	modules: new ModuleRegistry(),
+	/** Active client’s shard messaging and live stats API. Access requires an active client. */
 	get sharding(): ShardLink {
 		return this.client.sharding;
 	},

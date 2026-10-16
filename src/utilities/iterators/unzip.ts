@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an array for each element of the input iterable, transposing the input iterable. The opposite of {@linkcode zip}. */
+/** Consume equally sized arrays into one output array per column. Empty input, non-array values, or unequal row lengths throw. */
 export function unzip<const ElementType extends readonly any[]>(
 	iterable: IterableResolvable<ElementType>,
 ): UnzipIterable<ElementType> {
@@ -37,6 +37,7 @@ export function unzip<const ElementType extends readonly any[]>(
 	return results as UnzipIterable<ElementType>;
 }
 
+/** Column-array tuple produced by unzipping rows of the supplied tuple type. */
 export type UnzipIterable<ElementType extends readonly any[]> = {
 	-readonly [P in keyof ElementType]: ElementType[P][];
 };

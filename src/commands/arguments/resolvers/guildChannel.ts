@@ -7,6 +7,12 @@ import type { GuildBasedChannelTypes } from "../../../utilities/discord/index";
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Look up a cached guild channel by ID, mention, or exact case-insensitive name.
+ * @param parameter - Channel lookup text.
+ * @param guild - Guild whose channel cache is searched.
+ * @returns The channel, or ArgumentGuildChannelError.
+ */
 export function resolveGuildChannel(
 	parameter: string,
 	guild: Guild,

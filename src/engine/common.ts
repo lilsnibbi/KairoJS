@@ -1,8 +1,15 @@
-/** Injectable time and randomness keep failure paths deterministic. */
+/** Clock, random source, and timer hooks used by the engine. Supply these together when controlling time. */
 export interface $Clock {
+	/** Return monotonic milliseconds used for deadlines and rate limits. */
 	now(): number;
+	/** Return a random number from 0 inclusive to 1 exclusive for reconnect jitter. */
 	random(): number;
+	/** Schedule a callback after the given milliseconds and return a timer handle. */
 	setTimeout(callback: () => void, milliseconds: number): unknown;
+	/**
+	 * Cancel a timer created by this clock.
+	 * @param handle - Handle returned by setTimeout.
+	 */
 	clearTimeout(handle: unknown): void;
 }
 

@@ -1,3 +1,7 @@
+/**
+ * Define message and application commands, parse arguments, register Discord commands, and run command checks.
+ * @packageDocumentation
+ */
 import "../core/runtime";
 
 export * from "../commands/arguments/Args";
@@ -5,6 +9,7 @@ export * from "../commands/arguments/Argument";
 export * from "../commands/arguments/ArgumentStore";
 export * from "../commands/arguments/contexts";
 export type { EmojiObject } from "../commands/arguments/resolvers/emoji";
+/** Built-in argument resolver functions returning Result values. */
 export * as Resolvers from "../commands/arguments/resolvers/index";
 export type { MessageResolverOptions } from "../commands/arguments/resolvers/message";
 export * from "../commands/Command";
@@ -20,6 +25,7 @@ export * from "../commands/checks/containers/permissions/user";
 export { CorePreconditions } from "../commands/checks/core";
 export * from "../commands/checks/Precondition";
 export * from "../commands/checks/PreconditionStore";
+/** Reusable command-check functions returning success or UserError results. */
 export * as PreconditionResolvers from "../commands/checks/resolvers/index";
 export * from "../commands/enums";
 export * from "../commands/errors/ArgumentError";

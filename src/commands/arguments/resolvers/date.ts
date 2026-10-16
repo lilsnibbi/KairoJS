@@ -1,9 +1,20 @@
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Parse text with new Date() and check optional inclusive timestamp bounds.
+ * @param parameter - Input text.
+ * @param options - Optional resolver settings.
+ * @returns Date, or a parse/too-early/too-far identifier.
+ */
 export function resolveDate(
 	parameter: string,
-	options?: { minimum?: number; maximum?: number },
+	options?: {
+		/** Inclusive minimum Unix timestamp in milliseconds. Omit for no lower bound. */
+		minimum?: number;
+		/** Inclusive maximum Unix timestamp in milliseconds. Omit for no upper bound. */
+		maximum?: number
+	},
 ): Result<
 	Date,
 	| Identifiers.ArgumentDateError

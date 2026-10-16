@@ -2,6 +2,13 @@ import type { PathLike } from "node:fs";
 import { opendir } from "node:fs/promises";
 import { join } from "node:path";
 
+/**
+ * Walk directories recursively and yield file paths without following symbolic-link entries.
+ * @param path - Root directory.
+ * @param predicate - Test each file’s basename, including extension. Defaults to accepting every file.
+ * @returns Async iterator of paths joined to the root.
+ * @throws If directory access or the predicate fails.
+ */
 export async function* findFilesRecursively(
 	path: PathLike,
 	predicate: (filePath: string) => boolean = () => true,
@@ -17,7 +24,12 @@ export async function* findFilesRecursively(
 	}
 }
 
-/** Note that we do **not** support a full globby pattern using asterisk for wildcards. It has to be an exact match with {@link String.startsWith} */
+/**
+ * Walk subdirectories and yield paths whose file basenames start with the literal text.
+ * @param path - Directory to walk.
+ * @param fileStartsWith - Case-sensitive text to match, without wildcard expansion.
+ * @returns Lazy async iterator of matching paths. Filesystem failures reject iteration.
+ */
 export function findFilesRecursivelyStringStartsWith(
 	path: PathLike,
 	fileStartsWith: string,
@@ -27,7 +39,12 @@ export function findFilesRecursivelyStringStartsWith(
 	);
 }
 
-/** A literal filename suffix. Wildcard patterns are not supported. */
+/**
+ * Walk subdirectories and yield paths whose file basenames end with the literal text.
+ * @param path - Directory to walk.
+ * @param fileEndsWith - Case-sensitive text to match, without wildcard expansion.
+ * @returns Lazy async iterator of matching paths. Filesystem failures reject iteration.
+ */
 export function findFilesRecursivelyStringEndsWith(
 	path: PathLike,
 	fileEndsWith: string,
@@ -37,7 +54,12 @@ export function findFilesRecursivelyStringEndsWith(
 	);
 }
 
-/** Note that we do **not** support a full globby pattern using asterisk for wildcards. It has to be an exact match with {@link String.includes} */
+/**
+ * Walk subdirectories and yield paths whose file basenames contain the literal text.
+ * @param path - Directory to walk.
+ * @param include - Case-sensitive text to match, without wildcard expansion.
+ * @returns Lazy async iterator of matching paths. Filesystem failures reject iteration.
+ */
 export function findFilesRecursivelyStringIncludes(
 	path: PathLike,
 	include: string,
@@ -45,6 +67,12 @@ export function findFilesRecursivelyStringIncludes(
 	return findFilesRecursively(path, (filePath) => filePath.includes(include));
 }
 
+/**
+ * Yield files whose basenames match the supplied regex. Global/sticky regex state is not reset.
+ * @param path - Root directory.
+ * @param regex - Basename test.
+ * @returns An async file-path iterator; directory failures propagate.
+ */
 export function findFilesRecursivelyRegex(path: PathLike, regex: RegExp) {
 	return findFilesRecursively(path, (filePath) => regex.test(filePath));
 }

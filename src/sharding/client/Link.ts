@@ -110,6 +110,10 @@ export class ShardLink extends ShardMessenger {
 		reject: (error: unknown) => void;
 	};
 	private dormantReason?: string;
+	/**
+	 * Created by KairoClient. Use client.sharding to register handlers and send requests.
+	 * @internal
+	 */
 	public constructor(
 		private readonly config: ShardConfig | undefined,
 		private readonly shutdown: (code: number, cause?: unknown) => Promise<void>,
@@ -142,7 +146,15 @@ export class ShardLink extends ShardMessenger {
 	public get pendingCount(): number {
 		return this.requests.size;
 	}
-	/** First handler wins. Unsubscribe affects future invocations; existing work keeps its handler. */
+	/**
+	 * Register a local handler. Duplicate names and the built-in stats name are rejected.
+	 * @param name - Name declared in ShardRequests.
+	 * @param handler - Receives validated input and a cancellation context; return plain JSON output.
+	 * @param validate - Optional synchronous input validator. Throw to reject the request; its return value becomes handler
+	 * input.
+	 * @returns An unsubscribe callback for future invocations. Already running work keeps its handler.
+	 * @throws If the name or callbacks are invalid, already registered, reserved, or the link is closed.
+	 */
 	public handle<K extends ShardRequestName>(
 		name: K,
 		handler: (
@@ -174,7 +186,11 @@ export class ShardLink extends ShardMessenger {
 			if (this.handlers.get(name) === entry) this.handlers.delete(name);
 		};
 	}
-	/** Normally called by login. Explicit connect supports transport-only processes without Discord login. */
+	/**
+	 * Open managed IPC and wait for a reconciled, assigned shard. Normally called by client.login().
+	 * @returns The shared connection promise. Dormant children wait until assigned.
+	 * @throws If unmanaged, closed, or the handshake fails.
+	 */
 	public connect(): Promise<void> {
 		if (!this.config)
 			return Promise.reject(
@@ -226,6 +242,12 @@ export class ShardLink extends ShardMessenger {
 		}
 		return this.assignmentWait.promise;
 	}
+	/**
+	 * Wait for coordinator reconciliation when requested and deduct waiting time from the call budget.
+	 * @param options - Deadline, cancellation, and wait settings.
+	 * @returns Settings with the remaining timeout.
+	 * @throws On closure, disconnection, exhausted wait capacity, cancellation, or timeout.
+	 */
 	protected override prepare(
 		options: ShardCallOptions,
 	): Promise<ShardCallOptions> {
@@ -235,6 +257,15 @@ export class ShardLink extends ShardMessenger {
 			this.policy.maxPending - this.requests.size,
 		);
 	}
+	/**
+	 * Route one JSON request through the coordinator and await its reply.
+	 * @param target - Target shard ID in the configured range.
+	 * @param name - Registered request name.
+	 * @param payload - Plain JSON input.
+	 * @param options - Deadline and cancellation settings.
+	 * @returns The handler’s output.
+	 * @throws If preparation, validation, transport, or the remote handler fails.
+	 */
 	protected override async call(
 		target: number,
 		name: string,
@@ -656,6 +687,10 @@ export class ShardLink extends ShardMessenger {
 			process.exit(code);
 		})());
 	}
+	/**
+	 * Stop IPC listeners and timers, reject pending work, and abort running handlers.
+	 * @returns The shared close promise, waiting briefly for handlers to settle. Normally called by client.destroy().
+	 */
 	public close(): Promise<void> {
 		this.closed = true;
 		this.connected = false;

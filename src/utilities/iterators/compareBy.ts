@@ -8,7 +8,10 @@ import {
 } from "./shared/_compare";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** {@link LexicographicComparison Lexicographically} compares the elements of both iterators are equal. That is: */
+/**
+ * Compare two sources value by value using a comparator. Undefined sorts last without calling the comparator; a shared
+ * prefix sorts before a longer source. Return -1, 0, or 1.
+ */
 export function compareBy<const ElementType>(
 	iterable: IterableResolvable<ElementType | undefined>,
 	other: IterableResolvable<ElementType | undefined>,

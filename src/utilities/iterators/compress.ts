@@ -1,7 +1,7 @@
 import { from, type IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create a new iterable of the first iterable based on the truthiness of the corresponding element in the second iterable. */
+/** Lazily yield input values whose corresponding selector is truthy. Stop when the input or selector source ends. */
 export function* compress<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	selectors: IterableResolvable<boolean>,

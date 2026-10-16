@@ -20,14 +20,25 @@ import type {
 
 /** Owns synchronous resident state. Native gateway payloads remain untouched. */
 export class EngineCache {
+	/** Guild metadata keyed by guild ID. Gateway snapshots may be partial. */
 	public readonly guilds = new CacheStore<$CacheEntities["guild"]>();
+	/** Channels keyed by channel ID. */
 	public readonly channels = new CacheStore<APIChannel>();
+	/** Roles grouped by guild ID, then role ID. */
 	public readonly roles = new ScopedCache<APIRole>(Number.POSITIVE_INFINITY);
+	/** Members grouped by guild ID, then user ID. */
 	public readonly members: ScopedCache<APIGuildMember>;
+	/** Messages grouped by channel ID, then message ID. */
 	public readonly messages: ScopedCache<APIMessage>;
 	private readonly channelOwners = new Map<string, string>();
 	private readonly options: $CacheOptions;
 
+	/**
+	 * Create empty resident caches.
+	 * @param options - Entity filters and per-scope limits. Messages default to disabled; member caches default to 1000 per
+	 * guild.
+	 * @throws RangeError for invalid numeric limits.
+	 */
 	public constructor(options: $CacheOptions = {}) {
 		this.options = { ...options };
 		if (typeof options.membersPerGuild === "number")
@@ -41,6 +52,7 @@ export class EngineCache {
 		);
 		this.messages = new ScopedCache(options.messagesPerChannel ?? 0);
 	}
+	/** Remove all resident entities and channel ownership metadata. */
 	public clear(): void {
 		this.guilds.clear();
 		this.channels.clear();
@@ -67,11 +79,23 @@ export class EngineCache {
 			enabled && (this.options.policy?.({ kind, id, scope, data }) ?? true)
 		);
 	}
+	/**
+	 * Store a full member if the cache policy accepts it; otherwise remove its existing entry.
+	 * @param guildId - Owning guild.
+	 * @param id - Member’s user ID.
+	 * @param data - Full native member.
+	 */
 	public putMember(guildId: string, id: string, data: APIGuildMember): void {
 		if (this.allows("member", id, guildId, data))
 			this.members.put(guildId, id, data);
 		else this.members.delete(guildId, id);
 	}
+	/**
+	 * Merge partial member fields when accepted by policy; otherwise remove its existing entry.
+	 * @param guildId - Owning guild.
+	 * @param id - Member’s user ID.
+	 * @param data - Known member fields.
+	 */
 	public patchMember(
 		guildId: string,
 		id: string,
@@ -81,6 +105,11 @@ export class EngineCache {
 			this.members.patch(guildId, id, data);
 		else this.members.delete(guildId, id);
 	}
+	/**
+	 * Store a full channel when accepted by policy and channel settings.
+	 * @param data - Native channel.
+	 * @param guildId - Optional owner override; otherwise use the payload’s guild ID.
+	 */
 	public putChannel(data: APIChannel, guildId?: string): void {
 		const scope =
 			guildId ?? ("guild_id" in data ? data.guild_id : undefined) ?? "";
@@ -92,6 +121,11 @@ export class EngineCache {
 			if (!this.messages.size(data.id)) this.channelOwners.delete(data.id);
 		}
 	}
+	/**
+	 * Store a full message when enabled and accepted by policy.
+	 * @param data - Native message, scoped by channel_id.
+	 * @param guildId - Optional guild owner used for later guild cleanup.
+	 */
 	public putMessage(data: APIMessage, guildId?: string): void {
 		if (this.allows("message", data.id, data.channel_id, data)) {
 			const entry = this.messages.put(data.channel_id, data.id, data);
@@ -123,7 +157,11 @@ export class EngineCache {
 			if (owner === id) this.removeChannel(channelId);
 	}
 
-	/** Run once per dispatch, before invoking public handlers. */
+	/**
+	 * Apply one gateway dispatch synchronously before public handlers run. Native payloads remain untouched.
+	 * @param payload - Native gateway dispatch.
+	 * @returns Deletion records with previous cache entries when available.
+	 */
 	public apply(payload: $GatewayDispatch): $CacheDeletion[] {
 		const data = payload.d;
 		const scope =

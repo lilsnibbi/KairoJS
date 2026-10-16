@@ -13,16 +13,25 @@ import type {
 } from "../types";
 import { type AsyncPreconditionResult, Precondition } from "./Precondition";
 
+/** Store of check modules, including a global list ordered by position. */
 export class PreconditionStore extends ModuleStore<
 	Precondition,
 	"preconditions"
 > {
 	private readonly globalPreconditions: Precondition[] = [];
 
+	/** Create an empty preconditions store. */
 	public constructor() {
 		super(Precondition, { name: "preconditions" });
 	}
 
+	/**
+	 * Run global checks for a message invocation in position order, stopping at the first Err.
+	 * @param message - Triggering message.
+	 * @param command - Command being checked.
+	 * @param context - Shared invocation data; defaults to an empty object.
+	 * @returns Ok if all checks allow, or the first denial. Missing flow handlers return an error; thrown checks reject.
+	 */
 	public async messageRun(
 		message: Message,
 		command: MessageCommand,
@@ -44,6 +53,13 @@ export class PreconditionStore extends ModuleStore<
 		return Result.ok();
 	}
 
+	/**
+	 * Run global checks for a slash invocation in position order, stopping at the first Err.
+	 * @param interaction - Triggering interaction.
+	 * @param command - Command being checked.
+	 * @param context - Shared invocation data; defaults to an empty object.
+	 * @returns Ok if all checks allow, or the first denial. Missing flow handlers return an error; thrown checks reject.
+	 */
 	public async chatInputRun(
 		interaction: ChatInputCommandInteraction,
 		command: ChatInputCommand,
@@ -65,6 +81,13 @@ export class PreconditionStore extends ModuleStore<
 		return Result.ok();
 	}
 
+	/**
+	 * Run global checks for a context-menu invocation in position order, stopping at the first Err.
+	 * @param interaction - Triggering interaction.
+	 * @param command - Command being checked.
+	 * @param context - Shared invocation data; defaults to an empty object.
+	 * @returns Ok if all checks allow, or the first denial. Missing flow handlers return an error; thrown checks reject.
+	 */
 	public async contextMenuRun(
 		interaction: ContextMenuCommandInteraction,
 		command: ContextMenuCommand,
@@ -86,6 +109,12 @@ export class PreconditionStore extends ModuleStore<
 		return Result.ok();
 	}
 
+	/**
+	 * Store a check and add it to the global list when position is non-null. Equal positions put the new entry first.
+	 * @param key - Lookup name.
+	 * @param value - Check module.
+	 * @returns This store. Prefer insert() when lifecycle hooks must run.
+	 */
 	public override set(key: string, value: Precondition): this {
 		if (value.position !== null) {
 			const index = this.globalPreconditions.findIndex(
@@ -100,6 +129,11 @@ export class PreconditionStore extends ModuleStore<
 		return super.set(key, value);
 	}
 
+	/**
+	 * Remove the named check from lookup and the global list.
+	 * @param key - Lookup name.
+	 * @returns Whether the lookup entry existed. Use unload() to run cleanup.
+	 */
 	public override delete(key: string): boolean {
 		const index = this.globalPreconditions.findIndex(
 			(precondition) => precondition.name === key,
@@ -111,6 +145,7 @@ export class PreconditionStore extends ModuleStore<
 		return super.delete(key);
 	}
 
+	/** Clear lookup entries and the global check list. Use unloadAll() to run cleanup. */
 	public override clear(): void {
 		this.globalPreconditions.length = 0;
 		super.clear();

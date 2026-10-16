@@ -17,9 +17,11 @@ import {
 import { BucketScope, CommandOptionsRunTypeEnum } from "./enums";
 import type { ApplicationCommandRegistry } from "./registration/Registry";
 
+/** Detailed help text, or a custom description object interpreted by your application. */
 export type DetailedDescriptionCommand =
 	string | DetailedDescriptionCommandObject;
 
+/** Augmentable shape for application-specific command help data. KairoJS stores it without interpreting its fields. */
 export interface DetailedDescriptionCommandObject {}
 
 /** The allowed values for {@link CommandOptions.runIn}. */
@@ -43,8 +45,11 @@ export type CommandRunInUnion =
 
 /** A more detailed structure for {@link CommandOptions.runIn} when you want to have a different `runIn` for each command type. */
 export interface CommandSpecificRunIn {
+	/** Channel types allowed for slash commands. Omit to leave this flow unrestricted. */
 	chatInputRun?: CommandRunInUnion;
+	/** Channel types allowed for message commands. Omit to leave this flow unrestricted. */
 	messageRun?: CommandRunInUnion;
+	/** Channel types allowed for context-menu commands. Omit to leave this flow unrestricted. */
 	contextMenuRun?: CommandRunInUnion;
 }
 
@@ -67,36 +72,32 @@ export interface CommandOptions
 	 * @default '' */
 	detailedDescription?: DetailedDescriptionCommand;
 
-	/** The full category path for the command
-	 * @default 'An array of folder names that lead back to the folder that is registered for in the commands store' */
+	/** Category folder names. Defaults to the module’s directories relative to its configured root. */
 	fullCategory?: string[];
 
-	/** The {@link Precondition}s to be run, accepts an array of their names. @seealso {@link PreconditionContainerArray}
-	 * @default [] */
+	/** Command checks as names, named entries with context, or nested groups. Defaults to an empty list. */
 	preconditions?: readonly PreconditionEntryResolvable[];
 
-	/** The quotes accepted by this command, pass `[]` to disable them.
-	 * @default */
+	/**
+	 * Opening/closing quote pairs accepted by message argument parsing. Defaults to straight double quotes, curly double
+	 * quotes, CJK corner brackets, and guillemets. Pass [] to disable quoting.
+	 */
 	quotes?: [string, string][];
 
 	/** Set whether the command should be treated as NSFW. If set to true, the `NSFW` precondition will be added to the list.
 	 * @default false */
 	nsfw?: boolean;
 
-	/** The number of entries the cooldown can have before filling up, if set to a non-zero value alongside {@link CommandOptions.cooldownDelay}, the `Cooldown` precondition will be added to the list.
-	 * @default 1 */
+	/** Uses per cooldown bucket. Defaults to client.defaultCooldown.limit or 1. A positive limit and delay enable the cooldown check. */
 	cooldownLimit?: number;
 
-	/** The time in milliseconds for the cooldown entries to reset, if set to a non-zero value alongside {@link CommandOptions.cooldownLimit}, the `Cooldown` precondition will be added to the list.
-	 * @default 0 */
+	/** Bucket reset time in milliseconds. Defaults to client.defaultCooldown.delay or 0, which disables the cooldown check. */
 	cooldownDelay?: number;
 
-	/** The scope of the cooldown entries.
-	 * @default BucketScope.User */
+	/** Bucket key scope. Defaults to client.defaultCooldown.scope or BucketScope.User. */
 	cooldownScope?: BucketScope;
 
-	/** The users that are exempt from the Cooldown precondition. Use this to filter out someone like a bot owner
-	 * @default undefined */
+	/** Users exempt from this command’s cooldown. Defaults to client.defaultCooldown.filteredUsers or an empty list. */
 	cooldownFilteredUsers?: Snowflake[];
 
 	/** The required permissions for the client.
@@ -111,20 +112,21 @@ export interface CommandOptions
 	 * @default null */
 	runIn?: CommandRunInUnion | CommandSpecificRunIn;
 
-	/** If {@link KairoClient.typing} is true, this option will override it. Otherwise, this option has no effect - you may call {@link Channel#sendTyping}` in the run method if you want specific commands to display the typing status.
-	 * @default true */
+	/** Send typing while this message command runs when client.options.typing is enabled. Defaults to true. */
 	typing?: boolean;
 }
 
+/** Matched prefix and command name for one message-command invocation. Extra fields may be added by your application. */
 export interface MessageCommandContext extends Record<PropertyKey, unknown> {
 	/** The prefix used to run this command.  This is a string for the mention and default prefix, and a RegExp for the `regexPrefix`. */
 	prefix: string | RegExp;
 	/** The alias used to run this command. */
 	commandName: string;
-	/** The matched prefix, this will always be the same as {@link MessageCommand.RunContext.prefix} if it was a string, otherwise it is the result of doing `prefix.exec(content)[0]`. */
+	/** Exact prefix text matched in the message, including a regex prefix match. */
 	commandPrefix: string;
 }
 
+/** Slash command name and Discord ID for one invocation. */
 export interface ChatInputCommandContext extends Record<PropertyKey, unknown> {
 	/** The name of the command. */
 	commandName: string;
@@ -132,6 +134,7 @@ export interface ChatInputCommandContext extends Record<PropertyKey, unknown> {
 	commandId: string;
 }
 
+/** Context-menu command name and Discord ID for one invocation. */
 export interface ContextMenuCommandContext extends Record<
 	PropertyKey,
 	unknown
@@ -142,6 +145,7 @@ export interface ContextMenuCommandContext extends Record<
 	commandId: string;
 }
 
+/** Command name and Discord ID for an autocomplete request. */
 export interface AutocompleteCommandContext extends Record<
 	PropertyKey,
 	unknown
@@ -152,66 +156,104 @@ export interface AutocompleteCommandContext extends Record<
 	commandId: string;
 }
 
+/** Command metadata returned by toJSON. */
 export interface CommandJSON extends AliasModuleJSON {
+	/** Short command description. */
 	description: string;
+	/** Detailed help text or custom help object. */
 	detailedDescription: DetailedDescriptionCommand;
+	/** First category folder, or null if none exists. */
 	category: string | null;
 }
 
+/** Command with an autocompleteRun handler. */
 export type AutocompleteCommand = Command &
 	Required<Pick<Command, "autocompleteRun">>;
 
+/** Types and helpers for {@link AutocompleteCommand}. */
 export namespace AutocompleteCommand {
+	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
+	/** Shorthand for {@link Command.JSON}. */
 	export type JSON = Command.JSON;
+	/** Shorthand for {@link Command.Context}. */
 	export type Context = Command.Context;
+	/** Shorthand for {@link CommandOptionsRunType}. */
 	export type RunInTypes = CommandOptionsRunType;
+	/** Shorthand for {@link AutocompleteCommandContext}. */
 	export type RunContext = AutocompleteCommandContext;
+	/** Shorthand for {@link AutocompleteInteraction}. */
 	export type Interaction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = AutocompleteInteraction<Cached>;
+	/** Shorthand for {@link ApplicationCommandRegistry}. */
 	export type Registry = ApplicationCommandRegistry;
 }
 
+/** Command with a contextMenuRun handler. */
 export type ContextMenuCommand = Command &
 	Required<Pick<Command, "contextMenuRun">>;
 
+/** Types and helpers for {@link ContextMenuCommand}. */
 export namespace ContextMenuCommand {
+	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
+	/** Shorthand for {@link Command.JSON}. */
 	export type JSON = Command.JSON;
+	/** Shorthand for {@link Command.Context}. */
 	export type Context = Command.Context;
+	/** Shorthand for {@link CommandOptionsRunType}. */
 	export type RunInTypes = CommandOptionsRunType;
+	/** Shorthand for {@link ContextMenuCommandContext}. */
 	export type RunContext = ContextMenuCommandContext;
+	/** Shorthand for {@link ContextMenuCommandInteraction}. */
 	export type Interaction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = ContextMenuCommandInteraction<Cached>;
+	/** Shorthand for {@link ApplicationCommandRegistry}. */
 	export type Registry = ApplicationCommandRegistry;
 }
 
+/** Command with a messageRun handler. */
 export type MessageCommand = Command & Required<Pick<Command, "messageRun">>;
 
+/** Types and helpers for {@link MessageCommand}. */
 export namespace MessageCommand {
+	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
+	/** Shorthand for {@link Command.JSON}. */
 	export type JSON = Command.JSON;
+	/** Shorthand for {@link Command.Context}. */
 	export type Context = Command.Context;
+	/** Shorthand for {@link CommandOptionsRunType}. */
 	export type RunInTypes = CommandOptionsRunType;
+	/** Shorthand for {@link MessageCommandContext}. */
 	export type RunContext = MessageCommandContext;
 }
 
+/** Command with a chatInputRun handler. */
 export type ChatInputCommand = Command &
 	Required<Pick<Command, "chatInputRun">>;
 
+/** Types and helpers for {@link ChatInputCommand}. */
 export namespace ChatInputCommand {
+	/** Shorthand for {@link Command.Options}. */
 	export type Options = Command.Options;
+	/** Shorthand for {@link Command.JSON}. */
 	export type JSON = Command.JSON;
+	/** Shorthand for {@link Command.Context}. */
 	export type Context = Command.Context;
+	/** Shorthand for {@link CommandOptionsRunType}. */
 	export type RunInTypes = CommandOptionsRunType;
+	/** Shorthand for {@link ChatInputCommandContext}. */
 	export type RunContext = ChatInputCommandContext;
+	/** Shorthand for {@link ChatInputCommandInteraction}. */
 	export type Interaction<
 		Cached extends import("discord.js").CacheType =
 			import("discord.js").CacheType,
 	> = ChatInputCommandInteraction<Cached>;
+	/** Shorthand for {@link ApplicationCommandRegistry}. */
 	export type Registry = ApplicationCommandRegistry;
 }

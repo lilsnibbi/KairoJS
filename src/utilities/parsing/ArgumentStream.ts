@@ -2,10 +2,17 @@ import { Option, Result } from "../result/index";
 import type { Parameter } from "./lexer/streams/ParameterStream";
 import type { ParserResult } from "./parser/ParserResult";
 
+/** Consume positional arguments while reading parsed flags/options independently. Rejected parses leave their argument available. */
 export class ArgumentStream {
+	/** Underlying positional parameters, flags, and named option values. */
 	public readonly results: ParserResult;
+	/** Mutable used-index set and next-position cursor. Use save/restore for temporary parsing. */
 	public state: ArgumentStream.State;
 
+	/**
+	 * Create a reader with no consumed positions.
+	 * @param results - Parsed positional, flag, and option data.
+	 */
 	public constructor(results: ParserResult) {
 		this.results = results;
 		this.state = { used: new Set(), position: 0 };
@@ -268,6 +275,13 @@ export class ArgumentStream {
 		return parameters.length ? Option.some(parameters) : Option.none;
 	}
 
+	/**
+	 * Select unused positional arguments, consuming only matches.
+	 * @param predicate - Test for whether to consume a value.
+	 * @param from - Starting position; defaults to the current cursor.
+	 * @returns Some with collected values, including an empty list if nothing matched. Returns None only when already
+	 * finished. Callback errors propagate.
+	 */
 	public filter(
 		predicate: (value: string) => boolean,
 		from = this.state.position,
@@ -288,6 +302,13 @@ export class ArgumentStream {
 		return Option.some(parameters);
 	}
 
+	/**
+	 * Select unused positional arguments, consuming only matches. Callbacks are awaited one at a time.
+	 * @param predicate - Test for whether to consume a value.
+	 * @param from - Starting position; defaults to the current cursor.
+	 * @returns A promise for Some with collected values, including an empty list if nothing matched. Returns None only when
+	 * already finished. Callback errors propagate.
+	 */
 	public async filterAsync(
 		predicate: (value: string) => Promise<boolean>,
 		from = this.state.position,
@@ -308,6 +329,13 @@ export class ArgumentStream {
 		return Option.some(parameters);
 	}
 
+	/**
+	 * Map unused positional arguments, consuming only Some results.
+	 * @param predicate - Mapper returning Some to accept or None to skip.
+	 * @param from - Starting position; defaults to the current cursor.
+	 * @returns Some with collected values, including an empty list if nothing matched. Returns None only when already
+	 * finished. Callback errors propagate.
+	 */
 	public filterMap<T>(
 		predicate: (value: string) => Option<T>,
 		from = this.state.position,
@@ -329,6 +357,13 @@ export class ArgumentStream {
 		return Option.some(parameters);
 	}
 
+	/**
+	 * Map unused positional arguments, consuming only Some results. Callbacks are awaited one at a time.
+	 * @param predicate - Mapper returning Some to accept or None to skip.
+	 * @param from - Starting position; defaults to the current cursor.
+	 * @returns A promise for Some with collected values, including an empty list if nothing matched. Returns None only when
+	 * already finished. Callback errors propagate.
+	 */
 	public async filterMapAsync<T>(
 		predicate: (value: string) => Promise<Option<T>>,
 		from = this.state.position,
@@ -371,6 +406,7 @@ export class ArgumentStream {
 		return entries.length ? Option.some(entries) : Option.none;
 	}
 
+	/** Copy the used-index set and cursor into a restorable state. */
 	public save(): ArgumentStream.State {
 		return {
 			used: new Set(this.state.used),
@@ -378,18 +414,27 @@ export class ArgumentStream {
 		};
 	}
 
+	/**
+	 * Adopt a saved state object without cloning it.
+	 * @param state - State from save() or an equivalent valid state.
+	 */
 	public restore(state: ArgumentStream.State) {
 		this.state = state;
 	}
 
+	/** Mark every positional argument unused and move the cursor to zero. */
 	public reset() {
 		this.restore({ used: new Set(), position: 0 });
 	}
 }
 
+/** Types and helpers for {@link ArgumentStream}. */
 export namespace ArgumentStream {
+	/** Consumption state for positional arguments. */
 	export interface State {
+		/** Zero-based positions already consumed. */
 		used: Set<number>;
+		/** Cursor used to begin the next positional read. */
 		position: number;
 	}
 }

@@ -1,7 +1,7 @@
 import { from, type IterableResolvable } from "./from";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 
-/** Create an iterable iterator from an iterable or iterator-like object. */
+/** Get a synchronous iterable iterator, wrapping a bare iterator when needed. The source is not copied; reads consume it. */
 export function toIterableIterator<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 ): IterableIterator<ElementType> {

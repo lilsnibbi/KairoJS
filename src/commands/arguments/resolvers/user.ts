@@ -7,6 +7,11 @@ import {
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Fetch a Discord user by ID or mention.
+ * @param parameter - User ID or mention.
+ * @returns The user, or ArgumentUserError for invalid input or a failed fetch.
+ */
 export async function resolveUser(
 	parameter: string,
 ): Promise<Result<User, Identifiers.ArgumentUserError>> {

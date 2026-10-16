@@ -1,7 +1,10 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterable with the elements that are in either input iterable. */
+/**
+ * Lazily yield each distinct value once across the sources, preserving first-seen order. Uses Set equality and retains
+ * seen values in memory.
+ */
 export function* union<const ElementType>(
 	...iterables: IterableResolvable<ElementType>[]
 ): IterableIterator<ElementType> {

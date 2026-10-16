@@ -26,32 +26,59 @@ import { Uint16Type } from "./Uint16";
 import { Uint32Type } from "./Uint32";
 import { Uint64Type } from "./Uint64";
 
+/** Built-in binary codecs and factories used by Schema. */
 export const t = {
+	/** Factory for the {@link ArrayType} codec. */
 	array: ArrayType,
+	/** Codec for a signed 32-bit bigint. */
 	bigInt32: BigInt32Type,
+	/** Codec for a signed 64-bit bigint. */
 	bigInt64: BigInt64Type,
+	/** Codec for a unsigned 32-bit bigint. */
 	bigUint32: BigUint32Type,
+	/** Codec for a unsigned 64-bit bigint. */
 	bigUint64: BigUint64Type,
+	/** Codec for a one-bit numeric value. */
 	bit: BitType,
+	/** Codec for a one-bit boolean. */
 	boolean: BooleanType,
+	/** Factory for the {@link ConstantType} codec. */
 	constant: ConstantType,
+	/** Factory for the {@link FixedLengthArrayType} codec. */
 	fixedLengthArray: FixedLengthArrayType,
+	/** Codec for a 32-bit floating-point number. */
 	float32: Float32Type,
+	/** Codec for a 64-bit floating-point number. */
 	float64: Float64Type,
+	/** Codec for a signed 16-bit integer. */
 	int16: Int16Type,
+	/** Codec for a signed 2-bit integer. */
 	int2: Int2Type,
+	/** Codec for a signed 32-bit integer. */
 	int32: Int32Type,
+	/** Codec for a signed 4-bit integer. */
 	int4: Int4Type,
+	/** Codec for a signed 64-bit number. */
 	int64: Int64Type,
+	/** Codec for a signed 8-bit integer. */
 	int8: Int8Type,
+	/** Factory for the {@link NullableType} codec. */
 	nullable: NullableType,
+	/** Codec for a unsigned 64-bit bigint decoded from a bigint or string input. */
 	snowflake: SnowflakeType,
+	/** Codec for a UTF-8 string with a 16-bit byte-length prefix. */
 	string: StringType,
+	/** Codec for a unsigned 16-bit integer. */
 	uint16: Uint16Type,
+	/** Codec for a unsigned 2-bit integer. */
 	uint2: Uint2Type,
+	/** Codec for a unsigned 32-bit integer. */
 	uint32: Uint32Type,
+	/** Codec for a unsigned 4-bit integer. */
 	uint4: Uint4Type,
+	/** Codec for a unsigned 64-bit number. */
 	uint64: Uint64Type,
+	/** Codec for a unsigned 8-bit integer. */
 	uint8: Uint8Type,
 };
 

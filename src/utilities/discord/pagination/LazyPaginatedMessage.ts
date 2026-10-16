@@ -10,7 +10,11 @@ import type {
 
 /** This is a LazyPaginatedMessage. Instead of resolving all pages that are functions on {@link PaginatedMessage.run} will resolve when requested. */
 export class LazyPaginatedMessage extends PaginatedMessage {
-	/** Only resolves the page corresponding with the handler's current index. */
+	/**
+	 * Resolve the current page and its immediate neighbors at startup, leaving other page functions unevaluated.
+	 * @param messageOrInteraction - Original pagination target.
+	 * @param target - User allowed to control the pages.
+	 */
 	public override async resolvePagesOnRun(
 		messageOrInteraction: Message | AnyInteractableInteraction,
 		target: User,
@@ -34,6 +38,11 @@ export class LazyPaginatedMessage extends PaginatedMessage {
 		return result;
 	}
 
+	/**
+	 * Add a page whose MessageBuilder callback is evaluated when that page is resolved.
+	 * @param builder - Builder or builder callback.
+	 * @returns This handler.
+	 */
 	public override addPageBuilder(
 		builder: MessageBuilder | ((builder: MessageBuilder) => MessageBuilder),
 	): this {
@@ -42,10 +51,20 @@ export class LazyPaginatedMessage extends PaginatedMessage {
 		);
 	}
 
+	/**
+	 * Add a lazily resolved text page.
+	 * @param content - Page text.
+	 * @returns This handler.
+	 */
 	public override addPageContent(content: string): this {
 		return this.addPage(() => ({ content }));
 	}
 
+	/**
+	 * Add a lazily resolved single-embed page.
+	 * @param embed - Embed data or callback receiving a fresh EmbedBuilder.
+	 * @returns This handler.
+	 */
 	public override addPageEmbed(
 		embed: EmbedResolvable | ((builder: EmbedBuilder) => EmbedResolvable),
 	): this {
@@ -55,6 +74,11 @@ export class LazyPaginatedMessage extends PaginatedMessage {
 		}));
 	}
 
+	/**
+	 * Add a lazily resolved embed page.
+	 * @param embeds - Embeds or callback receiving ten fresh builders. Results are capped at ten embeds.
+	 * @returns This handler.
+	 */
 	public override addPageEmbeds(
 		embeds:
 			| EmbedResolvable[]

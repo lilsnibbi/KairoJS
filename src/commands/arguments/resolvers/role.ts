@@ -6,6 +6,13 @@ import {
 import { Result } from "../../../utilities/result/index";
 import { Identifiers } from "../../errors/Identifiers";
 
+/**
+ * Fetch a role by ID or mention, then try an exact case-insensitive cached name.
+ * @param parameter - Role lookup text.
+ * @param guild - Guild to search.
+ * @returns The role, or ArgumentRoleError when no match exists.
+ * @throws If the role fetch rejects.
+ */
 export async function resolveRole(
 	parameter: string,
 	guild: Guild,

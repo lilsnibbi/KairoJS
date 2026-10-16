@@ -9,7 +9,10 @@ import {
 } from "./shared/_compare";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Check if the elements of this iterator are sorted using the given comparator function.  @seealso {@link isSorted} for a version that uses the default comparator. @seealso {@link isSortedByKey} for a version that allows custom key extractors. */
+/**
+ * Check adjacent values with a comparator, treating undefined as last. Empty and single-value sources pass. Stops at the
+ * first descending pair.
+ */
 export function isSortedBy<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	comparator: CompareByComparator<ElementType>,

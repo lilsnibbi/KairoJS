@@ -1,7 +1,7 @@
 import type { IterableResolvable } from "./from";
 import { toIterableIterator } from "./toIterableIterator";
 
-/** Create an iterable that yields the elements of each iterable in the input iterable. */
+/** Lazily flatten one level of nested synchronous sources. */
 export function* flat<const ElementType>(
 	iterables: IterableResolvable<IterableResolvable<ElementType>>,
 ): IterableIterator<ElementType> {

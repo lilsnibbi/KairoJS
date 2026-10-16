@@ -1,21 +1,29 @@
 import type { Lexer } from "../../Lexer";
 
+/** Stateful lazy stream of raw tokens. Iterating again continues from the current input position. */
 export class TokenStream implements Iterable<Token> {
 	private readonly input: string;
 	private readonly quotes: readonly [string, string][];
 	private readonly separator: string;
 	private position = 0;
 
+	/**
+	 * Create a tokenizer over input text.
+	 * @param lexer - Separator and quote rules.
+	 * @param input - Text to tokenize.
+	 */
 	public constructor(lexer: Lexer, input: string) {
 		this.quotes = lexer.quotes;
 		this.separator = lexer.separator;
 		this.input = input;
 	}
 
+	/** Whether the input cursor has reached the end. */
 	public get finished() {
 		return this.position >= this.input.length;
 	}
 
+	/** Yield separators, matched quoted groups, and words while advancing the shared cursor. */
 	public *[Symbol.iterator](): Iterator<Token> {
 		while (!this.finished) {
 			yield this.getPossibleSeparator() ??
@@ -60,27 +68,43 @@ export class TokenStream implements Iterable<Token> {
 	}
 }
 
+/** Raw token categories. */
 export enum TokenType {
+	/** Unquoted word text. */
 	Parameter,
+	/** Text enclosed by a configured quote pair. */
 	Quoted,
+	/** One configured literal separator. */
 	Separator,
 }
 
+/** Word, quoted-group, or separator token. */
 export type Token = WordToken | QuotedToken | SeparatorToken;
 
+/** One unquoted word token. */
 export interface WordToken {
+	/** Marks an unquoted parameter. */
 	readonly type: TokenType.Parameter;
+	/** Word text without separators. */
 	readonly value: string;
 }
 
+/** One quoted group with its delimiters preserved separately. */
 export interface QuotedToken {
+	/** Marks a quoted parameter. */
 	readonly type: TokenType.Quoted;
+	/** Text between the quote delimiters. */
 	readonly value: string;
+	/** Opening quote delimiter. */
 	readonly open: string;
+	/** Closing quote delimiter. */
 	readonly close: string;
 }
 
+/** One occurrence of the configured separator. */
 export interface SeparatorToken {
+	/** Marks a separator token. */
 	readonly type: TokenType.Separator;
+	/** Literal separator text. */
 	readonly value: string;
 }

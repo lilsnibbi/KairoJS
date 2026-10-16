@@ -1,14 +1,25 @@
 const FlagEntriesSymbol = Symbol("kairojs/bitfield.flags.entries");
 
+/** Resolve and combine named positive bit masks using either 32-bit numbers or bigints. */
 export class BitField<
 	Flags extends Record<string, number> | Record<string, bigint>,
 > {
+	/** Numeric representation shared by every flag: number or bigint. */
 	public readonly type: Flags[keyof Flags] extends number ? "number" : "bigint";
+	/** Zero value in the flags’ numeric representation. */
 	public readonly zero: Flags[keyof Flags] extends number ? 0 : 0n;
+	/** Union of every configured flag bit. */
 	public readonly mask: ValueType<this>;
+	/** Original named flag object supplied to the constructor. */
 	public readonly flags: Flags;
 	private readonly [FlagEntriesSymbol]: readonly [string, Flags[keyof Flags]][];
 
+	/**
+	 * Create helpers for a set of named bit masks.
+	 * @param flags - Nonempty map of positive values, all numbers or all bigints. Number flags must fit a signed 32-bit
+	 * integer.
+	 * @throws TypeError for mixed or unsupported values, or RangeError for nonpositive/out-of-range flags.
+	 */
 	public constructor(flags: Readonly<Flags>) {
 		if (typeof flags !== "object" || flags === null) {
 			throw new TypeError("flags must be a non-null object");
@@ -202,8 +213,10 @@ export class BitField<
 	}
 }
 
+/** Widen a numeric flag literal to number or bigint. */
 export type PrimitiveType<T> = T extends number ? number : bigint;
 
+/** One value or a readonly array of values. */
 export type MaybeArray<T> = T | readonly T[];
 
 /** Resolve the type of the values the specified {@link BitField} takes. @typeparam A {@link BitField} instance type. */

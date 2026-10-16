@@ -3,7 +3,10 @@ import { assertPositive } from "./shared/_assertPositive";
 import { makeIterableIterator } from "./shared/_makeIterableIterator";
 import { toIntegerOrInfinityOrThrow } from "./shared/_toIntegerOrInfinityOrThrow";
 
-/** Create an iterable with arrays of `count` elements representing a sliding window. */
+/**
+ * Yield overlapping arrays of count consecutive values, moving one value at a time. Short trailing windows are omitted.
+ * Count is truncated and must be positive; Infinity completes no finite window.
+ */
 export function windows<const ElementType>(
 	iterable: IterableResolvable<ElementType>,
 	count: number,

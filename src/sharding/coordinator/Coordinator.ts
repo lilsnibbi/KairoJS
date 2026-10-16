@@ -131,6 +131,11 @@ export class ShardCoordinator {
 		return this.options.logger ?? (this.ownedLogger ??= createConsoleLogger());
 	}
 
+	/**
+	 * Validate coordinator settings and initial host assignments without opening a listener.
+	 * @param options - Listener, host, session, and optional scaling settings.
+	 * @throws For invalid settings, incomplete or duplicate assignments, or missing session metadata.
+	 */
 	public constructor(options: ShardCoordinatorOptions) {
 		this.count = options.shardCount;
 		this.scaleStatus = {
@@ -217,15 +222,20 @@ export class ShardCoordinator {
 		if (options.botToken)
 			this.logSecrets = [...this.logSecrets, options.botToken];
 	}
+	/** Listening WebSocket endpoint, or undefined before startup and after closure. */
 	public get url(): string | undefined {
 		const server = this.server;
 		if (!server) return undefined;
 		const host = server.hostname ?? "127.0.0.1";
 		return `${this.options.tls ? "wss" : "ws"}://${host.includes(":") ? `[${host}]` : host}:${server.port}/sharding`;
 	}
+	/** Copies of configured hosts with their connection state and currently ready shard IDs. */
 	public get workers(): readonly {
+		/** Configured supervisor host ID. */
 		id: string;
+		/** Whether an unreleased authenticated session exists for this host. */
 		connected: boolean;
+		/** Shard IDs currently reported ready by this host’s sessions. */
 		shards: readonly number[];
 	}[] {
 		return [...this.hosts.values()].map((host) => ({
@@ -238,15 +248,23 @@ export class ShardCoordinator {
 				.flatMap((session) => [...session.ready.keys()]),
 		}));
 	}
+	/** Number of routed requests and identify requests currently awaiting completion. */
 	public get pendingCount(): number {
 		return this.routes.size + this.identifies.size;
 	}
+	/** Current configured Discord shard count. */
 	public get shardCount(): number {
 		return this.count;
 	}
+	/** Copy of the latest scaling status. */
 	public get scalingStatus(): ShardScalingStatus {
 		return { ...this.scaleStatus };
 	}
+	/**
+	 * Prepare fresh Discord session limits and start the authenticated WebSocket listener once.
+	 * @returns The shared startup promise.
+	 * @throws If closed, metadata cannot be fetched, scaling cannot fit capacity, or the listener cannot start.
+	 */
 	public start(): Promise<void> {
 		if (this.closed)
 			return Promise.reject(new ShardError("CLOSED", "Coordinator is closed."));
@@ -1202,7 +1220,12 @@ export class ShardCoordinator {
 			session.socket?.terminate();
 		}
 	}
-	/** Coalesces simultaneous checks; manual checks still respect confirmations and cooldown. */
+	/**
+	 * Run a scaling check with fresh metadata. Concurrent checks share a promise and respect confirmations and cooldown.
+	 * @returns The resulting status, including recorded metadata/deployment failures. Disabled scaling returns its existing
+	 * status.
+	 * @throws If scaling is enabled but the coordinator is not running.
+	 */
 	public checkScaling(): Promise<ShardScalingStatus> {
 		if (!this.scaling) return Promise.resolve(this.scalingStatus);
 		if (this.closed || !this.server)
@@ -1506,7 +1529,12 @@ export class ShardCoordinator {
 			);
 		}
 	}
-	/** Refresh an offline/manual snapshot; never increases an unexpired allowance. */
+	/**
+	 * Supply fresh session metadata without increasing an unexpired allowance.
+	 * @param value - Current Discord session-start limits.
+	 * @throws If the coordinator is not running, the snapshot is invalid, or active identify buckets conflict with a
+	 * concurrency change.
+	 */
 	public updateSessionLimit(value: ShardSessionLimit): void {
 		if (!this.scheduler || this.closed)
 			throw new ShardError("STATE", "Coordinator is not running.");
@@ -1566,6 +1594,10 @@ export class ShardCoordinator {
 			this.refreshing = false;
 		}
 	}
+	/**
+	 * Stop the listener and timers, disconnect hosts, and fail pending coordination work.
+	 * @returns One shared shutdown promise. Owned loggers are closed after cleanup.
+	 */
 	public close(): Promise<void> {
 		this.closed = true;
 		this.lifecycle.abort();

@@ -1,6 +1,9 @@
 import { toNumberOrThrow } from "./shared/_toNumberOrThrow";
 
-/** Create an iterable with the numbers from `start` to `stop` (exclusive) with an optional step. */
+/**
+ * Lazily yield numbers from start toward end, excluding end. Step defaults to 1 ascending or -1 descending. Zero or a step
+ * pointing away from end throws; equal endpoints yield nothing.
+ */
 export function* range(
 	start: number,
 	end: number,

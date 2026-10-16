@@ -8,8 +8,7 @@ export interface PollOptions {
 	/** An optional AbortSignal to abort the polling. */
 	signal?: AbortSignal | undefined;
 
-	/** The number of attempts to try, if any.
-	 * @default Infinite */
+	/** Maximum additional attempts after the first call. Defaults to Infinity; 0 runs cb once without testing its condition. */
 	maximumRetries?: number | null | undefined;
 
 	/** The number of time to wait between each poll.
@@ -21,7 +20,15 @@ export interface PollOptions {
 	verbose?: boolean | undefined;
 }
 
-/** Run a function {@link cb} and validates the result with function {@link cbCondition}, and repeats this until {@link cbCondition} returns `true` or the {@link timeout} is reached.  For a synchronous variant, see [pollSync](./pollSync.d.ts). */
+/**
+ * Call cb once, then retry while cbCondition is false and the retry budget allows it. Callback results and conditions are
+ * awaited.
+ * @param cb - Operation receiving the optional abort signal.
+ * @param cbCondition - Test for an acceptable result.
+ * @param options - Cancellation, retry limit, delay, and logging settings.
+ * @returns The last result, even if the condition is still false when retries run out.
+ * @throws For invalid options, callback failures, or cancellation.
+ */
 export async function poll<T>(
 	cb: (signal: AbortSignal | undefined) => Awaitable<T>,
 	cbCondition: (
