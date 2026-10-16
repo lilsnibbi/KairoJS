@@ -28,10 +28,13 @@ jobs:
 
           default_branch=$(gh api "repos/$GH_REPO" --jq '.default_branch')
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
+            # jq's $base is passed through jq's --arg option below.
+            # shellcheck disable=SC2016
             candidates=$(gh api --paginate \
+              --slurp \
               "repos/$GH_REPO/pulls?state=open&per_page=100" \
-              --jq --arg base "$default_branch" \
-              '.[] | select(.base.ref == $base) | .number')
+              | jq -r --arg base "$default_branch" \
+                'add[] | select(.base.ref == $base) | .number')
           else
             [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]
             candidates=$PR_NUMBER
@@ -54,6 +57,8 @@ jobs:
             else
               reviews=$(gh api --paginate --slurp \
                 "repos/$GH_REPO/pulls/$pr_number/reviews?per_page=100")
+              # jq's $head is passed through jq's --arg option above.
+              # shellcheck disable=SC2016
               review_state=$(jq -r --arg head "$head_sha" '
                 add
                 | map(select(.user.login == "lilsnibbi" and
