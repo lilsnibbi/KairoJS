@@ -1,0 +1,37 @@
+import { isValidLength } from "./_common";
+
+/** A pointer to a position in a buffer. */
+export class Pointer {
+	#value = 0;
+
+	public get value() {
+		return this.#value;
+	}
+
+	public add(value: number) {
+		const added = this.#value + value;
+		if (!isValidLength(added)) {
+			throw new RangeError(
+				`The pointer value cannot be an invalid length value`,
+			);
+		}
+
+		this.#value = added;
+		return this;
+	}
+
+	public static from(pointer: PointerLike) {
+		if (pointer instanceof Pointer) {
+			return pointer;
+		}
+
+		const instance = new Pointer();
+		instance.add(Number(pointer));
+		return instance;
+	}
+}
+
+export type PointerLike =
+	| Pointer
+	| { valueOf(): number }
+	| { [Symbol.toPrimitive](hint: "number"): number };

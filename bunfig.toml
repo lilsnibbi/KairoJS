@@ -1,0 +1,15 @@
+[test]
+root = "./tests"
+preload = ["./tests/setup.ts"]
+
+[lint]
+# typeAware = true   # also run the rules that need types
+
+[lint.rules]
+# "no-console" = "warn"
+# "eqeqeq" = ["error", "smart"]
+
+[fmt]
+printWidth = 80
+useTabs = true
+# semi = false
