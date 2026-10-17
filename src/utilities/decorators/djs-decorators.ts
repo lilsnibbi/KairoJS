@@ -1,0 +1,161 @@
+import {
+	type BaseInteraction,
+	type Message,
+	PermissionFlagsBits,
+	type PermissionResolvable,
+	PermissionsBitField,
+} from "discord.js";
+import { UserError } from "../../commands/errors/UserError";
+import { isDMChannel, isGuildBasedChannel } from "../discord/index";
+import { isNullish } from "../index";
+import { createFunctionPrecondition, type FunctionFallback } from "./utils";
+
+/** UserError identifiers thrown by permission decorators. */
+export enum DecoratorIdentifiers {
+	/** Bot permission requirements cannot be used in this DM context. */
+	RequiresClientPermissionsGuildOnly = "requiresClientPermissionsGuildOnly",
+	/** The bot’s guild member lacks a required permission. */
+	RequiresClientPermissionsMissingPermissions = "requiresClientPermissionsMissingPermissions",
+	/** User permission requirements cannot be used in this DM context. */
+	RequiresUserPermissionsGuildOnly = "requiresUserPermissionsGuildOnly",
+	/** The RequiresUserPermissions guild check found missing permissions. */
+	RequiresUserPermissionsMissingPermissions = "requiresUserPermissionsMissingPermissions",
+}
+
+const DMAvailablePermissions = new PermissionsBitField(
+	~new PermissionsBitField([
+		//
+		PermissionFlagsBits.AddReactions,
+		PermissionFlagsBits.AttachFiles,
+		PermissionFlagsBits.EmbedLinks,
+		PermissionFlagsBits.ReadMessageHistory,
+		PermissionFlagsBits.SendMessages,
+		PermissionFlagsBits.UseExternalEmojis,
+		PermissionFlagsBits.ViewChannel,
+	]).bitfield & PermissionsBitField.All,
+);
+
+const DMAvailableUserPermissions = new PermissionsBitField(
+	~new PermissionsBitField([
+		PermissionFlagsBits.AddReactions,
+		PermissionFlagsBits.AttachFiles,
+		PermissionFlagsBits.EmbedLinks,
+		PermissionFlagsBits.ReadMessageHistory,
+		PermissionFlagsBits.SendMessages,
+		PermissionFlagsBits.UseExternalEmojis,
+		PermissionFlagsBits.ViewChannel,
+		PermissionFlagsBits.UseExternalStickers,
+		PermissionFlagsBits.MentionEveryone,
+	]).bitfield & PermissionsBitField.All,
+);
+
+/** Allows you to set permissions required for individual methods. This is particularly useful for subcommands that require specific permissions. */
+export const RequiresClientPermissions = (
+	...permissionsResolvable: PermissionResolvable[]
+): MethodDecorator => {
+	const resolved = new PermissionsBitField(permissionsResolvable);
+	const resolvedIncludesServerPermissions = Boolean(
+		resolved.bitfield & DMAvailablePermissions.bitfield,
+	);
+
+	return createFunctionPrecondition((context: Message | BaseInteraction) => {
+		const { channel } = context;
+		const member = context.guild?.members.me;
+
+		if (resolvedIncludesServerPermissions && isDMChannel(channel)) {
+			throw new UserError({
+				identifier: DecoratorIdentifiers.RequiresClientPermissionsGuildOnly,
+				message:
+					"Sorry, but that command can only be used in a server because I do not have sufficient permissions in DMs",
+			});
+		}
+
+		if (isGuildBasedChannel(channel) && !isNullish(member)) {
+			const missingPermissions = channel
+				.permissionsFor(member)
+				.missing(resolved);
+
+			if (missingPermissions.length) {
+				throw new UserError({
+					identifier:
+						DecoratorIdentifiers.RequiresClientPermissionsMissingPermissions,
+					message: `Sorry, but I am not allowed to do that. I am missing the permissions: ${missingPermissions}`,
+					context: {
+						missing: missingPermissions,
+					},
+				});
+			}
+		}
+
+		return true;
+	});
+};
+
+/**
+ * Guard a method with user-facing permission errors. The current guild implementation checks guild.members.me (the bot),
+ * so it does not verify the invoking member.
+ * @param permissionsResolvable - Permission requirements.
+ * @returns A legacy method decorator that throws UserError when its check fails.
+ */
+export const RequiresUserPermissions = (
+	...permissionsResolvable: PermissionResolvable[]
+): MethodDecorator => {
+	const resolved = new PermissionsBitField(permissionsResolvable);
+	const resolvedIncludesServerPermissions = Boolean(
+		resolved.bitfield & DMAvailableUserPermissions.bitfield,
+	);
+
+	return createFunctionPrecondition((context: Message | BaseInteraction) => {
+		const { channel } = context;
+		const member = context.guild?.members.me;
+
+		if (resolvedIncludesServerPermissions && isDMChannel(channel)) {
+			throw new UserError({
+				identifier: DecoratorIdentifiers.RequiresUserPermissionsGuildOnly,
+				message:
+					"Sorry, but that command can only be used in a server because you do not have sufficient permissions in DMs",
+			});
+		}
+
+		if (isGuildBasedChannel(channel) && !isNullish(member)) {
+			const missingPermissions = channel
+				.permissionsFor(member)
+				.missing(resolved);
+
+			if (missingPermissions.length) {
+				throw new UserError({
+					identifier:
+						DecoratorIdentifiers.RequiresUserPermissionsMissingPermissions,
+					message: `Sorry, but you are not allowed to do that. You are missing the permissions: ${missingPermissions}`,
+					context: {
+						missing: missingPermissions,
+					},
+				});
+			}
+		}
+
+		return true;
+	});
+};
+
+/** Requires the message to be run in a guild context, this decorator requires the first argument to be a {@link Message} or {@link BaseInteraction} instance which includes all interaction types */
+export function RequiresGuildContext(
+	fallback: FunctionFallback<[Message | BaseInteraction]> = (): void =>
+		undefined,
+): MethodDecorator {
+	return createFunctionPrecondition(
+		(context: Message | BaseInteraction) => context.guild !== null,
+		fallback,
+	);
+}
+
+/** Requires the message to be run in a dm context, this decorator requires the first argument to be a {@link Message} or {@link BaseInteraction} instance which includes all interaction types */
+export function RequiresDMContext(
+	fallback: FunctionFallback<[Message | BaseInteraction]> = (): void =>
+		undefined,
+): MethodDecorator {
+	return createFunctionPrecondition(
+		(context: Message | BaseInteraction) => context.guild === null,
+		fallback,
+	);
+}
