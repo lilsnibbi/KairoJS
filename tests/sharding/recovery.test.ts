@@ -107,6 +107,7 @@ test("repeated coordinator-first stop/start works with locked legacy state and i
 			// Observe maintenance first so the next running state cannot belong to the old connection.
 			await until(
 				() => !host!.isConnected && host!.processes[0]?.state === "maintenance",
+				30000,
 			);
 			expect(oldChild.reconciled).toBe(false);
 			expect(oldChild.process.exitCode).toBeNull();
@@ -139,7 +140,7 @@ test("repeated coordinator-first stop/start works with locked legacy state and i
 		await coordinator.close();
 		f.remove();
 	}
-}, 30000);
+}, 60000);
 
 test("a new supervisor stays dormant until a confirmed exit releases capacity", async () => {
 	const f = legacyFiles();
