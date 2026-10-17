@@ -157,7 +157,7 @@ export interface RepeatedTask {
 	options: TaskOptions;
 }
 
-/** Augment rilo with your task names and payloads. */
+/** Augment virello with your task names and payloads. */
 export interface Tasks {}
 /** Task names declared in the augmentable Tasks interface. */
 export type TaskName = keyof Tasks;

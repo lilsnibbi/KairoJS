@@ -7,10 +7,10 @@ import {
 import { type None, none, type Option, type Some, some } from "./Option";
 import { ResultError } from "./ResultError";
 
-const ValueProperty = Symbol.for("rilo/result:Result.value");
-const SuccessProperty = Symbol.for("rilo/result:Result.success");
+const ValueProperty = Symbol.for("virello/result:Result.value");
+const SuccessProperty = Symbol.for("virello/result:Result.success");
 /** Symbol used to delegate safe unwrapping inside safeTry generators. */
-const UnwrapSafeProperty = Symbol.for("rilo/result:Result.safeUnwrap");
+const UnwrapSafeProperty = Symbol.for("virello/result:Result.safeUnwrap");
 
 /**
  * An Ok value or Err error. Create one with Result.ok/err. Ordinary callbacks run synchronously and propagate exceptions;

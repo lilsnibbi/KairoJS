@@ -1,4 +1,4 @@
-const FlagEntriesSymbol = Symbol("rilo/bitfield.flags.entries");
+const FlagEntriesSymbol = Symbol("virello/bitfield.flags.entries");
 
 /** Resolve and combine named positive bit masks using either 32-bit numbers or bigints. */
 export class BitField<

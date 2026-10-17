@@ -1,11 +1,11 @@
 import type { LogLevel } from "@lilsnibbi/logger";
 import { dataProperty, safeContext, safeText } from "./redact";
 
-/** Console output settings used when Rilo creates a logger. */
+/** Console output settings used when Virello creates a logger. */
 export interface ConsoleLogOptions {
-	/** Overrides RILO_LOG_FORMAT. Default: text. */
+	/** Overrides VIRELLO_LOG_FORMAT. Default: text. */
 	format?: "text" | "json";
-	/** Overrides RILO_LOG_STACKS. Default: short (three source locations). */
+	/** Overrides VIRELLO_LOG_STACKS. Default: short (three source locations). */
 	stacks?: "off" | "short" | "full";
 	/** Additional credential values to scrub. Values shorter than six characters are ignored. */
 	redact?: readonly string[];

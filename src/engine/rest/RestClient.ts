@@ -273,7 +273,8 @@ export class RestClient {
 		);
 		try {
 			const headers = new Headers({
-				"User-Agent": "RiloEngine (https://discord.com/developers/docs, 0.1.0)",
+				"User-Agent":
+					"VirelloEngine (https://discord.com/developers/docs, 0.1.0)",
 			});
 			if (request.auth !== false)
 				headers.set("Authorization", `Bot ${this.#token}`);

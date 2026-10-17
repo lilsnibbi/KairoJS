@@ -354,8 +354,8 @@ export class ShardManager extends ShardMessenger {
 				method: "HEAD",
 				headers: {
 					authorization: `Bearer ${this.options.token}`,
-					"x-rilo-worker": this.options.id,
-					"x-rilo-instance": this.instance,
+					"x-virello-worker": this.options.id,
+					"x-virello-instance": this.instance,
 				},
 				redirect: "error",
 				signal: AbortSignal.any([
@@ -380,7 +380,7 @@ export class ShardManager extends ShardMessenger {
 				"CONFIG",
 				"Coordinator admission endpoint is unavailable; check the URL and framework versions.",
 			);
-		const reason = response.headers.get("x-rilo-reason");
+		const reason = response.headers.get("x-virello-reason");
 		return reason === "host_already_connected"
 			? reason
 			: "coordinator_unavailable";
@@ -391,8 +391,8 @@ export class ShardManager extends ShardMessenger {
 				perMessageDeflate: false,
 				headers: {
 					authorization: `Bearer ${this.options.token}`,
-					"x-rilo-worker": this.options.id,
-					"x-rilo-instance": this.instance,
+					"x-virello-worker": this.options.id,
+					"x-virello-instance": this.instance,
 				},
 			});
 			this.socket = socket;
@@ -641,7 +641,7 @@ export class ShardManager extends ShardMessenger {
 					env: {
 						...process.env,
 						...this.options.env,
-						RILO_SHARD: encode(
+						VIRELLO_SHARD: encode(
 							{
 								shard: null,
 								count: this.count,

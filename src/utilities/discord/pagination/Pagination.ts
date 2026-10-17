@@ -124,7 +124,7 @@ export class Pagination {
 	private readonly entries: readonly string[];
 	private readonly options: PaginationBaseOptions;
 	private readonly mode: Mode;
-	private readonly prefix = `rilo:${randomUUIDv7()}:`;
+	private readonly prefix = `virello:${randomUUIDv7()}:`;
 	private readonly size: number;
 	private readonly pages: number;
 	private pageIndex = 0;

@@ -1,4 +1,4 @@
-import { ShardManager } from "rilo/sharding";
+import { ShardManager } from "virello/sharding";
 import { integerEnv, requiredEnv } from "./config";
 import { cleanupFailedStartup, exampleLogger, startupFailed } from "./logging";
 import { onShutdown } from "./shutdown";

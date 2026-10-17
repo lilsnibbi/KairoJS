@@ -1,4 +1,4 @@
-import { createConsoleLogger, type LoggerLike, logEvent } from "rilo/engine";
+import { createConsoleLogger, type LoggerLike, logEvent } from "virello/engine";
 import { ExampleConfigurationError } from "./config";
 
 // One logger per process; framework and example records use the same output settings.

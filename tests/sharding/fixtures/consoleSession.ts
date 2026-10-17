@@ -83,7 +83,7 @@ async function example(
 
 /** Exercise same-instance duplicate rejection and fresh admission using the actual example entrypoints. */
 export async function captureConsoleSession(width: number) {
-	const folder = mkdtempSync(join(tmpdir(), "rilo-console-session-"));
+	const folder = mkdtempSync(join(tmpdir(), "virello-console-session-"));
 	if (!resolve(folder).startsWith(resolve(tmpdir()) + sep))
 		throw new Error("Unexpected fixture folder.");
 	const env = {
@@ -96,12 +96,12 @@ export async function captureConsoleSession(width: number) {
 		SHARD_COORDINATOR_PORT: "0",
 		SHARD_TLS_CERT: "",
 		SHARD_TLS_KEY: "",
-		RILO_LOG_FORMAT: "text",
-		RILO_LOG_LEVEL: "info",
-		RILO_LOG_DETAIL: "full",
-		RILO_LOG_STACKS: "short",
-		RILO_LOG_WIDTH: String(width),
-		RILO_TEST_CONTROL_SHUTDOWN: "1",
+		VIRELLO_LOG_FORMAT: "text",
+		VIRELLO_LOG_LEVEL: "info",
+		VIRELLO_LOG_DETAIL: "full",
+		VIRELLO_LOG_STACKS: "short",
+		VIRELLO_LOG_WIDTH: String(width),
+		VIRELLO_TEST_CONTROL_SHUTDOWN: "1",
 		NO_COLOR: "1",
 		FORCE_COLOR: "0",
 	};
@@ -116,8 +116,8 @@ export async function captureConsoleSession(width: number) {
 		peer = new Socket(url, {
 			headers: {
 				authorization: `Bearer ${tokenA}`,
-				"x-rilo-worker": "local",
-				"x-rilo-instance": instance,
+				"x-virello-worker": "local",
+				"x-virello-instance": instance,
 			},
 		});
 		let welcomed = false;
@@ -132,7 +132,7 @@ export async function captureConsoleSession(width: number) {
 		const hostEnv = {
 			...env,
 			SHARD_COORDINATOR_URL: url,
-			RILO_TEST_SUPERVISOR_INSTANCE: instance,
+			VIRELLO_TEST_SUPERVISOR_INSTANCE: instance,
 		};
 		const active = await example("examples/host.ts", hostEnv, true);
 		attempts.push(active);
@@ -151,8 +151,8 @@ export async function captureConsoleSession(width: number) {
 		peer = new Socket(url, {
 			headers: {
 				authorization: `Bearer ${tokenA}`,
-				"x-rilo-worker": "local",
-				"x-rilo-instance": instance,
+				"x-virello-worker": "local",
+				"x-virello-instance": instance,
 			},
 		});
 		let recovered = false;

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { RiloClient } from "../../src/core/client/RiloClient";
+import { VirelloClient } from "../../src/core/client/VirelloClient";
 import { ManagedGateway } from "../../src/sharding/client/gateway";
 import { Availability } from "../../src/sharding/transport/availability";
 import { logger, stack, until } from "./helpers";
@@ -36,7 +36,7 @@ test("coordinator waits fail by default and bound capacity, time and cancellatio
 });
 
 test("same-ID total changes retire the old gateway and dormant assignments have no connection", async () => {
-	const client = new RiloClient({ intents: [], logger });
+	const client = new VirelloClient({ intents: [], logger });
 	const gateway = new ManagedGateway(
 		client,
 		async () => {},

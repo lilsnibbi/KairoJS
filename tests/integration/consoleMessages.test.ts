@@ -5,16 +5,16 @@ import {
 	ApplicationCommandRegistries,
 	ApplicationCommandRegistry,
 	createConsoleLogger,
-	RiloClient,
+	VirelloClient,
 	type LoggerLike,
 	logEvent,
 	RegisterBehavior,
-} from "rilo";
+} from "virello";
 import { createBot } from "../../examples/client";
 import { onShutdown } from "../../examples/shutdown";
 import { formatStats, summarizeStats } from "../../examples/stats";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 let detach: (() => void) | undefined;
 const exitCode = process.exitCode ?? 0;
 let defaultGuildIds = ApplicationCommandRegistries.getDefaultGuildIds();
@@ -55,7 +55,7 @@ function capture() {
 
 test("routing advice identifies the remedy while preserving accepted aliases and numeric IDs", () => {
 	const { logger, values } = capture();
-	client = new RiloClient({ intents: [], logger });
+	client = new VirelloClient({ intents: [], logger });
 	const registry = new ApplicationCommandRegistry("fixture");
 	registry.addChatInputCommandIds("fixture", "123456789012345678");
 	expect(registry.chatInputCommands.has("fixture")).toBe(true);
@@ -73,7 +73,7 @@ for (const behavior of [
 ] as const) {
 	test(`command change diagnostics preserve overwrite policy ${behavior}`, async () => {
 		const { logger, values } = capture();
-		client = new RiloClient({ intents: [], logger });
+		client = new VirelloClient({ intents: [], logger });
 		const registry = new ApplicationCommandRegistry("fixture");
 		registry.registerChatInputCommand(
 			{ name: "fixture", description: "New local description" },
@@ -230,8 +230,8 @@ test("live engine example remains explicitly disabled and emits useful console i
 		cwd: `${import.meta.dir}/../..`,
 		env: {
 			...process.env,
-			RILO_LOG_FORMAT: "json",
-			RILO_LOG_LEVEL: "info",
+			VIRELLO_LOG_FORMAT: "json",
+			VIRELLO_LOG_LEVEL: "info",
 			DISCORD_TOKEN: undefined,
 		},
 		stdout: "pipe",
@@ -249,8 +249,8 @@ test("example host configuration errors identify the missing setting without net
 		cwd: `${import.meta.dir}/../..`,
 		env: {
 			...process.env,
-			RILO_LOG_FORMAT: "json",
-			RILO_LOG_LEVEL: "info",
+			VIRELLO_LOG_FORMAT: "json",
+			VIRELLO_LOG_LEVEL: "info",
 			SHARD_HOST_TOKEN: undefined,
 			DISCORD_TOKEN: undefined,
 		},

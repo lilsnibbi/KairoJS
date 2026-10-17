@@ -11,7 +11,7 @@ writeEvent(logger, "notif", {
 	context: {
 		token: "fixture-private-token",
 		endpoint: "https://user:password@example.test/path?token=fixture-query",
-		note: process.env.RILO_FIXTURE_TOKEN,
+		note: process.env.VIRELLO_FIXTURE_TOKEN,
 	},
 });
 writeEvent(logger, "alert", {

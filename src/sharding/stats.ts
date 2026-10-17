@@ -3,7 +3,7 @@ import type { Client } from "discord.js";
 import { ShardError, type ShardStats, type ShardStatsResult } from "./types";
 
 // Internal RPC uses the usual coordinator routing, ownership checks and request limits.
-export const statsRequest = "rilo:stats";
+export const statsRequest = "virello:stats";
 const nonnegative = type("number >= 0");
 const count = type("number.integer >= 0");
 const schema = type({

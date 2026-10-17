@@ -32,7 +32,7 @@ export class RedisBackend implements TaskBackend {
 	constructor(
 		private readonly options: TaskSchedulerOptions & { redis_url: string },
 	) {
-		const prefix = `rilo:tasks:v1:{${encodeURIComponent(options.queue ?? "scheduled-tasks")}}`;
+		const prefix = `virello:tasks:v1:{${encodeURIComponent(options.queue ?? "scheduled-tasks")}}`;
 		this.keys = [`${prefix}:jobs`, `${prefix}:due`, `${prefix}:leases`];
 	}
 	async connect(): Promise<void> {

@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, spyOn, test } from "bun:test";
 import { Logger as DependencyLogger } from "@lilsnibbi/logger";
-import { createConsoleLogger, RiloClient, Logger, type LoggerLike } from "rilo";
+import {
+	createConsoleLogger,
+	VirelloClient,
+	Logger,
+	type LoggerLike,
+} from "virello";
 import { Extension } from "../../src/core/lifecycle/Extension";
 import { consoleEventOptions } from "../../src/core/logging/console";
 import { writeEvent, writeLog } from "../../src/core/logging/diagnostics";
@@ -22,11 +27,11 @@ const entry: LogEntry = {
 	context: { task: "fixture", requestId: "fixture-request", shard: 2 },
 };
 const keys = [
-	"RILO_LOG_LEVEL",
-	"RILO_LOG_FORMAT",
-	"RILO_LOG_STACKS",
-	"RILO_LOG_DETAIL",
-	"RILO_LOG_LAYOUT",
+	"VIRELLO_LOG_LEVEL",
+	"VIRELLO_LOG_FORMAT",
+	"VIRELLO_LOG_STACKS",
+	"VIRELLO_LOG_DETAIL",
+	"VIRELLO_LOG_LAYOUT",
 	"NO_COLOR",
 	"FORCE_COLOR",
 	"TERM",
@@ -34,10 +39,10 @@ const keys = [
 const environment = Object.fromEntries(
 	keys.map((key) => [key, process.env[key]]),
 );
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 function nativeText(value: unknown, colors = false): string {
 	const logger = createConsoleLogger(
-		"Rilo",
+		"Virello",
 		{ colors, level: "ERROR" },
 		{ detail: "full" },
 	);
@@ -57,13 +62,13 @@ afterEach(async () => {
 
 describe("console records", () => {
 	test("stable UTC severity, component, event and context in text and JSON", () => {
-		const record = makeRecord("Rilo", "ERROR", entry, date, "off");
+		const record = makeRecord("Virello", "ERROR", entry, date, "off");
 		expect(nativeText(entry)).toContain("jobs › Scheduled task failed.");
 		expect(nativeText(entry)).toContain("requestId=fixture-request");
 		expect(JSON.parse(serializeRecord(record))).toEqual({
 			timestamp: date.toISOString(),
 			level: "error",
-			component: "Rilo.tasks",
+			component: "Virello.tasks",
 			event: "task_failed",
 			message: "Scheduled task failed.",
 			context: entry.context,
@@ -78,7 +83,7 @@ describe("console records", () => {
 		} as const))
 			expect(
 				makeRecord(
-					"Rilo",
+					"Virello",
 					level as "DEBUG" | "NOTIF" | "ALERT" | "ERROR",
 					"Fixture",
 					date,
@@ -88,7 +93,7 @@ describe("console records", () => {
 	});
 	test("embedded newlines, control sequences and bidi characters cannot forge records", () => {
 		const record = makeRecord(
-			"Rilo\nforged",
+			"Virello\nforged",
 			"NOTIF",
 			{
 				...entry,
@@ -364,9 +369,9 @@ describe("default and customized loggers", () => {
 		expect(serializeRecord(record)).not.toContain("\x1b");
 	});
 	test("environment defaults and invalid settings are safe; explicit options and mutable level/name work", () => {
-		process.env.RILO_LOG_LEVEL = "constructor";
-		process.env.RILO_LOG_FORMAT = "invalid";
-		process.env.RILO_LOG_STACKS = "invalid";
+		process.env.VIRELLO_LOG_LEVEL = "constructor";
+		process.env.VIRELLO_LOG_FORMAT = "invalid";
+		process.env.VIRELLO_LOG_STACKS = "invalid";
 		expect(createConsoleLogger().level).toBe("NOTIF");
 		expect(
 			createConsoleLogger("fixture", {
@@ -374,7 +379,7 @@ describe("default and customized loggers", () => {
 				colors: false,
 			}).notif("Fixture", true),
 		).toContain("NOTIF");
-		process.env.RILO_LOG_LEVEL = "WaRn";
+		process.env.VIRELLO_LOG_LEVEL = "WaRn";
 		expect(createConsoleLogger().level).toBe("ALERT");
 		const logger = createConsoleLogger(
 			"fixture",
@@ -437,7 +442,7 @@ describe("default and customized loggers", () => {
 				throw cause;
 			}
 		}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: custom,
 			loggerOptions: { name: "ignored", silent: true },
@@ -460,7 +465,7 @@ describe("default and customized loggers", () => {
 				});
 			}
 		}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logging: { format: "json", stacks: "off" },
 			loggerOptions: { colors: false },
@@ -469,7 +474,7 @@ describe("default and customized loggers", () => {
 		const text = sink.mock.calls.map((args) => String(args[0])).join("");
 		expect(text).not.toContain("private-extension-content");
 		expect(JSON.parse(text)).toMatchObject({
-			component: "Rilo.extensions",
+			component: "Virello.extensions",
 			event: "setup_failed",
 			context: { extension: "Broken" },
 			error: { code: "ECONNREFUSED" },
@@ -504,7 +509,7 @@ describe("default and customized loggers", () => {
 			alert() {},
 			error() {},
 		};
-		client = new RiloClient({ intents: [], logger: broken });
+		client = new VirelloClient({ intents: [], logger: broken });
 		await expect(client.load()).resolves.toBeUndefined();
 		const output = sink.mock.calls.map((args) => String(args[0])).join("");
 		expect(output.replaceAll(/\s+/g, " ")).toContain(
@@ -520,10 +525,10 @@ describe("default and customized loggers", () => {
 				{
 					env: {
 						...process.env,
-						RILO_LOG_LEVEL: "info",
-						RILO_LOG_FORMAT: format,
-						RILO_LOG_STACKS: "off",
-						RILO_FIXTURE_TOKEN: "fixture-env-credential",
+						VIRELLO_LOG_LEVEL: "info",
+						VIRELLO_LOG_FORMAT: format,
+						VIRELLO_LOG_STACKS: "off",
+						VIRELLO_FIXTURE_TOKEN: "fixture-env-credential",
 						NO_COLOR: undefined,
 						FORCE_COLOR: undefined,
 						TERM: "xterm",

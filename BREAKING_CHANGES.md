@@ -1,5 +1,24 @@
 # Breaking changes
 
+## Virello rename
+
+- The framework is now Virello, with package name `virello`. Replace `rilo`
+  imports and subpath imports with `virello`; TypeScript declaration augmentation
+  must target `virello`. Availability of the npm package name is unverified.
+- Rename `RiloClient` and `RiloClientOptions` to `VirelloClient` and
+  `VirelloClientOptions`. The previous names are no longer exported.
+- Replace the `RILO_` prefix with `VIRELLO_` in environment variables and GitHub
+  repository variables, including `VIRELLO_RELEASES` and
+  `VIRELLO_TEST_REDIS_URL`.
+- Upgrade coordinators, hosts and children together: transport headers and the
+  reserved stats request now use `x-virello-*` and `virello:stats`.
+- Redis task keys now use `virello:tasks:v1:`. Existing tasks under `rilo:tasks:v1:`
+  are not read; drain or migrate them before switching. Branded symbols and
+  pagination component IDs also use the new name, so avoid mixing framework
+  versions in one application and recreate active pagination messages.
+- The Rilo migration below describes the earlier Kairo-to-Rilo rename. When
+  migrating directly from Kairo, apply both renames and use the Virello names.
+
 ## Rilo rename
 
 - Install `rilo` and update all imports and subpath imports from `kairojs` to

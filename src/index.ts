@@ -1,5 +1,5 @@
 /**
- * Rilo client, modules, commands, events, extensions, and shared helpers. The separate engine API is available from rilo/engine.
+ * Virello client, modules, commands, events, extensions, and shared helpers. The separate engine API is available from virello/engine.
  * @packageDocumentation
  */
 import "./core/runtime";

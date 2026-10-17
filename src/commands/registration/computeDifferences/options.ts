@@ -62,7 +62,7 @@ export function* checkOptions(
 			while ((option = existingOptions![index]) !== undefined) {
 				const expectedType =
 					optionTypeToPrettyName.get(option.type) ??
-					`unknown (${option.type}); please contact Rilo developers about this!`;
+					`unknown (${option.type}); please contact Virello developers about this!`;
 
 				yield {
 					key: `existing command option at index ${index}`,
@@ -91,7 +91,7 @@ function* reportOptionDifferences({
 	if (!existingOption) {
 		const expectedType =
 			optionTypeToPrettyName.get(option.type) ??
-			`unknown (${option.type}); please contact Rilo developers about this!`;
+			`unknown (${option.type}); please contact Virello developers about this!`;
 
 		yield {
 			key: keyPath(currentIndex),
@@ -295,7 +295,7 @@ function* handleSubcommandOptions({
 			while ((option = existingOptions![processedIndex]) !== undefined) {
 				const expectedType =
 					optionTypeToPrettyName.get(option.type) ??
-					`unknown (${option.type}); please contact Rilo developers about this!`;
+					`unknown (${option.type}); please contact Virello developers about this!`;
 
 				yield {
 					key: `existing command option at path ${keyPath(currentIndex)}.options[${processedIndex}]`,

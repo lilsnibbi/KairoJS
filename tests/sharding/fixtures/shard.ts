@@ -1,17 +1,17 @@
 import "./contracts";
-import { RiloClient, type } from "rilo";
+import { VirelloClient, type } from "virello";
 
 if (process.env.SHARD_TEST_MODE === "exit") process.exit(23);
 if (
 	process.env.SHARD_TEST_FAIL_COUNT &&
-	JSON.parse(process.env.RILO_SHARD!).count >=
+	JSON.parse(process.env.VIRELLO_SHARD!).count >=
 		Number(process.env.SHARD_TEST_FAIL_COUNT)
 )
 	process.exit(23);
 if (process.env.SHARD_TEST_MODE === "noBoot")
 	await new Promise(() => setInterval(() => {}, 1000));
 const logger = { debug() {}, notif() {}, alert() {}, error() {} };
-const client = new RiloClient({
+const client = new VirelloClient({
 	intents: [],
 	logger,
 	extensions: {
@@ -87,7 +87,7 @@ if (
 	process.env.SHARD_TEST_MODE === "login" ||
 	process.env.SHARD_TEST_MODE === "scaling"
 ) {
-	// Exercise RiloClient.login and the actual installed throttler, replacing only Discord network connection.
+	// Exercise VirelloClient.login and the actual installed throttler, replacing only Discord network connection.
 	Reflect.set(client.ws, "connect", async () => {
 		const throttler = await client.options.ws!.buildIdentifyThrottler!(
 			null as never,

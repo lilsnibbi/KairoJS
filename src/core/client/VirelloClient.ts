@@ -50,8 +50,8 @@ export type Prefix = string | readonly string[] | null;
  */
 export type PrefixHook = (message: Message) => Awaitable<Prefix>;
 
-/** Rilo options added to discord.js ClientOptions. */
-export interface RiloClientOptions {
+/** Virello options added to discord.js ClientOptions. */
+export interface VirelloClientOptions {
 	/** Configure built-in features and custom extensions. Built-ins run first, in the documented extension order. */
 	extensions?: ExtensionOptions;
 	/** Base directory for module patterns. Defaults to cwd. */
@@ -73,7 +73,7 @@ export interface RiloClientOptions {
 	/** The regex prefix, an alternative to a mention or regular prefix to allow creating natural language command messages */
 	regexPrefix?: RegExp;
 
-	/** The prefix hook, by default it is a callback function that returns {@link RiloClientOptions.defaultPrefix}.
+	/** The prefix hook, by default it is a callback function that returns {@link VirelloClientOptions.defaultPrefix}.
 	 * @default () => client.options.defaultPrefix */
 	fetchPrefix?: PrefixHook;
 
@@ -82,7 +82,7 @@ export interface RiloClientOptions {
 
 	/** Supply your logger instance directly. Its identity and settings are preserved. */
 	logger?: LoggerLike;
-	/** Used only when Rilo creates its own logger. */
+	/** Used only when Virello creates its own logger. */
 	loggerOptions?: Partial<LoggerOptions>;
 	/** Formatting for the framework-created console logger. Supplied loggers are untouched. */
 	logging?: ConsoleLogOptions;
@@ -125,10 +125,12 @@ interface FeatureState {
 	restoreProperties: () => void;
 	active: boolean;
 }
-const clientState: { active?: RiloClient } = {};
+const clientState: { active?: VirelloClient } = {};
 
 /** One active Discord client owns the shared services. */
-export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
+export class VirelloClient<
+	Ready extends boolean = boolean,
+> extends Client<Ready> {
 	/** Bot user ID used for mention prefixes, or null before it is known. */
 	public override id: Snowflake | null = null;
 	/** Resolve prefixes for each message. Defaults to returning options.defaultPrefix or null. */
@@ -161,8 +163,8 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 
 	/**
 	 * Create the shared client, register stores, and run synchronous extension setup. Discord connects at login.
-	 * @param options - Discord client options, including intents and Rilo settings.
-	 * @throws If options are invalid, another RiloClient is active, or required setup fails. Managed children reject
+	 * @param options - Discord client options, including intents and Virello settings.
+	 * @throws If options are invalid, another VirelloClient is active, or required setup fails. Managed children reject
 	 * conflicting shard options.
 	 */
 	public constructor(options: ClientOptions) {
@@ -197,7 +199,7 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 		])
 			if (key in options)
 				throw new TypeError(
-					`Rilo no longer supports "${key}". See BREAKING_CHANGES.md.`,
+					`Virello no longer supports "${key}". See BREAKING_CHANGES.md.`,
 				);
 		const extensions = resolveExtensions(options.extensions);
 		if (options.extensions?.scheduledtasks)
@@ -236,14 +238,14 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 			);
 		if (clientState.active)
 			throw new Error(
-				"Only one RiloClient can be active. Await client.destroy() before creating another.",
+				"Only one VirelloClient can be active. Await client.destroy() before creating another.",
 			);
 		super(options);
 		this.extensions = extensions;
 		this.logger =
 			options.logger ??
 			(this.ownedLogger = createConsoleLogger(
-				"Rilo",
+				"Virello",
 				options.loggerOptions,
 				options.logging,
 			));
@@ -350,7 +352,7 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 	 */
 	public load(): Promise<void> {
 		if (this.closed)
-			return Promise.reject(new Error("This RiloClient is closed."));
+			return Promise.reject(new Error("This VirelloClient is closed."));
 		return this.modules.load();
 	}
 
@@ -362,7 +364,7 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 	 */
 	public override login(token?: string): Promise<string> {
 		if (this.closed)
-			return Promise.reject(new Error("This RiloClient is closed."));
+			return Promise.reject(new Error("This VirelloClient is closed."));
 		this.loginPromise ??= this.connect(token);
 		return this.loginPromise;
 	}
@@ -592,11 +594,14 @@ export class RiloClient<Ready extends boolean = boolean> extends Client<Ready> {
 		}
 		if (clientState.active === this) clientState.active = undefined;
 		if (errors.length)
-			throw new AggregateError(errors, "Some Rilo features could not close.");
+			throw new AggregateError(
+				errors,
+				"Some Virello features could not close.",
+			);
 	}
 
 	private assertOpen(): void {
-		if (this.closed) throw new Error("This RiloClient is closed.");
+		if (this.closed) throw new Error("This VirelloClient is closed.");
 	}
 }
 
@@ -614,9 +619,9 @@ export interface CooldownOptions {
 	filteredCommands?: string[];
 }
 
-/** Add Rilo client properties and options to discord.js types. */
+/** Add Virello client properties and options to discord.js types. */
 declare module "discord.js" {
-	/** Framework services available on a RiloClient. */
+	/** Framework services available on a VirelloClient. */
 	interface Client {
 		/** Bot user ID used for mention prefixes, or null before it is known. */
 		id: Snowflake | null;
@@ -628,8 +633,8 @@ declare module "discord.js" {
 		fetchPrefix: PrefixHook;
 	}
 
-	/** Discord client options with Rilo configuration. */
-	interface ClientOptions extends RiloClientOptions {
+	/** Discord client options with Virello configuration. */
+	interface ClientOptions extends VirelloClientOptions {
 		/** Configure built-in features and custom extensions. */
 		extensions?: ExtensionOptions;
 	}

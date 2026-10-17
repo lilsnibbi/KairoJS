@@ -1,4 +1,4 @@
-import { EngineClient, logEvent } from "rilo/engine";
+import { EngineClient, logEvent } from "virello/engine";
 import { exampleLogger } from "../logging";
 import { MockDiscord } from "./MockDiscord";
 
@@ -34,7 +34,7 @@ async function main(): Promise<void> {
 	const resumed = Promise.withResolvers<void>();
 	client.on("messageCreate", async (message) => {
 		await message.reply({
-			content: "Pong from the original Rilo engine.",
+			content: "Pong from the original Virello engine.",
 			allowed_mentions: { parse: [] },
 		});
 		replied.resolve();

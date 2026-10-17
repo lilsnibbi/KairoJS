@@ -5,7 +5,7 @@ import { TasksExtension } from "../../extensions/scheduledTasks/extension";
 import type { TaskSchedulerOptions } from "../../extensions/scheduledTasks/types/TaskTypes";
 import { ServicesExtension } from "../../extensions/services/extension";
 import { SubcommandsExtension } from "../../extensions/subcommands/extension";
-import type { CooldownOptions } from "../client/RiloClient";
+import type { CooldownOptions } from "../client/VirelloClient";
 import { Extension } from "../lifecycle/Extension";
 
 /** Settings for subcommand handling. */

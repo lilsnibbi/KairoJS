@@ -1,20 +1,20 @@
 import { expectTypeOf } from "expect-type";
-import type * as Root from "rilo";
-import type * as Client from "rilo/client";
-import type * as Commands from "rilo/commands";
-import type * as Discord from "rilo/discord";
-import type * as Events from "rilo/events";
-import type * as Extensions from "rilo/extensions";
-import type * as Localisation from "rilo/localisation";
-import type * as Modules from "rilo/modules";
-import type * as Scheduling from "rilo/scheduling";
-import type * as Services from "rilo/services";
-import type * as Sharding from "rilo/sharding";
-import type * as Time from "rilo/time";
-import type * as Utilities from "rilo/utilities";
-import type * as Validation from "rilo/validation";
+import type * as Root from "virello";
+import type * as Client from "virello/client";
+import type * as Commands from "virello/commands";
+import type * as Discord from "virello/discord";
+import type * as Events from "virello/events";
+import type * as Extensions from "virello/extensions";
+import type * as Localisation from "virello/localisation";
+import type * as Modules from "virello/modules";
+import type * as Scheduling from "virello/scheduling";
+import type * as Services from "virello/services";
+import type * as Sharding from "virello/sharding";
+import type * as Time from "virello/time";
+import type * as Utilities from "virello/utilities";
+import type * as Validation from "virello/validation";
 
-declare module "rilo" {
+declare module "virello" {
 	interface Container {
 		fromRoot: boolean;
 	}
@@ -31,8 +31,8 @@ declare module "rilo" {
 		rootRequest: { input: null; output: string };
 	}
 }
-expectTypeOf<Client.RiloClient>().toEqualTypeOf<Root.RiloClient>();
-expectTypeOf<Client.RiloClientOptions>().toEqualTypeOf<Root.RiloClientOptions>();
+expectTypeOf<Client.VirelloClient>().toEqualTypeOf<Root.VirelloClient>();
+expectTypeOf<Client.VirelloClientOptions>().toEqualTypeOf<Root.VirelloClientOptions>();
 expectTypeOf<Commands.Command>().toEqualTypeOf<Root.Command>();
 expectTypeOf<Discord.Pagination>().toEqualTypeOf<Root.Pagination>();
 expectTypeOf<Events.Listener>().toEqualTypeOf<Root.Listener>();
@@ -57,7 +57,7 @@ expectTypeOf<Scheduling.TaskPayload<"rootJob">>().toEqualTypeOf<{
 }>();
 
 export function requestTypes(
-	client: Client.RiloClient,
+	client: Client.VirelloClient,
 	manager: Sharding.ShardManager,
 ) {
 	expectTypeOf(client.sharding.request(0, "rootRequest", null)).toEqualTypeOf<
@@ -74,17 +74,17 @@ export function requestTypes(
 }
 
 // @ts-expect-error Every public entrypoint uses named exports.
-import defaultCommands from "rilo/commands";
+import defaultCommands from "virello/commands";
 
 void defaultCommands;
 
 // @ts-expect-error There are no arbitrary deep category paths.
-import type { Command as DeepCommand } from "rilo/commands/Command";
+import type { Command as DeepCommand } from "virello/commands/Command";
 // @ts-expect-error Package metadata is not a public entrypoint.
-import metadata from "rilo/package.json";
+import metadata from "virello/package.json";
 // @ts-expect-error Client implementation files remain private.
-import type { RiloClient as PrivateClient } from "rilo/src/core/client/RiloClient";
+import type { VirelloClient as PrivateClient } from "virello/src/core/client/VirelloClient";
 // @ts-expect-error Category files are not additional supported subpaths.
-import type { Command as PrivateCommand } from "rilo/src/public/commands";
+import type { Command as PrivateCommand } from "virello/src/public/commands";
 export type PrivatePaths = [PrivateClient, PrivateCommand, DeepCommand];
 void metadata;

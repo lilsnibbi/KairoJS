@@ -6,7 +6,7 @@ import {
 	GatewayDispatchEvents as E,
 	InteractionType,
 } from "discord-api-types/v10";
-import { EngineClient } from "rilo/engine";
+import { EngineClient } from "virello/engine";
 import { MockDiscord } from "../../examples/engine/MockDiscord";
 import { EngineInteraction } from "../../src/engine/client/EngineInteraction";
 import { EventHub } from "../../src/engine/client/EventHub";
@@ -420,9 +420,9 @@ test("closing from the connecting state callback never constructs a socket", asy
 	expect(sockets).toBe(0);
 });
 
-test("engine and existing RiloClient coexist without changing the framework container", async () => {
-	const { RiloClient, container } = await import("rilo/client");
-	const framework = new RiloClient({
+test("engine and existing VirelloClient coexist without changing the framework container", async () => {
+	const { VirelloClient, container } = await import("virello/client");
+	const framework = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});

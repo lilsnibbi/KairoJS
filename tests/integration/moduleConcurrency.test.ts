@@ -3,18 +3,18 @@ import { EventEmitter } from "node:events";
 import {
 	ApplicationCommandRegistries,
 	Command,
-	RiloClient,
+	VirelloClient,
 	Listener,
-} from "rilo";
+} from "virello";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
 });
 
 function createClient() {
-	return (client = new RiloClient({
+	return (client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	}));

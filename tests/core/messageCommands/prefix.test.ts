@@ -1,10 +1,10 @@
 import { afterEach, expect, test } from "bun:test";
 import { ChannelType, DMChannel, Message } from "discord.js";
-import { Command, Events, RiloClient } from "rilo";
+import { Command, Events, VirelloClient } from "virello";
 import { PrefixedMessageListener } from "../../../src/commands/message/listeners/prefixedMessage";
 import { PreMessageParserListener } from "../../../src/commands/message/listeners/preMessageParser";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
@@ -12,7 +12,7 @@ afterEach(async () => {
 
 for (const regexPrefix of [/^!/g, /^!/y]) {
 	test(`stateful regex prefix ${regexPrefix.flags} dispatches consecutive messages without changing regex state`, async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			regexPrefix,
 			logger: { debug() {}, notif() {}, alert() {}, error() {} },

@@ -1,4 +1,4 @@
-import type { RiloClient } from "../../core/client/RiloClient";
+import type { VirelloClient } from "../../core/client/VirelloClient";
 import { Extension } from "../../core/lifecycle/Extension";
 import { container } from "../../core/modules/index";
 import { loadListeners, TaskScheduler, TaskStore } from "./index";
@@ -10,7 +10,7 @@ export class TasksExtension extends Extension {
 	 * Register scheduled task execution during client construction.
 	 * @param client - Client being configured.
 	 */
-	static override setup(client: RiloClient): void {
+	static override setup(client: VirelloClient): void {
 		const options = client.options.extensions?.scheduledtasks || {};
 		const tasks = new TaskScheduler(options);
 		container.tasks = tasks;

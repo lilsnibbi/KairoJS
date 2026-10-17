@@ -37,7 +37,7 @@ async function put(backend: TaskBackend, record = job()): Promise<TaskRecord> {
 	records.push({ backend, id: record.id });
 	return backend.put(record);
 }
-const url = process.env.RILO_TEST_REDIS_URL;
+const url = process.env.VIRELLO_TEST_REDIS_URL;
 if (url && !["127.0.0.1", "localhost", "[::1]"].includes(new URL(url).hostname))
 	throw new Error("Live scheduling tests require a disposable loopback Redis.");
 

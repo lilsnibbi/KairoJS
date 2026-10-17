@@ -1,4 +1,4 @@
-import { type } from "rilo/validation";
+import { type } from "virello/validation";
 
 /** Names identify configuration problems without printing their values. */
 export class ExampleConfigurationError extends Error {

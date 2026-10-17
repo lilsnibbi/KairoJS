@@ -140,7 +140,7 @@ function eligible(options: Record<string, unknown> = {}): boolean {
 			ref_name: branch,
 			event: { repository: { default_branch: defaultBranch } },
 		},
-		{ RILO_RELEASES: enabled },
+		{ VIRELLO_RELEASES: enabled },
 		() => true,
 	);
 }

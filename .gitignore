@@ -8,4 +8,4 @@ coverage/
 sharding.sqlite*
 
 .engine-validation/
-.rilo-sharding/
+.virello-sharding/

@@ -35,8 +35,9 @@ Object.assign(globalThis, {
 try {
 	const path = process.argv[2]!;
 	const first = await import(path);
-	const root = await import("rilo");
-	const reference = path === "rilo/engine" ? await import("rilo/engine") : root;
+	const root = await import("virello");
+	const reference =
+		path === "virello/engine" ? await import("virello/engine") : root;
 	for (const [name, value] of Object.entries(first)) {
 		if (value !== Reflect.get(reference, name))
 			throw new Error(`Identity differs: ${path} ${name}`);

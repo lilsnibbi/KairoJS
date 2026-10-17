@@ -52,7 +52,7 @@ export function auditExports(root: string, failures: string[]): void {
 		}
 		entries.set(path, file);
 	}
-	const temporary = mkdtempSync(join(tmpdir(), "rilo-exports-"));
+	const temporary = mkdtempSync(join(tmpdir(), "virello-exports-"));
 	let api: API | undefined;
 	try {
 		api = new API({ cwd: root });

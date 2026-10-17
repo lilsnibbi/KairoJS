@@ -1,8 +1,8 @@
 import "./contracts";
-import { container, RiloClient } from "rilo";
+import { container, VirelloClient } from "virello";
 import type { StatsReply } from "./contracts";
 
-const client = new RiloClient({
+const client = new VirelloClient({
 	intents: [],
 	logger: { debug() {}, notif() {}, alert() {}, error() {} },
 });

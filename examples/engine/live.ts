@@ -2,7 +2,7 @@ import {
 	GatewayIntentBits,
 	InteractionResponseType,
 } from "discord-api-types/v10";
-import { EngineClient, logEvent } from "rilo/engine";
+import { EngineClient, logEvent } from "virello/engine";
 import { requiredEnv } from "../config";
 import { exampleLogger, startupFailed } from "../logging";
 import { onShutdown } from "../shutdown";
@@ -45,7 +45,7 @@ async function main(): Promise<void> {
 	client.on("messageCreate", async (message) => {
 		if (!message.data.author.bot && message.data.content === "!engine-ping")
 			await message.reply({
-				content: "Pong from Rilo engine.",
+				content: "Pong from Virello engine.",
 				allowed_mentions: { parse: [] },
 			});
 	});
@@ -57,7 +57,7 @@ async function main(): Promise<void> {
 			await interaction.respond({
 				type: InteractionResponseType.ChannelMessageWithSource,
 				data: {
-					content: "Pong from Rilo engine.",
+					content: "Pong from Virello engine.",
 					allowed_mentions: { parse: [] },
 				},
 			});

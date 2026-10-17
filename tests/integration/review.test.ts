@@ -7,20 +7,20 @@ import {
 	Command,
 	container,
 	Extension,
-	RiloClient,
+	VirelloClient,
 	Logger,
 	type LoggerLike,
 	Module,
 	ModuleStore,
 	Task,
-} from "rilo";
+} from "virello";
 
-declare module "rilo" {
+declare module "virello" {
 	interface ModuleStores {
 		reviewOwned: ModuleStore<Module, "reviewOwned">;
 	}
 }
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 const dirs: string[] = [];
 afterEach(async () => {
 	await client?.destroy().catch(() => {});
@@ -57,9 +57,9 @@ function logger() {
 
 describe("review configuration and ownership", () => {
 	test("uses the published default logger and preserves a supplied logger", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
-			loggerOptions: { name: "Created by Rilo", silent: true },
+			loggerOptions: { name: "Created by Virello", silent: true },
 		});
 		expect(client.logger).toBeInstanceOf(Logger);
 		await client.destroy();
@@ -70,7 +70,7 @@ describe("review configuration and ownership", () => {
 			includeTimestamps: false,
 		});
 		const close = spyOn(supplied, "close");
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: supplied,
 			loggerOptions: { name: "Must be ignored" },
@@ -81,7 +81,7 @@ describe("review configuration and ownership", () => {
 		expect(close).not.toHaveBeenCalled();
 	});
 	test("built-ins default on, can all be disabled, and custom classes remain deduplicated", async () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		expect(client.extensions).toHaveLength(5);
 		expect(client.modules.has("tasks")).toBe(true);
 		expect(container.tasks.storage).toBe("memory");
@@ -93,7 +93,7 @@ describe("review configuration and ownership", () => {
 				calls.push("custom");
 			}
 		}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: {
 				localisation: false,
@@ -117,24 +117,24 @@ describe("review configuration and ownership", () => {
 		).toBe(false);
 	});
 	test("only one active client, including while asynchronous cleanup is in progress", async () => {
-		client = new RiloClient({ intents: [] });
-		expect(() => new RiloClient({ intents: [] })).toThrow("Only one");
+		client = new VirelloClient({ intents: [] });
+		expect(() => new VirelloClient({ intents: [] })).toThrow("Only one");
 		let release!: () => void;
 		const gate = new Promise<void>((resolve) => {
 			release = resolve;
 		});
 		client.addDisposer(() => gate);
 		const closed = client.destroy();
-		expect(() => new RiloClient({ intents: [] })).toThrow("Only one");
+		expect(() => new VirelloClient({ intents: [] })).toThrow("Only one");
 		release();
 		await closed;
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 	});
 	test("a failed custom setup releases resources and removes its registrations", async () => {
 		const { instance, logs } = logger();
 		const cleaned: string[] = [];
 		class Broken extends Extension {
-			static override setup(owner: RiloClient) {
+			static override setup(owner: VirelloClient) {
 				owner.modules.register(
 					new ModuleStore(Module, { name: "reviewOwned" }),
 				);
@@ -145,7 +145,7 @@ describe("review configuration and ownership", () => {
 				throw new Error("setup failed");
 			}
 		}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: instance,
 			extensions: { custom: [Broken] },
@@ -161,7 +161,7 @@ describe("review configuration and ownership", () => {
 		const { instance, logs } = logger();
 		const cleaned: string[] = [];
 		class Broken extends Extension {
-			static override setup(owner: RiloClient) {
+			static override setup(owner: VirelloClient) {
 				owner.addDisposer(() => cleaned.push("feature"));
 			}
 			static override beforeLogin() {
@@ -171,7 +171,7 @@ describe("review configuration and ownership", () => {
 		const login = spyOn(Client.prototype, "login").mockResolvedValue(
 			"mock-token",
 		);
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: instance,
 			extensions: { custom: [Broken] },
@@ -181,7 +181,7 @@ describe("review configuration and ownership", () => {
 		expect(logs.error).toHaveLength(1);
 		await client.destroy();
 		login.mockRejectedValue(new Error("authentication failed"));
-		client = new RiloClient({ intents: [], logger: instance });
+		client = new VirelloClient({ intents: [], logger: instance });
 		client.addDisposer(() => cleaned.push("client"));
 		await expect(client.login("invalid")).rejects.toThrow(
 			"authentication failed",
@@ -196,7 +196,7 @@ test("eligible discovery, class metadata, duplicates and bad exports are determi
 	dirs.push(root);
 	mkdirSync(join(root, "folder"));
 	const moduleSource = (name: string, description: string) =>
-		`import { Command } from 'rilo'; export default class extends Command { static options = {name:'${name}',description:'${description}',fullCategory:['metadata']}; }`;
+		`import { Command } from 'virello'; export default class extends Command { static options = {name:'${name}',description:'${description}',fullCategory:['metadata']}; }`;
 	writeFileSync(join(root, "folder/a.ts"), moduleSource("winner", "first"));
 	writeFileSync(join(root, "folder/b.ts"), moduleSource("winner", "second"));
 	for (const name of [
@@ -215,14 +215,14 @@ test("eligible discovery, class metadata, duplicates and bad exports are determi
 	writeFileSync(join(root, "folder/c.ts"), 'throw new Error("bad import")');
 	writeFileSync(
 		join(root, "folder/d.ts"),
-		`import { Command } from 'rilo'; export class A extends Command { constructor(c) { super(c); throw new Error('bad constructor'); } } export class Z extends Command { static options={name:'survivor'}; }`,
+		`import { Command } from 'virello'; export class A extends Command { constructor(c) { super(c); throw new Error('bad constructor'); } } export class Z extends Command { static options={name:'survivor'}; }`,
 	);
 	writeFileSync(
 		join(root, "folder/e.ts"),
-		`import { Command, ApplyOptions } from 'rilo'; @ApplyOptions({name:'decorated',fullCategory:['explicit']}) export default class extends Command {}`,
+		`import { Command, ApplyOptions } from 'virello'; @ApplyOptions({name:'decorated',fullCategory:['explicit']}) export default class extends Command {}`,
 	);
 	const { instance, logs } = logger();
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: instance,
 		root,
@@ -244,7 +244,7 @@ test("eligible discovery, class metadata, duplicates and bad exports are determi
 
 test("failed activation cleans its resources and permits later duplicates and unrelated modules", async () => {
 	const { instance, logs } = logger();
-	client = new RiloClient({ intents: [], logger: instance });
+	client = new VirelloClient({ intents: [], logger: instance });
 	let cleanup = 0;
 	class Bad extends Command {
 		static override options = { name: "same" };
@@ -275,7 +275,7 @@ test("failed activation cleans its resources and permits later duplicates and un
 
 test("failed module cleanup is fatal and releases the other client resources", async () => {
 	const { instance } = logger();
-	client = new RiloClient({ intents: [], logger: instance });
+	client = new VirelloClient({ intents: [], logger: instance });
 	let disposed = false;
 	client.addDisposer(() => {
 		disposed = true;
@@ -296,12 +296,12 @@ test("failed module cleanup is fatal and releases the other client resources", a
 	await expect(client.load()).rejects.toThrow("activation and cleanup");
 	expect(disposed).toBe(true);
 	expect(container.client).toBeUndefined();
-	client = new RiloClient({ intents: [], logger: instance });
+	client = new VirelloClient({ intents: [], logger: instance });
 });
 
 test("invalid repeated task metadata is skipped without disabling healthy tasks", async () => {
 	const { instance, logs } = logger();
-	client = new RiloClient({ intents: [], logger: instance });
+	client = new VirelloClient({ intents: [], logger: instance });
 	class Invalid extends Task {
 		static override options = { interval: -1 };
 		override run() {}

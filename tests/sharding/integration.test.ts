@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import "./fixtures/contracts";
-import { RiloClient, ShardCoordinator, ShardManager } from "../../src/index";
+import { VirelloClient, ShardCoordinator, ShardManager } from "../../src/index";
 import { fixture, logger, stack, tokenA, until } from "./helpers";
 
 describe("real loopback coordinator, supervisors and Bun shard processes", () => {
@@ -193,11 +193,13 @@ describe("real loopback coordinator, supervisors and Bun shard processes", () =>
 		}
 	}, 20000);
 	test("one client per process remains enforced and no transport starts by default", async () => {
-		const client = new RiloClient({ intents: [], logger });
+		const client = new VirelloClient({ intents: [], logger });
 		try {
 			expect(client.sharding.enabled).toBe(false);
 			expect(client.sharding.isConnected).toBe(false);
-			expect(() => new RiloClient({ intents: [], logger })).toThrow("Only one");
+			expect(() => new VirelloClient({ intents: [], logger })).toThrow(
+				"Only one",
+			);
 			await expect(client.sharding.connect()).rejects.toThrow(
 				"not a ShardManager",
 			);

@@ -1,4 +1,4 @@
-import { ShardCoordinator } from "rilo/sharding";
+import { ShardCoordinator } from "virello/sharding";
 import {
 	ExampleConfigurationError,
 	integerEnv,

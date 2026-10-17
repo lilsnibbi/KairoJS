@@ -17,9 +17,9 @@ import { frame } from "../../src/sharding/transport/protocol";
 import { fixture, logger, sessionLimit, tokenA, until } from "./helpers";
 
 function legacyFiles() {
-	const folder = mkdtempSync(join(tmpdir(), "rilo-unused-state-"));
+	const folder = mkdtempSync(join(tmpdir(), "virello-unused-state-"));
 	const statePath = join(folder, "sharding.sqlite");
-	const stateDirectory = join(folder, ".rilo-sharding", "a");
+	const stateDirectory = join(folder, ".virello-sharding", "a");
 	mkdirSync(stateDirectory, { recursive: true });
 	const hostFile = join(stateDirectory, "host.sqlite");
 	const gate = join(stateDirectory, "supervisor.json");
@@ -27,10 +27,10 @@ function legacyFiles() {
 	writeFileSync(gate, '{"epoch":"obsolete"}');
 	const held = new Database(statePath);
 	held.exec(
-		"CREATE TABLE rilo_sharding (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
+		"CREATE TABLE virello_sharding (key TEXT PRIMARY KEY, value TEXT NOT NULL)",
 	);
 	held
-		.query("INSERT INTO rilo_sharding VALUES (?, ?)")
+		.query("INSERT INTO virello_sharding VALUES (?, ?)")
 		.run("owner:a", '"old-supervisor"');
 	held.exec("PRAGMA locking_mode=EXCLUSIVE; BEGIN EXCLUSIVE; COMMIT;");
 	const originals = [statePath, hostFile, gate].map((path) => ({
@@ -55,7 +55,7 @@ function legacyFiles() {
 				expect(readFileSync(original.path).equals(original.bytes)).toBe(true);
 			expect(
 				held
-					.query("SELECT value FROM rilo_sharding WHERE key = ?")
+					.query("SELECT value FROM virello_sharding WHERE key = ?")
 					.get("owner:a"),
 			).toEqual({ value: '"old-supervisor"' });
 		},
@@ -200,8 +200,8 @@ test("a host started before its coordinator connects without spawning early; adm
 			method: "HEAD",
 			headers: {
 				authorization: `Bearer ${tokenA}`,
-				"x-rilo-worker": "a",
-				"x-rilo-instance": "fresh",
+				"x-virello-worker": "a",
+				"x-virello-instance": "fresh",
 			},
 		});
 		expect(response.status).toBe(204);

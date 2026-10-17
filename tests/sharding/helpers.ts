@@ -30,7 +30,7 @@ export async function until(
 	}
 }
 export async function stack(options: Partial<ShardCoordinatorOptions> = {}) {
-	const folder = mkdtempSync(join(tmpdir(), "rilo-shards-"));
+	const folder = mkdtempSync(join(tmpdir(), "virello-shards-"));
 	const base: ShardCoordinatorOptions = {
 		shardCount: 2,
 		workers: [

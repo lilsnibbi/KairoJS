@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import "./fixtures/contracts";
 import {
 	container,
-	RiloClient,
+	VirelloClient,
 	ShardCoordinator,
 	ShardError,
 	type ShardStats,
@@ -416,7 +416,7 @@ test("stats fails during maintenance and returns fresh data after reconciliation
 
 test("container.sharding follows the active client and unmanaged clients cannot return local fallback stats", async () => {
 	for (let attempt = 0; attempt < 2; attempt++) {
-		const client = new RiloClient({ intents: [], logger });
+		const client = new VirelloClient({ intents: [], logger });
 		try {
 			expect(container.sharding).toBe(client.sharding);
 			expect(Reflect.set(container, "sharding", {})).toBe(false);

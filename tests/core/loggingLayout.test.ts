@@ -28,10 +28,10 @@ const entry: LogEntry = {
 	},
 };
 const keys = [
-	"RILO_LOG_WIDTH",
-	"RILO_LOG_DETAIL",
-	"RILO_LOG_LAYOUT",
-	"RILO_LOG_FORMAT",
+	"VIRELLO_LOG_WIDTH",
+	"VIRELLO_LOG_DETAIL",
+	"VIRELLO_LOG_LAYOUT",
+	"VIRELLO_LOG_FORMAT",
 	"COLUMNS",
 	"NO_COLOR",
 	"FORCE_COLOR",
@@ -404,7 +404,7 @@ test("native framing uses sanitized event and source names without leaking redac
 	expect(text).toContain("[REDACTED]");
 });
 test("native filters, transport and JSON files keep full safe records when console level filters them", async () => {
-	const folder = mkdtempSync(join(tmpdir(), "rilo-native-logging-"));
+	const folder = mkdtempSync(join(tmpdir(), "virello-native-logging-"));
 	if (!resolve(folder).startsWith(resolve(tmpdir()) + sep))
 		throw new Error("Unexpected fixture path.");
 	const filter = mock(() => true);
@@ -476,7 +476,7 @@ test("DEBUG defaults to full metadata and an explicit compact choice remains res
 	).not.toContain(connectionId);
 });
 test("text width options override environment and default terminal width stays capped", () => {
-	process.env.RILO_LOG_WIDTH = "64";
+	process.env.VIRELLO_LOG_WIDTH = "64";
 	process.env.COLUMNS = "400";
 	const message =
 		"A readable line of operational detail with predictable wrapping. ".repeat(
@@ -493,7 +493,7 @@ test("text width options override environment and default terminal width stays c
 			.split("\n")
 			.some((line) => Bun.stringWidth(line) > 64),
 	).toBe(true);
-	process.env.RILO_LOG_WIDTH = "3";
+	process.env.VIRELLO_LOG_WIDTH = "3";
 	fits(text(), 120);
 	expect(
 		text()

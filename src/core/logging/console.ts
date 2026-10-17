@@ -59,7 +59,7 @@ function widthFor(settings: Settings, level: LogLevel): number {
 	return textWidth(
 		settings.output.width ??
 			settings.options.box?.width ??
-			Number(process.env.RILO_LOG_WIDTH),
+			Number(process.env.VIRELLO_LOG_WIDTH),
 		detected,
 	);
 }
@@ -138,18 +138,18 @@ function serialize(
 }
 
 /**
- * Create a logger with Rilo console formatting and the native logger’s streams, filters, and file lifecycle.
- * @param name - Logger name; defaults to Rilo.
+ * Create a logger with Virello console formatting and the native logger’s streams, filters, and file lifecycle.
+ * @param name - Logger name; defaults to Virello.
  * @param options - Native logger settings.
  * @param output - Console formatting and redaction settings.
  * @returns A new logger. Await close() when its resources are no longer needed.
  */
 export function createConsoleLogger(
-	name = "Rilo",
+	name = "Virello",
 	options: Partial<LoggerOptions> = {},
 	output: ConsoleLogOptions = {},
 ): Logger {
-	const requestedLevel = process.env.RILO_LOG_LEVEL?.toLowerCase() ?? "info";
+	const requestedLevel = process.env.VIRELLO_LOG_LEVEL?.toLowerCase() ?? "info";
 	const level =
 		options.level ??
 		(Object.hasOwn(levels, requestedLevel) ? levels[requestedLevel] : "NOTIF");
@@ -161,15 +161,15 @@ export function createConsoleLogger(
 		options.relativePaths !== undefined
 	)
 		return new Logger({ name, level, ...options });
-	const layout = options.layout ?? process.env.RILO_LOG_LAYOUT;
-	const detail = output.detail ?? process.env.RILO_LOG_DETAIL;
-	const stackSetting = output.stacks ?? process.env.RILO_LOG_STACKS;
+	const layout = options.layout ?? process.env.VIRELLO_LOG_LAYOUT;
+	const detail = output.detail ?? process.env.VIRELLO_LOG_DETAIL;
+	const stackSetting = output.stacks ?? process.env.VIRELLO_LOG_STACKS;
 	const settings: Settings = {
 		options,
 		output,
 		format:
 			output.format ??
-			(process.env.RILO_LOG_FORMAT === "json" ? "json" : "text"),
+			(process.env.VIRELLO_LOG_FORMAT === "json" ? "json" : "text"),
 		stacks:
 			stackSetting === "off" || stackSetting === "full"
 				? stackSetting

@@ -3,18 +3,18 @@ import { mergeDefault } from "../../../src/utilities/index";
 
 describe("mergeDefault", () => {
 	test("applies prototype-named JSON defaults without changing prototypes", () => {
-		const base = JSON.parse('{"__proto__":{"riloDefaultPolluted":true}}');
+		const base = JSON.parse('{"__proto__":{"virelloDefaultPolluted":true}}');
 		const overwrites = {};
 		try {
 			mergeDefault(base, overwrites);
-			expect(Object.hasOwn(Object.prototype, "riloDefaultPolluted")).toBe(
+			expect(Object.hasOwn(Object.prototype, "virelloDefaultPolluted")).toBe(
 				false,
 			);
 			expect(Object.getPrototypeOf(overwrites)).toBe(Object.prototype);
 			expect(Object.hasOwn(overwrites, "__proto__")).toBe(true);
 			expect(overwrites).toEqual(base);
 		} finally {
-			Reflect.deleteProperty(Object.prototype, "riloDefaultPolluted");
+			Reflect.deleteProperty(Object.prototype, "virelloDefaultPolluted");
 		}
 	});
 

@@ -12,14 +12,14 @@ export function* checkOptionType({
 }): Generator<CommandDifference> {
 	const expectedTypeString =
 		optionTypeToPrettyName.get(expectedType) ??
-		`unknown (${expectedType}); please contact Rilo developers about this!`;
+		`unknown (${expectedType}); please contact Virello developers about this!`;
 
 	if (originalType !== expectedType) {
 		yield {
 			key,
 			original:
 				optionTypeToPrettyName.get(originalType) ??
-				`unknown (${originalType}); please contact Rilo developers about this!`,
+				`unknown (${originalType}); please contact Virello developers about this!`,
 			expected: expectedTypeString,
 		};
 	}

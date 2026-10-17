@@ -1,14 +1,14 @@
 import { afterEach, expect, test } from "bun:test";
-import { Command, RiloClient, Service } from "rilo";
+import { Command, VirelloClient, Service } from "virello";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
 });
 
 test("a module can await registration of another module in its initializing store", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});
@@ -45,7 +45,7 @@ test("a module can await registration of another module in its initializing stor
 });
 
 test("startup hooks can register modules in a staged store that has not initialized yet", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});
@@ -79,7 +79,7 @@ test("startup hooks can register modules in a staged store that has not initiali
 
 for (const registerInHook of [false, true])
 	test(`startup ${registerInHook ? "nested" : "explicit"} registration never waits behind its own activation`, async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: { debug() {}, notif() {}, alert() {}, error() {} },
 		});
@@ -117,7 +117,7 @@ for (const registerInHook of [false, true])
 	});
 
 test("startup hooks preserve earlier explicit registrations that have not activated yet", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});
@@ -162,7 +162,7 @@ test("startup hooks preserve earlier explicit registrations that have not activa
 
 for (const duplicateName of ["entry", "another-entry"]) {
 	test(`startup metadata names do not deadlock registration through ${duplicateName}`, async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: { debug() {}, notif() {}, alert() {}, error() {} },
 		});
@@ -206,7 +206,7 @@ for (const duplicateName of ["entry", "another-entry"]) {
 }
 
 test("startup metadata names preserve staged precedence across different registration names", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});
@@ -252,7 +252,7 @@ test("startup metadata names preserve staged precedence across different registr
 });
 
 test("startup registration aliases cannot hide a different resolved module name", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});

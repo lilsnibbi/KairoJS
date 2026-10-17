@@ -12,21 +12,21 @@ import { pathToFileURL } from "node:url";
 import {
 	Command,
 	Extension,
-	RiloClient,
+	VirelloClient,
 	Listener,
 	Module,
 	ModuleLoader,
 	type ModulePaths,
 	ModuleStore,
-} from "rilo";
+} from "virello";
 
-declare module "rilo" {
+declare module "virello" {
 	interface ModuleStores {
 		probes: ModuleStore<Module, "probes">;
 	}
 }
 const directories: string[] = [];
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 function fixture() {
 	const path = mkdtempSync(join(import.meta.dir, "glob-fixture-"));
 	directories.push(path);
@@ -39,7 +39,7 @@ function put(base: string, path: string, source: string) {
 	return file;
 }
 const command = (name?: string, description = "loaded") =>
-	'import { Command } from "rilo"; export default class extends Command { constructor(context) { super(context, ' +
+	'import { Command } from "virello"; export default class extends Command { constructor(context) { super(context, ' +
 	JSON.stringify({ ...(name ? { name } : {}), description }) +
 	"); } }";
 afterEach(async () => {
@@ -56,7 +56,7 @@ describe("explicit Bun module globs", () => {
 	test("no implicit folders, and load is idempotent", async () => {
 		const root = fixture();
 		put(root, "commands/broken.ts", "this is not typescript");
-		client = new RiloClient({ intents: [], root });
+		client = new VirelloClient({ intents: [], root });
 		await client.load();
 		const argument = client.modules.require("arguments").get("string");
 		await Promise.all([client.load(), client.load()]);
@@ -70,7 +70,7 @@ describe("explicit Bun module globs", () => {
 		put(root, "odd place/.hidden.ts", command());
 		put(root, "odd place/skip.ts", 'throw new Error("excluded")');
 		put(root, "odd place/types.d.ts", "export interface OnlyTypes {}");
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: pathToFileURL(root),
 			modules: { commands: ["odd place/**/*.{ts,mts}", "!**/skip.ts"] },
@@ -81,7 +81,7 @@ describe("explicit Bun module globs", () => {
 	test("relative roots and absolute platform paths work", async () => {
 		const root = fixture();
 		const file = put(root, "wherever/a.ts", command());
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: join(root, "..", root.split(sep).at(-1)!),
 			modules: { commands: file },
@@ -91,14 +91,14 @@ describe("explicit Bun module globs", () => {
 	});
 	test("native separators and overlapping includes import once; export aliases do not duplicate instances", async () => {
 		const root = fixture();
-		const key = "__riloImportCount";
+		const key = "__virelloImportCount";
 		Reflect.set(globalThis, key, 0);
 		put(
 			root,
 			"unusual/a.ts",
-			`import { Command } from "rilo"; globalThis.${key}++; class A extends Command {} export { A, A as default };`,
+			`import { Command } from "virello"; globalThis.${key}++; class A extends Command {} export { A, A as default };`,
 		);
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root,
 			modules: {
@@ -116,16 +116,16 @@ describe("explicit Bun module globs", () => {
 	});
 	test("one file can serve several module kinds without repeated evaluation", async () => {
 		const root = fixture();
-		const key = "__riloKinds";
+		const key = "__virelloKinds";
 		Reflect.set(globalThis, key, 0);
 		put(
 			root,
 			"mixed.ts",
-			'import { Command, Listener } from "rilo"; globalThis.' +
+			'import { Command, Listener } from "virello"; globalThis.' +
 				key +
 				'++; export class A extends Command {} export class B extends Listener { constructor(c) { super(c,{name:"event",event:"test"}) } run() {} }',
 		);
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root,
 			modules: { commands: "*.ts", listeners: "*.ts" },
@@ -141,7 +141,7 @@ describe("explicit Bun module globs", () => {
 		Reflect.deleteProperty(globalThis, key);
 	});
 	test("valid empty matches are allowed", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: fixture(),
 			modules: { commands: "missing/**/*.ts" },
@@ -153,7 +153,7 @@ describe("explicit Bun module globs", () => {
 		test(`invalid pattern fails clearly: ${JSON.stringify(pattern)}`, () => {
 			expect(
 				() =>
-					new RiloClient({
+					new VirelloClient({
 						intents: [],
 						modules: { commands: pattern } as ModulePaths,
 					}),
@@ -162,7 +162,7 @@ describe("explicit Bun module globs", () => {
 	test("unregistered kinds require an extension", () => {
 		expect(
 			() =>
-				new RiloClient({
+				new VirelloClient({
 					intents: [],
 					extensions: { services: false },
 					modules: { services: "*.ts" },
@@ -173,7 +173,7 @@ describe("explicit Bun module globs", () => {
 		const root = fixture();
 		put(root, "a.ts", command("same"));
 		put(root, "b.ts", command("same"));
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root,
 			modules: { commands: "*.ts" },
@@ -190,7 +190,7 @@ describe("explicit Bun module globs", () => {
 		test(`startup skips invalid module source: ${source}`, async () => {
 			const root = fixture();
 			const path = put(root, "a.ts", source);
-			client = new RiloClient({
+			client = new VirelloClient({
 				intents: [],
 				root,
 				modules: { commands: "*.ts" },
@@ -208,7 +208,7 @@ describe("explicit Bun module globs", () => {
 		const root = fixture();
 		const firstPath = put(root, "a.ts", command("one", "initial"));
 		const secondPath = put(root, "b.ts", command("two"));
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root,
 			modules: { commands: "*.ts" },
@@ -242,7 +242,7 @@ describe("explicit Bun module globs", () => {
 
 describe("module lifecycle and extension contracts", () => {
 	test("async loader and module hooks run in order; failed activation preserves unrelated instances", async () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		const calls: string[] = [];
 		class Hooks extends ModuleLoader<Module> {
 			override async onLoad() {
@@ -316,7 +316,7 @@ describe("module lifecycle and extension contracts", () => {
 	test("a once listener is removed when unloaded before firing", async () => {
 		const emitter = new EventEmitter();
 		const maximum = emitter.getMaxListeners();
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		class Once extends Listener {
 			constructor(context: Listener.Context) {
 				super(context, { emitter, event: "one", once: true });
@@ -342,14 +342,14 @@ describe("module lifecycle and extension contracts", () => {
 			}
 		}
 		class Second extends First {}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { custom: [First, Second, First] },
 		});
 		expect(calls).toEqual(["First", "Second"]);
 	});
 	test("closed clients reject load and reuse one cleanup promise", async () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		await client.load();
 		const first = client.destroy();
 		expect(client.destroy()).toBe(first);
@@ -359,7 +359,7 @@ describe("module lifecycle and extension contracts", () => {
 });
 
 test("module events reflect successful registration and unloading", async () => {
-	client = new RiloClient({ intents: [] });
+	client = new VirelloClient({ intents: [] });
 	const events: string[] = [];
 	client.on("moduleLoaded", (store, module) => {
 		if (store.name === "commands") events.push(`load:${module.name}`);

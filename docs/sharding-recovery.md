@@ -20,7 +20,7 @@ through coordinator outages. Unmanaged clients default to `maintenance = false`.
 
 Only authenticated control, an accepted lease, local assignment application and
 coordinator registration clear maintenance. Opening a socket or receiving a
-welcome is insufficient. Rilo does not install a command policy or send outage
+welcome is insufficient. Virello does not install a command policy or send outage
 replies: developers choose the response appropriate to each operation.
 
 ```ts
@@ -93,7 +93,7 @@ Discord shard IDs. Dormant clients remain in maintenance.
 
 Recovery with the same ID and total preserves the Discord session. If the total
 changed, the child closes its old gateway and reconnects with the accepted ID
-and current total, even when the numerical ID is unchanged. RiloClient, modules
+and current total, even when the numerical ID is unchanged. VirelloClient, modules
 and application listeners stay alive. Assignment changes reset gateway resume
 data and guild/channel/user caches. Extension login hooks run once per client;
 Discord ready events may repeat. The gateway adapter targets discord.js 14.
@@ -154,7 +154,7 @@ fetching fresh `GET /gateway/bot` limits. This is an IDENTIFY cooldown, not a
 reconciliation grace period. Permits are charged before sending and never refunded
 on loss. An unexpired allowance cannot increase. `sessionStartLimit` is the
 manual/offline alternative and needs a fresh snapshot on every start and expiry.
-Restarting Rilo does not reset Discord's allowance.
+Restarting Virello does not reset Discord's allowance.
 
 Upgrade coordinator, hosts and children together: the internal protocol changed.
 Restart running processes deliberately to load the new version. `statePath`,

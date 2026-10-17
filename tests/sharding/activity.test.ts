@@ -63,8 +63,8 @@ async function peer(
 	const socket = new Socket(url, {
 		headers: {
 			authorization: `Bearer ${host === "b" ? tokenB : tokenA}`,
-			"x-rilo-worker": host,
-			"x-rilo-instance": instance,
+			"x-virello-worker": host,
+			"x-virello-instance": instance,
 		},
 		perMessageDeflate: false,
 	});
@@ -127,7 +127,7 @@ async function peer(
 
 for (const level of ["info", "debug"] as const) {
 	test(`actual coordinator example emits safe ${level} activity through real WebSockets`, async () => {
-		const folder = mkdtempSync(join(tmpdir(), "rilo-coordinator-activity-"));
+		const folder = mkdtempSync(join(tmpdir(), "virello-coordinator-activity-"));
 		expect(resolve(folder).startsWith(resolve(tmpdir()) + sep)).toBe(true);
 		const child = Bun.spawn(
 			[
@@ -149,10 +149,10 @@ for (const level of ["info", "debug"] as const) {
 					SHARD_COORDINATOR_PORT: "0",
 					SHARD_TLS_CERT: "",
 					SHARD_TLS_KEY: "",
-					RILO_LOG_FORMAT: "json",
-					RILO_LOG_LEVEL: level,
-					RILO_LOG_STACKS: "off",
-					RILO_TEST_CONTROL_SHUTDOWN: "1",
+					VIRELLO_LOG_FORMAT: "json",
+					VIRELLO_LOG_LEVEL: level,
+					VIRELLO_LOG_STACKS: "off",
+					VIRELLO_TEST_CONTROL_SHUTDOWN: "1",
 				},
 				stdin: "ignore",
 				stdout: "pipe",
@@ -298,7 +298,7 @@ test("authentication, upgrade and reconnect activity preserves rejection statuse
 			(
 				await fetch(url, {
 					headers: {
-						"x-rilo-worker": "unknown-sensitive-worker",
+						"x-virello-worker": "unknown-sensitive-worker",
 						authorization: "Bearer unknown-sensitive-credential",
 					},
 				})
@@ -308,16 +308,16 @@ test("authentication, upgrade and reconnect activity preserves rejection statuse
 			(
 				await fetch(url, {
 					headers: {
-						"x-rilo-worker": "a",
+						"x-virello-worker": "a",
 						authorization: "Bearer unknown-sensitive-credential",
 					},
 				})
 			).status,
 		).toBe(401);
 		const headers = {
-			"x-rilo-worker": "a",
+			"x-virello-worker": "a",
 			authorization: `Bearer ${tokenA}`,
-			"x-rilo-instance": "fixture-instance",
+			"x-virello-instance": "fixture-instance",
 		};
 		expect((await fetch(url, { headers })).status).toBe(400);
 		host = await peer(s.coordinator.url!, "a", "fixture-instance");
@@ -333,7 +333,7 @@ test("authentication, upgrade and reconnect activity preserves rejection statuse
 					headers: {
 						...headers,
 						upgrade: "websocket",
-						"x-rilo-instance": "different-instance",
+						"x-virello-instance": "different-instance",
 					},
 				})
 			).status,

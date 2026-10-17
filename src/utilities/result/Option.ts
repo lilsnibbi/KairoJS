@@ -7,8 +7,8 @@ import {
 import { OptionError } from "./OptionError";
 import { type Err, err, type Ok, ok, Result } from "./Result";
 
-const ValueProperty = Symbol.for("rilo/result:Option.value");
-const ExistsProperty = Symbol.for("rilo/result:Option.exists");
+const ValueProperty = Symbol.for("virello/result:Option.value");
+const ExistsProperty = Symbol.for("virello/result:Option.exists");
 
 /**
  * Some(value) or None. Some can contain null or undefined explicitly; from() converts nullish values to None. Ordinary

@@ -1,5 +1,5 @@
-import { logEvent } from "rilo/client";
-import { Events, Listener } from "rilo/events";
+import { logEvent } from "virello/client";
+import { Events, Listener } from "virello/events";
 
 export default class ReadyListener extends Listener<typeof Events.ClientReady> {
 	static override options: Listener.Options = {

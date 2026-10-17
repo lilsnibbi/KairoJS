@@ -36,14 +36,14 @@ export interface ShardConfig {
 	assignmentPollIntervalMs?: number;
 	maxDisconnectedLifetimeMs?: number;
 }
-/** Called only by RiloClient; ordinary clients never read transport credentials or open connections. */
+/** Called only by VirelloClient; ordinary clients never read transport credentials or open connections. */
 export function shardConfig(): ShardConfig | undefined {
-	const input = process.env.RILO_SHARD;
+	const input = process.env.VIRELLO_SHARD;
 	if (input === undefined) return undefined;
 	if (!process.send || !process.connected)
 		throw new ShardError(
 			"CONFIG",
-			"RILO_SHARD is reserved for ShardManager-owned Bun IPC children.",
+			"VIRELLO_SHARD is reserved for ShardManager-owned Bun IPC children.",
 		);
 	if (Buffer.byteLength(input) > 8192)
 		throw new ShardError("CONFIG", "Invalid managed shard configuration.");
@@ -83,7 +83,7 @@ interface Lifecycle {
 	logger: LoggerLike;
 }
 
-/** Typed messaging on one managed RiloClient. Handlers run local registered code only. */
+/** Typed messaging on one managed VirelloClient. Handlers run local registered code only. */
 export class ShardLink extends ShardMessenger {
 	private readonly handlers = new Map<string, Handler>();
 	private readonly active = new Map<string, Active>();
@@ -111,7 +111,7 @@ export class ShardLink extends ShardMessenger {
 	};
 	private dormantReason?: string;
 	/**
-	 * Created by RiloClient. Use client.sharding to register handlers and send requests.
+	 * Created by VirelloClient. Use client.sharding to register handlers and send requests.
 	 * @internal
 	 */
 	public constructor(

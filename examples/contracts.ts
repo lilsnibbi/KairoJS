@@ -8,7 +8,7 @@ export interface ExampleShardStats {
 	commands: string[];
 }
 
-declare module "rilo" {
+declare module "virello" {
 	interface ShardRequests {
 		exampleStats: { input: null; output: ExampleShardStats };
 	}

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { container, Task } from "rilo";
+import { container, Task } from "virello";
 
-declare module "rilo" {
+declare module "virello" {
 	interface Tasks {
 		integrationTick: never;
 		integrationEcho: { message: string };
@@ -13,14 +13,14 @@ import { join, resolve, sep } from "node:path";
 import {
 	Command,
 	Extension,
-	RiloClient,
+	VirelloClient,
 	LocaleManager,
 	ModuleLoader,
 	type,
-} from "rilo";
+} from "virello";
 
 const directories: string[] = [];
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 function fixture(): string {
 	const directory = mkdtempSync(join(import.meta.dir, "fixture-"));
 	directories.push(directory);
@@ -36,9 +36,9 @@ afterEach(async () => {
 	}
 });
 
-describe("Rilo integration", () => {
+describe("Virello integration", () => {
 	test("package imports do not enable external services", () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		expect(client.modules.size).toBe(8);
 		expect("server" in client).toBe(false);
 		expect(container.tasks.storage).toBe("memory");
@@ -47,10 +47,10 @@ describe("Rilo integration", () => {
 
 	test("ArkType rejects invalid framework options", () => {
 		expect(
-			() => new RiloClient({ intents: [], defaultCooldown: { delay: -1 } }),
+			() => new VirelloClient({ intents: [], defaultCooldown: { delay: -1 } }),
 		).toThrow();
 		expect(
-			() => new RiloClient({ intents: [], defaultPrefix: 42 } as never),
+			() => new VirelloClient({ intents: [], defaultPrefix: 42 } as never),
 		).toThrow();
 		const payload = type({ count: "number.integer > 0" });
 		expect(payload.assert({ count: 2 })).toEqual({ count: 2 });
@@ -59,7 +59,7 @@ describe("Rilo integration", () => {
 
 	test("built-in pieces load on each client lifecycle", async () => {
 		for (let run = 0; run < 2; run++) {
-			client = new RiloClient({ intents: [] });
+			client = new VirelloClient({ intents: [] });
 			await client.load();
 			expect(client.modules.require("arguments").has("string")).toBe(true);
 			expect(client.modules.require("arguments").has("integer")).toBe(true);
@@ -76,11 +76,11 @@ describe("Rilo integration", () => {
 		mkdirSync(commandDirectory);
 		const path = join(commandDirectory, "ping.ts");
 		const source = (description: string) =>
-			'import { Command } from "rilo"; export default class Ping extends Command { constructor(context: Command.Context) { super(context, { description: ' +
+			'import { Command } from "virello"; export default class Ping extends Command { constructor(context: Command.Context) { super(context, { description: ' +
 			JSON.stringify(description) +
 			" }); } }";
 		writeFileSync(path, source("first"));
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: base,
 			modules: { commands: "commands/*.ts" },
@@ -93,7 +93,7 @@ describe("Rilo integration", () => {
 		await client.load();
 		expect(client.modules.require("commands").get("ping")).toBe(first);
 		await client.destroy();
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: base,
 			modules: { commands: "commands/*.ts" },
@@ -116,7 +116,7 @@ describe("Rilo integration", () => {
 				calls.push("before");
 			}
 		}
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { custom: [Feature, Feature] },
 		});
@@ -137,14 +137,14 @@ describe("Rilo integration", () => {
 			join(locale, "default.json"),
 			JSON.stringify({ greeting: "Hello {{name}}" }),
 		);
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { localisation: { defaultLanguageDirectory: base } },
 		});
 		const handler = new LocaleManager({ defaultLanguageDirectory: base });
 		await handler.init();
-		expect(handler.format("en-US", "greeting", { name: "Rilo" })).toBe(
-			"Hello Rilo",
+		expect(handler.format("en-US", "greeting", { name: "Virello" })).toBe(
+			"Hello Virello",
 		);
 		expect(
 			handler.format("en-US", "missing", { defaultValue: "Fallback" }),
@@ -158,13 +158,13 @@ describe("Rilo integration", () => {
 		expect(handler.init()).toBe(initialization);
 		await initialization;
 		expect(handler.getT("en-US")).toBe(translator);
-		expect(handler.format("en-US", "greeting", { name: "Rilo" })).toBe(
-			"Hello Rilo",
+		expect(handler.format("en-US", "greeting", { name: "Virello" })).toBe(
+			"Hello Virello",
 		);
 	});
 
 	test("task pieces can load without opening Redis connections", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { scheduledtasks: { redis_url: "redis://127.0.0.1:1" } },
 		});
@@ -175,7 +175,7 @@ describe("Rilo integration", () => {
 	});
 
 	test("scheduled tasks run by name or payload without Redis", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { scheduledtasks: { redis_url: "redis://127.0.0.1:1" } },
 		});
@@ -218,7 +218,7 @@ describe("Rilo integration", () => {
 	});
 
 	test("destroy completes cleanup even when a disposer fails", async () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		await client.load();
 		const calls: string[] = [];
 		client.addDisposer(() => {
@@ -237,7 +237,7 @@ describe("Rilo integration", () => {
 	});
 
 	test("scheduling defaults to memory", () => {
-		client = new RiloClient({ intents: [] });
+		client = new VirelloClient({ intents: [] });
 		expect(container.tasks.storage).toBe("memory");
 	});
 });

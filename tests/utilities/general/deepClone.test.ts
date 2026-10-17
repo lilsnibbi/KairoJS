@@ -44,7 +44,7 @@ describe("deepClone", () => {
 	});
 
 	test("GIVEN Symbol THEN returns same", () => {
-		const source = Symbol("rilo");
+		const source = Symbol("virello");
 		expect(deepClone(source)).toBe(source);
 	});
 

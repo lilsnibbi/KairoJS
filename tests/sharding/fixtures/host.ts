@@ -1,5 +1,5 @@
 import "./contracts";
-import { ShardManager } from "rilo";
+import { ShardManager } from "virello";
 
 const manager = new ShardManager({
 	id: process.env.SHARD_TEST_ID!,

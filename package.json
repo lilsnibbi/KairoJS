@@ -1,12 +1,12 @@
 {
-	"name": "rilo",
+	"name": "virello",
 	"version": "0.1.0",
 	"description": "A modular Discord framework for Bun, written in TypeScript.",
 	"type": "module",
 	"license": "MIT AND Apache-2.0",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/lilsnibbi/rilo.git"
+		"url": "https://github.com/lilsnibbi/virello.git"
 	},
 	"exports": {
 		".": {

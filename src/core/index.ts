@@ -38,7 +38,7 @@ export * from "../events/listenerModuleLoader";
 export * from "../events/listenerStore";
 export type { Awaitable } from "../utilities/index";
 export * from "../utilities/result/index";
-export * from "./client/RiloClient";
+export * from "./client/VirelloClient";
 export * from "./lifecycle/Extension";
 export * from "./logging/index";
 export * from "./logging/LoggerLike";

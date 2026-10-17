@@ -22,7 +22,7 @@ import type { IPreconditionContainer } from "./Container";
 
 /** Defines the simple options for the {@link PreconditionContainerSingle}, where only the name of the precondition can be defined. */
 export interface SimplePreconditionSingleResolvableDetails {
-	/** The name of the precondition to retrieve from {@link RiloClient.preconditions}. */
+	/** The name of the precondition to retrieve from {@link VirelloClient.preconditions}. */
 	name: SimplePreconditionKeys;
 }
 
@@ -30,7 +30,7 @@ export interface SimplePreconditionSingleResolvableDetails {
 export interface PreconditionSingleResolvableDetails<
 	K extends PreconditionKeys = PreconditionKeys,
 > {
-	/** The name of the precondition to retrieve from {@link RiloClient.preconditions}. */
+	/** The name of the precondition to retrieve from {@link VirelloClient.preconditions}. */
 	name: K;
 
 	/** The context to be set at {@link PreconditionContainerSingle.context}. */
@@ -43,7 +43,7 @@ export type PreconditionSingleResolvable =
 	| SimplePreconditionSingleResolvableDetails
 	| PreconditionSingleResolvableDetails;
 
-/** An {@link IPreconditionContainer} which runs a single precondition from {@link RiloClient.preconditions}. */
+/** An {@link IPreconditionContainer} which runs a single precondition from {@link VirelloClient.preconditions}. */
 export class PreconditionContainerSingle implements IPreconditionContainer {
 	/** Context passed to the precondition. String entries get an empty object. */
 	public readonly context: Record<PropertyKey, unknown>;

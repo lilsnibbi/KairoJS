@@ -18,7 +18,7 @@ assertCanaryToolchain(
 	revision.stdout.toString().trim(),
 );
 const redis = new RedisClient(
-	requiredRedisUrl(process.env.RILO_TEST_REDIS_URL),
+	requiredRedisUrl(process.env.VIRELLO_TEST_REDIS_URL),
 	{ connectionTimeout: 5000, autoReconnect: false },
 );
 try {
@@ -29,7 +29,7 @@ try {
 } finally {
 	redis.close();
 }
-const reportDirectory = mkdtempSync(join(tmpdir(), "rilo-ci-"));
+const reportDirectory = mkdtempSync(join(tmpdir(), "virello-ci-"));
 async function run(...args: string[]): Promise<void> {
 	console.log(`::group::bun ${args.join(" ")}`);
 	const child = Bun.spawn([process.execPath, ...args], {

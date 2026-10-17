@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-Rilo is a modular Discord framework shipped as raw TypeScript for Bun. There is no build step or Node runtime support.
+Virello is a modular Discord framework shipped as raw TypeScript for Bun. There is no build step or Node runtime support.
 
 - `src/core/`: client configuration and module lifecycle.
 - `src/commands/`, `src/events/`, `src/extensions/`: commands, listeners and built-in extensions.
@@ -33,7 +33,7 @@ Use strict TypeScript and the Bun formatting settings in `bunfig.toml`: tabs and
 
 Use `bun:test` and name files `*.test.ts` in the relevant feature directory. Shared cleanup lives in `tests/setup.ts`. Add regression tests for changed behaviour; cover failure paths and resource cleanup. Run focused tests with `bun test tests/core/resolvers/string.test.ts`.
 
-No numeric coverage threshold is configured. Complete CI requires zero skipped tests and disposable Redis via `RILO_TEST_REDIS_URL`; run `bun scripts/ci.ts` for that validation.
+No numeric coverage threshold is configured. Complete CI requires zero skipped tests and disposable Redis via `VIRELLO_TEST_REDIS_URL`; run `bun scripts/ci.ts` for that validation.
 
 ## Commit & Pull Request Guidelines
 

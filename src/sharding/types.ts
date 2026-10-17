@@ -1,6 +1,6 @@
 import type { LoggerLike } from "../core/logging/LoggerLike";
 
-/** Add named { input, output } request contracts by augmenting rilo. Inputs and outputs must be plain JSON values. */
+/** Add named { input, output } request contracts by augmenting virello. Inputs and outputs must be plain JSON values. */
 export interface ShardRequests {}
 /** Names declared in ShardRequests. */
 export type ShardRequestName = keyof ShardRequests & string;
@@ -211,7 +211,7 @@ export interface ShardCoordinatorOptions {
 	sessionStartLimit?: ShardSessionLimit;
 	/** Message, buffer, concurrency, and deadline limits. Omitted fields use ShardLimits defaults. */
 	limits?: ShardLimits;
-	/** Logger to reuse without taking ownership. Defaults to an owned Rilo console logger. */
+	/** Logger to reuse without taking ownership. Defaults to an owned Virello console logger. */
 	logger?: LoggerLike;
 }
 /** Child crash recovery settings. Delays use exponential backoff with jitter. */
@@ -267,7 +267,7 @@ export interface ShardManagerOptions {
 	maxDisconnectedLifetimeMs?: number;
 	/** Optional minimum local process pool, including standby capacity. Must fit the host's configured maxShards. */
 	processCount?: number;
-	/** Logger to reuse without taking ownership. Defaults to an owned Rilo console logger. */
+	/** Logger to reuse without taking ownership. Defaults to an owned Virello console logger. */
 	logger?: LoggerLike;
 }
 /** Copy of one local process slot’s latest supervisor state. */

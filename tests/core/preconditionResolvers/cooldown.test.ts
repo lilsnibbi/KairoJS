@@ -3,7 +3,7 @@ import type { PreconditionContainerSingle } from "../../../src/commands/checks/c
 import { PreconditionContainerArray } from "../../../src/commands/checks/containers/Group";
 import { parseConstructorPreConditionsCooldown } from "../../../src/commands/checks/resolvers/cooldown";
 import { BucketScope } from "../../../src/commands/enums";
-import type { CooldownOptions } from "../../../src/core/client/RiloClient";
+import type { CooldownOptions } from "../../../src/core/client/VirelloClient";
 import { container } from "../../../src/core/modules/index";
 
 describe("parseConstructorPreConditionsCooldown", () => {

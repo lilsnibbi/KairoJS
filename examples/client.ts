@@ -1,16 +1,16 @@
 import "./contracts";
 import { GatewayIntentBits } from "discord.js";
-import { RiloClient, type LoggerLike } from "rilo/client";
-import { ApplicationCommandRegistries } from "rilo/commands";
+import { VirelloClient, type LoggerLike } from "virello/client";
+import { ApplicationCommandRegistries } from "virello/commands";
 import { developmentGuild } from "./config";
 import { exampleLogger } from "./logging";
 
-export function createBot(logger: LoggerLike = exampleLogger): RiloClient {
+export function createBot(logger: LoggerLike = exampleLogger): VirelloClient {
 	const guildId = developmentGuild();
 	ApplicationCommandRegistries.setDefaultGuildIds(
 		guildId ? [guildId] : undefined,
 	);
-	const client = new RiloClient({
+	const client = new VirelloClient({
 		intents: [GatewayIntentBits.Guilds],
 		logger,
 		root: import.meta.dir,

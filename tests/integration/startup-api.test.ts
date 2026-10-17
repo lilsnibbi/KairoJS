@@ -1,25 +1,25 @@
 import { afterEach, expect, test } from "bun:test";
 import { expectTypeOf } from "expect-type";
-import * as Rilo from "rilo";
+import * as Virello from "virello";
 import {
 	Command,
 	type InternationalizationOptions,
-	RiloClient,
-	type RiloClientOptions,
+	VirelloClient,
+	type VirelloClientOptions,
 	LocaleManager,
 	Module,
 	ModuleRegistry,
 	ModuleStore,
-} from "rilo";
+} from "virello";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
 });
 
 test("the public API has startup and cleanup, without reload entry points", () => {
-	expectTypeOf<RiloClient>().not.toHaveProperty("reload");
+	expectTypeOf<VirelloClient>().not.toHaveProperty("reload");
 	expectTypeOf<Module>().not.toHaveProperty("reload");
 	expectTypeOf<Command>().not.toHaveProperty("reload");
 	expectTypeOf<ModuleRegistry>().not.toHaveProperty("refresh");
@@ -29,17 +29,17 @@ test("the public API has startup and cleanup, without reload entry points", () =
 	expectTypeOf<ModuleStore<Module>>().not.toHaveProperty("replaceAll");
 	expectTypeOf<ModuleStore<Module>>().not.toHaveProperty("replaceFile");
 	expectTypeOf<LocaleManager>().not.toHaveProperty("reloadResources");
-	expectTypeOf<RiloClientOptions>().not.toHaveProperty("hmr");
+	expectTypeOf<VirelloClientOptions>().not.toHaveProperty("hmr");
 	expectTypeOf<InternationalizationOptions>().not.toHaveProperty("hmr");
-	expect("WatchExtension" in Rilo).toBe(false);
-	expect("watchModules" in Rilo).toBe(false);
-	expect("reload" in RiloClient.prototype).toBe(false);
+	expect("WatchExtension" in Virello).toBe(false);
+	expect("watchModules" in Virello).toBe(false);
+	expect("reload" in VirelloClient.prototype).toBe(false);
 	expect("reload" in Command.prototype).toBe(false);
 	expect("reloadResources" in LocaleManager.prototype).toBe(false);
 });
 
 test("old watcher options fail with migration guidance", () => {
-	expect(() => new RiloClient({ intents: [], hmr: {} } as never)).toThrow(
+	expect(() => new VirelloClient({ intents: [], hmr: {} } as never)).toThrow(
 		'no longer supports "hmr"',
 	);
 	expect(() => new LocaleManager({ hmr: { enabled: true } } as never)).toThrow(
@@ -48,7 +48,7 @@ test("old watcher options fail with migration guidance", () => {
 });
 
 test("shutdown waits for startup activation and still runs module cleanup", async () => {
-	client = new RiloClient({ intents: [] });
+	client = new VirelloClient({ intents: [] });
 	let release!: () => void;
 	let started!: () => void;
 	const gate = new Promise<void>((resolve) => {
@@ -86,7 +86,7 @@ test("shutdown waits for startup activation and still runs module cleanup", asyn
 });
 
 test("failed activation shares one startup result and cleans up the partial module", async () => {
-	client = new RiloClient({ intents: [] });
+	client = new VirelloClient({ intents: [] });
 	let loads = 0,
 		unloads = 0;
 	class Broken extends Command {

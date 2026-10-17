@@ -1,9 +1,9 @@
 // Only the example subprocess loads this preload. No Discord request leaves the fixture.
-import { ShardManager } from "rilo/sharding";
+import { ShardManager } from "virello/sharding";
 
 // Duplicate rejection is scoped to a supervisor instance, not every process sharing a host ID.
 // Pin the example's test identity before it opens a socket, just like the coordinator protocol tests.
-const instance = process.env.RILO_TEST_SUPERVISOR_INSTANCE;
+const instance = process.env.VIRELLO_TEST_SUPERVISOR_INSTANCE;
 if (instance) {
 	const start = ShardManager.prototype.start;
 	ShardManager.prototype.start = function () {
@@ -34,7 +34,7 @@ globalThis.fetch = Object.assign(
 
 // Controlled shutdown lets the actual example drain naturally on Windows too,
 // where Subprocess.kill('SIGTERM') terminates the process instead of delivering a JS signal.
-if (process.env.RILO_TEST_CONTROL_SHUTDOWN === "1" && process.send) {
+if (process.env.VIRELLO_TEST_CONTROL_SHUTDOWN === "1" && process.send) {
 	process.on("message", (message) => {
 		if ((message as { fixture?: string }).fixture !== "shutdown") return;
 		process.emit("SIGTERM", "SIGTERM");

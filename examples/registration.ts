@@ -1,5 +1,5 @@
-import { container } from "rilo/client";
-import type { Command } from "rilo/commands";
+import { container } from "virello/client";
+import type { Command } from "virello/commands";
 
 export function registerCommand(
 	registry: Command.Registry,

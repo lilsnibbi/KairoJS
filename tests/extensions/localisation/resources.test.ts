@@ -9,10 +9,10 @@ import {
 import { tmpdir } from "node:os";
 import { dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
-import { container, RiloClient, LocaleManager } from "rilo";
+import { container, VirelloClient, LocaleManager } from "virello";
 
 const folders: string[] = [];
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
@@ -23,7 +23,7 @@ afterEach(async () => {
 	}
 });
 function fixture() {
-	const folder = mkdtempSync(join(tmpdir(), "rilo-locales-"));
+	const folder = mkdtempSync(join(tmpdir(), "virello-locales-"));
 	folders.push(folder);
 	return folder;
 }
@@ -74,7 +74,7 @@ describe("owned startup resource loader", () => {
 		});
 		file(root, "my langues été/fr/commands/admin.json", { help: "Aide" });
 		file(root, "my langues été/en-US/commands/admin.json", { help: "Help" });
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			root: pathToFileURL(root + sep),
 			extensions: {
@@ -85,8 +85,8 @@ describe("owned startup resource loader", () => {
 		expect(manager.languagesLoaded).toBe(false);
 		await manager.init();
 		expect(manager.languagesDirectory).toBe(join(root, "my langues été"));
-		expect(manager.format("en-US", "hello", { name: "Rilo" })).toBe(
-			"Hello Rilo",
+		expect(manager.format("en-US", "hello", { name: "Virello" })).toBe(
+			"Hello Virello",
 		);
 		expect(manager.format("en-US", "items", { count: 2 })).toBe("2 items");
 		expect(manager.format("fr", "commands/admin:help")).toBe("Aide");
@@ -177,7 +177,7 @@ describe("owned startup resource loader", () => {
 		).toHaveLength(4);
 	});
 	test("empty/missing implicit languages directory is valid and has a usable default translator", async () => {
-		client = new RiloClient({ intents: [], root: fixture() });
+		client = new VirelloClient({ intents: [], root: fixture() });
 		await container.i18n.init();
 		expect(container.i18n.diagnostics).toHaveLength(0);
 		expect(
@@ -226,7 +226,9 @@ describe("owned startup resource loader", () => {
 			],
 		});
 		await manager.init();
-		expect(manager.format("fr", "hello", { name: "rilo" })).toBe("Hello RILO");
+		expect(manager.format("fr", "hello", { name: "virello" })).toBe(
+			"Hello VIRELLO",
+		);
 		expect(manager.format("fr", "absent")).toBe("Missing absent");
 		expect(() => manager.getT("unknown")).toThrow("Invalid language");
 	});

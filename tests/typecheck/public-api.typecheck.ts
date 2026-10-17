@@ -6,9 +6,9 @@ import {
 	type ModuleStore,
 	type ModuleStores,
 	type TaskPayload,
-} from "rilo";
+} from "virello";
 
-declare module "rilo" {
+declare module "virello" {
 	interface Container {
 		exampleService: { ready: boolean };
 	}

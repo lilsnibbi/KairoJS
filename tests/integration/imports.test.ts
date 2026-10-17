@@ -1,19 +1,19 @@
 import { expect, test } from "bun:test";
 import { join } from "node:path";
-import * as Root from "rilo";
-import * as Client from "rilo/client";
-import * as Commands from "rilo/commands";
-import * as Discord from "rilo/discord";
-import * as Events from "rilo/events";
-import * as Extensions from "rilo/extensions";
-import * as Localisation from "rilo/localisation";
-import * as Modules from "rilo/modules";
-import * as Scheduling from "rilo/scheduling";
-import * as Services from "rilo/services";
-import * as Sharding from "rilo/sharding";
-import * as Time from "rilo/time";
-import * as Utilities from "rilo/utilities";
-import * as Validation from "rilo/validation";
+import * as Root from "virello";
+import * as Client from "virello/client";
+import * as Commands from "virello/commands";
+import * as Discord from "virello/discord";
+import * as Events from "virello/events";
+import * as Extensions from "virello/extensions";
+import * as Localisation from "virello/localisation";
+import * as Modules from "virello/modules";
+import * as Scheduling from "virello/scheduling";
+import * as Services from "virello/services";
+import * as Sharding from "virello/sharding";
+import * as Time from "virello/time";
+import * as Utilities from "virello/utilities";
+import * as Validation from "virello/validation";
 import manifest from "../../package.json";
 import { CorePreconditions } from "../../src/commands/checks/core";
 import { ApplicationCommandRegistries } from "../../src/commands/registration/api";
@@ -75,7 +75,7 @@ test("sharding exposes supported APIs without exporting stats transport plumbing
 });
 
 for (const [name, category] of Object.entries(categories)) {
-	test(`rilo/${name} shares every runtime identity with the root`, () => {
+	test(`virello/${name} shares every runtime identity with the root`, () => {
 		expect(Object.keys(category).length).toBeGreaterThan(0);
 		expect("default" in category).toBe(false);
 		for (const [key, value] of Object.entries(category)) {
@@ -91,7 +91,7 @@ test("category imports keep shared services, registration state, and the single-
 	);
 	expect(Commands.ApplicationCommandRegistries.registries).toBe(registries);
 	expect(Commands.CorePreconditions).toBe(CorePreconditions);
-	expect("RiloClient" in Commands).toBe(false);
+	expect("VirelloClient" in Commands).toBe(false);
 	expect("Command" in Time).toBe(false);
 	const logger: Root.LoggerLike = {
 		debug() {},
@@ -99,12 +99,12 @@ test("category imports keep shared services, registration state, and the single-
 		alert() {},
 		error() {},
 	};
-	const client = new Client.RiloClient({ intents: [], logger });
+	const client = new Client.VirelloClient({ intents: [], logger });
 	try {
 		expect(Root.container.client).toBe(client);
-		expect(client).toBeInstanceOf(Root.RiloClient);
-		expect(() => new Root.RiloClient({ intents: [], logger })).toThrow(
-			"Only one RiloClient can be active",
+		expect(client).toBeInstanceOf(Root.VirelloClient);
+		expect(() => new Root.VirelloClient({ intents: [], logger })).toThrow(
+			"Only one VirelloClient can be active",
 		);
 		await client.load();
 		expect(Client.container.tasks).toBe(Root.container.tasks);
@@ -123,9 +123,9 @@ test("category imports keep shared services, registration state, and the single-
 });
 
 for (const specifier of [
-	"rilo",
-	"rilo/engine",
-	...Object.keys(categories).map((name) => `rilo/${name}`),
+	"virello",
+	"virello/engine",
+	...Object.keys(categories).map((name) => `virello/${name}`),
 ]) {
 	test(`${specifier} can be imported first without opening resources`, async () => {
 		const child = Bun.spawn(

@@ -76,7 +76,7 @@ export class PaginatedMessage {
 	/** The default actions of this handler. */
 	public static defaultActions: PaginatedMessageAction[] = [
 		{
-			customId: "rilo/pagination.goToPage",
+			customId: "virello/pagination.goToPage",
 			type: ComponentType.StringSelect,
 			options: [],
 			run: ({ handler, interaction }) =>
@@ -84,14 +84,14 @@ export class PaginatedMessage {
 				(handler.index = parseInt(interaction.values[0], 10)),
 		},
 		{
-			customId: "rilo/pagination.firstPage",
+			customId: "virello/pagination.firstPage",
 			style: ButtonStyle.Primary,
 			emoji: "⏪",
 			type: ComponentType.Button,
 			run: ({ handler }) => (handler.index = 0),
 		},
 		{
-			customId: "rilo/pagination.previousPage",
+			customId: "virello/pagination.previousPage",
 			style: ButtonStyle.Primary,
 			emoji: "◀️",
 			type: ComponentType.Button,
@@ -104,7 +104,7 @@ export class PaginatedMessage {
 			},
 		},
 		{
-			customId: "rilo/pagination.nextPage",
+			customId: "virello/pagination.nextPage",
 			style: ButtonStyle.Primary,
 			emoji: "▶️",
 			type: ComponentType.Button,
@@ -117,14 +117,14 @@ export class PaginatedMessage {
 			},
 		},
 		{
-			customId: "rilo/pagination.goToLastPage",
+			customId: "virello/pagination.goToLastPage",
 			style: ButtonStyle.Primary,
 			emoji: "⏩",
 			type: ComponentType.Button,
 			run: ({ handler }) => (handler.index = handler.pages.length - 1),
 		},
 		{
-			customId: "rilo/pagination.stop",
+			customId: "virello/pagination.stop",
 			style: ButtonStyle.Danger,
 			emoji: "⏹️",
 			type: ComponentType.Button,
@@ -141,8 +141,8 @@ export class PaginatedMessage {
 	public static emitPartialDMChannelWarning = true;
 
 	/** A list of `customId` that are bound to actions that will stop the {@link PaginatedMessage}
-	 * @default ['rilo/pagination.stop'] */
-	public static stopPaginatedMessageCustomIds = ["rilo/pagination.stop"];
+	 * @default ['virello/pagination.stop'] */
+	public static stopPaginatedMessageCustomIds = ["virello/pagination.stop"];
 
 	/** The reasons sent by {@linkplain https://discord.js.org/docs/packages/discord.js/main/InteractionCollector:Class#end InteractionCollector#end} event when the message (or its owner) has been deleted. */
 	public static deletionStopReasons = [
@@ -1050,7 +1050,7 @@ export class PaginatedMessage {
 					if (isMessageStringSelectInteractionData(interaction)) {
 						return new StringSelectMenuBuilder({
 							...interaction,
-							...(interaction.customId === "rilo/pagination.goToPage" && {
+							...(interaction.customId === "virello/pagination.goToPage" && {
 								options: await Promise.all(
 									this.pages.map(async (_, index) => {
 										return {
@@ -1071,7 +1071,7 @@ export class PaginatedMessage {
 					}
 
 					throw new Error(
-						"Unsupported message component type detected. Validate your code and if you're sure this is a bug in Rilo make a report in the server",
+						"Unsupported message component type detected. Validate your code and if you're sure this is a bug in Virello make a report in the server",
 					);
 				},
 			),

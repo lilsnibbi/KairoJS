@@ -1,8 +1,8 @@
 # Console logging
 
-Rilo uses actual `@lilsnibbi/logger` instances. The library draws the
+Virello uses actual `@lilsnibbi/logger` instances. The library draws the
 timestamps, source names, severity markers, bars, badges, boxes and error trees.
-Rilo prepares safe message content and chooses native per-call display
+Virello prepares safe message content and chooses native per-call display
 options. It adds no console interception, logging service, dependency, buffer
 or background timer.
 
@@ -43,17 +43,17 @@ messages remain literal `\n` and cannot forge additional records.
 
 ## Configuration
 
-| Variable          | Values                                                          | Default                                         |
-| ----------------- | --------------------------------------------------------------- | ----------------------------------------------- |
-| `RILO_LOG_LEVEL`  | `debug`, `info`, `warn`, `error`; `notif`/`alert` also accepted | `info`                                          |
-| `RILO_LOG_FORMAT` | `text`, `json`                                                  | `text`                                          |
-| `RILO_LOG_DETAIL` | `compact`, `full`                                               | `compact`; `DEBUG` defaults to `full`           |
-| `RILO_LOG_LAYOUT` | `auto`, `badge`, `bar`, `box`                                   | `auto`                                          |
-| `RILO_LOG_STACKS` | `off`, `short`, `full`                                          | `short`                                         |
-| `RILO_LOG_WIDTH`  | Integer columns, `32`–`200`                                     | Terminal width capped at `120`; pipes use `100` |
-| `NO_COLOR`        | Any defined value disables color                                | Unset                                           |
-| `FORCE_COLOR`     | `0` disables; a nonempty value enables when permitted           | Unset                                           |
-| `TERM`            | `dumb` disables color                                           | Unset                                           |
+| Variable             | Values                                                          | Default                                         |
+| -------------------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| `VIRELLO_LOG_LEVEL`  | `debug`, `info`, `warn`, `error`; `notif`/`alert` also accepted | `info`                                          |
+| `VIRELLO_LOG_FORMAT` | `text`, `json`                                                  | `text`                                          |
+| `VIRELLO_LOG_DETAIL` | `compact`, `full`                                               | `compact`; `DEBUG` defaults to `full`           |
+| `VIRELLO_LOG_LAYOUT` | `auto`, `badge`, `bar`, `box`                                   | `auto`                                          |
+| `VIRELLO_LOG_STACKS` | `off`, `short`, `full`                                          | `short`                                         |
+| `VIRELLO_LOG_WIDTH`  | Integer columns, `32`–`200`                                     | Terminal width capped at `120`; pipes use `100` |
+| `NO_COLOR`           | Any defined value disables color                                | Unset                                           |
+| `FORCE_COLOR`        | `0` disables; a nonempty value enables when permitted           | Unset                                           |
+| `TERM`               | `dumb` disables color                                           | Unset                                           |
 
 Invalid environment values fall back to defaults. Explicit `loggerOptions.level`,
 `loggerOptions.layout` and `logging.format/detail/stacks/width` take precedence.
@@ -64,9 +64,9 @@ for framework events as they are emitted. `NO_COLOR`, `TERM=dumb`,
 always color free.
 
 ```ts
-import { RiloClient, createConsoleLogger, logEvent } from "rilo/client";
+import { VirelloClient, createConsoleLogger, logEvent } from "virello/client";
 
-const client = new RiloClient({
+const client = new VirelloClient({
 	intents: [],
 	loggerOptions: { layout: "bar", colors: "auto" },
 	logging: { detail: "compact", stacks: "short", width: 100 },
@@ -101,17 +101,17 @@ short display wording in compact mode. Full mode restores the original wording.
 
 ## Detailed records and collection
 
-Set `RILO_LOG_DETAIL=full` to inspect the original event message, full component,
+Set `VIRELLO_LOG_DETAIL=full` to inspect the original event message, full component,
 every retained safe context field and complete request/connection/generation
-identifiers. `RILO_LOG_LEVEL=debug` additionally enables frame and module
+identifiers. `VIRELLO_LOG_LEVEL=debug` additionally enables frame and module
 metadata and defaults to full detail unless compact detail was explicitly chosen.
 No wire bodies are included. Compact request/warning records may show an
 eight-character `ref`; use the full ID from detailed text or JSON for tracing.
 
 ```powershell
-$env:RILO_LOG_LEVEL = 'debug'
-$env:RILO_LOG_DETAIL = 'full'
-$env:RILO_LOG_FORMAT = 'json'
+$env:VIRELLO_LOG_LEVEL = 'debug'
+$env:VIRELLO_LOG_DETAIL = 'full'
+$env:VIRELLO_LOG_FORMAT = 'json'
 bun --env-file=examples/.env examples/coordinator.ts
 ```
 
@@ -126,7 +126,7 @@ change after reconnects.
 
 `Logger`, `LoggerOptions` and `LogLevel` still come directly from the dependency.
 `LogLayout`, `LogCallOptions`, `LogBoxOptions`, `LogFileOptions`, `LogTheme` and
-`LogStyle` are also available from `rilo` / `rilo/client`.
+`LogStyle` are also available from `virello` / `virello/client`.
 
 Native `layout`, `box` corners, `symbols`, `theme`, `timeformat`,
 `includeTimestamps`, `filter`, `transport` and file options work with built-in safe
@@ -158,19 +158,19 @@ const logger = createConsoleLogger(
 Text file sinks retain full safe detail even when console presentation is compact.
 `file.level` can retain debug records filtered from the console. `file.json` keeps
 the dependency's native envelope (`time`, `level`, `name`, `message`); parse its
-`message` string as JSON for the canonical Rilo record. The native transport
+`message` string as JSON for the canonical Virello record. The native transport
 receives a plain rendered line and a record whose `value` is the full sanitized
-Rilo record. Filters still run before formatting. File ownership, rotation,
+Virello record. Filters still run before formatting. File ownership, rotation,
 flushing and closing stay with the dependency.
 
 An explicit `format` / `serialize` hook or native `inspectDepth` / `relativePaths`
 serialization control selects the dependency's original formatting contract and
 owns redaction/presentation. Passing `new Logger(...)`
 directly also retains native behavior. The exported helpers are available on
-`rilo/engine` without importing Discord.js or changing the engine runtime.
+`virello/engine` without importing Discord.js or changing the engine runtime.
 
 Supplying `logger` to a client, coordinator or host preserves that exact instance,
-its settings, method binding and ownership; Rilo never configures or closes it.
+its settings, method binding and ownership; Virello never configures or closes it.
 Custom loggers still need only `debug`, `notif`, `alert` and `error`. They receive
 one contextual string for notices or one contextual `Error` whose `cause` is the
 original thrown value. User error callbacks, events and their arguments are

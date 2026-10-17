@@ -26,7 +26,7 @@ const channelTypeToPrettyName: Record<
 };
 
 const unknownChannelType = (type: number): string =>
-	`unknown channel type (${type}); please contact Rilo developers about this!`;
+	`unknown channel type (${type}); please contact Virello developers about this!`;
 
 function getChannelTypePrettyName(
 	type: keyof typeof channelTypeToPrettyName,

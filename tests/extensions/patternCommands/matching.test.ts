@@ -1,17 +1,17 @@
 import { afterEach, expect, test } from "bun:test";
 import { ChannelType, DMChannel, Message } from "discord.js";
-import { RiloClient, PatternCommand, PatternCommandEvents } from "rilo";
+import { VirelloClient, PatternCommand, PatternCommandEvents } from "virello";
 import type { MessageParseListener } from "../../../src/extensions/patternCommands/listeners/messageParse";
 import type { PatternCommandPrePayload } from "../../../src/extensions/patternCommands/types";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
 });
 
 test("full-name patterns match words within a message but exclude substrings", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});

@@ -56,7 +56,7 @@ Run these commands from the **repository root**, using Bun 1.4.3 or newer.
    bun --env-file=examples/.env examples/host.ts
    ```
 
-The host starts `bot.ts` for each assigned shard. Don't run `bot.ts` directly or set `RILO_SHARD` yourself. Wait for each shard's ready message, then try the commands in Discord. The coordinator may space out logins, so the shards won't always become ready together.
+The host starts `bot.ts` for each assigned shard. Don't run `bot.ts` directly or set `VIRELLO_SHARD` yourself. Wait for each shard's ready message, then try the commands in Discord. The coordinator may space out logins, so the shards won't always become ready together.
 
 ## Try the commands
 
@@ -106,7 +106,7 @@ Coordinator calls fail immediately while unavailable. Opt into bounded waiting
 with `{ waitForCoordinator: true, timeoutMs: 5000 }`; the deadline includes the
 wait and execution. Broadcasts share one deadline across all targets. Sent calls
 are never replayed. `/shard` demonstrates an application-selected outage reply
-using `client.maintenance`; Rilo does not automatically block your commands.
+using `client.maintenance`; Virello does not automatically block your commands.
 
 Restart the host after editing bot code. Stop the host first, then the coordinator, with Ctrl+C. A normal host shutdown stops its children and releases its assignment. Child crashes are retried with backoff; repeated crashes eventually stop that shard, so check the logs.
 
@@ -127,8 +127,8 @@ bounded error trees. Pipes use plain badges. Routine events show concise source
 names and useful counts without repeated date rows, field grids or UUID blocks.
 Queueing, permitting and confirming a login remain three distinct records.
 Output wraps to the terminal, capped at 120 columns; pipes default to 100.
-Set `RILO_LOG_WIDTH=64` or `logging.width` for a fixed width, and
-`RILO_LOG_LAYOUT=badge|bar|box` to select a native layout explicitly.
+Set `VIRELLO_LOG_WIDTH=64` or `logging.width` for a fixed width, and
+`VIRELLO_LOG_LAYOUT=badge|bar|box` to select a native layout explicitly.
 
 Each live bot emits one info readiness message after the registration pass,
 with its shard, command and guild counts. The ready listener adds a debug cache
@@ -146,13 +146,13 @@ set it. Startup failures release any constructed resources. Ctrl+C/SIGTERM
 reports shutdown requested, then completion or a cleanup failure; a failed
 startup or cleanup sets a nonzero exit status.
 
-Use `RILO_LOG_DETAIL=full` for original messages and full correlation fields.
-`RILO_LOG_LEVEL=debug` adds frame/heartbeat metadata and defaults to full detail.
-`RILO_LOG_FORMAT=json` keeps the full structured schema, independent of compact
-text choices; `RILO_LOG_STACKS=off` omits locations. See
+Use `VIRELLO_LOG_DETAIL=full` for original messages and full correlation fields.
+`VIRELLO_LOG_LEVEL=debug` adds frame/heartbeat metadata and defaults to full detail.
+`VIRELLO_LOG_FORMAT=json` keeps the full structured schema, independent of compact
+text choices; `VIRELLO_LOG_STACKS=off` omits locations. See
 [console logging](../docs/console-logging.md) for native themes, symbols, files,
 per-call options and the local demo. To supply your own logger, pass it to
-`createBot(logger)` in `client.ts`; Rilo keeps that exact instance.
+`createBot(logger)` in `client.ts`; Virello keeps that exact instance.
 
 The coordinator and hosts keep sharding coordination in memory. During a
 coordinator restart, existing children keep Discord open in maintenance while
@@ -178,8 +178,8 @@ and obsolete configuration. Existing state files can stay unused.
 For detailed coordinator diagnostics in PowerShell:
 
 ```powershell
-$env:RILO_LOG_LEVEL = 'debug'
-$env:RILO_LOG_FORMAT = 'json'
+$env:VIRELLO_LOG_LEVEL = 'debug'
+$env:VIRELLO_LOG_FORMAT = 'json'
 bun --env-file=examples/.env examples/coordinator.ts
 ```
 
@@ -208,7 +208,7 @@ other. An existing process keeps its loaded code; the old plain
 | `SHARD_HOST_MAX_SHARDS`           | Local host capacity, required for automatic scaling without `SHARD_WORKERS`                     |
 | `SHARD_TLS_CERT`, `SHARD_TLS_KEY` | PEM certificate and private key paths for the coordinator's TLS listener                        |
 
-The env file is ignored by Git. Legacy `sharding.sqlite*` files and `.rilo-sharding/` directories remain ignored and are no longer used.
+The env file is ignored by Git. Legacy `sharding.sqlite*` files and `.virello-sharding/` directories remain ignored and are no longer used.
 
 ## More than one machine
 

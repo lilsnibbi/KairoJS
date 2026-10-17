@@ -17,8 +17,8 @@ async function peer(
 	const socket = new Socket(url, {
 		headers: {
 			authorization: `Bearer ${id === "a" ? tokenA : tokenB}`,
-			"x-rilo-worker": id,
-			"x-rilo-instance": instance,
+			"x-virello-worker": id,
+			"x-virello-instance": instance,
 		},
 		perMessageDeflate: false,
 	});
@@ -164,8 +164,8 @@ describe("authenticated coordinator on real WebSockets", () => {
 					await fetch(url, {
 						headers: {
 							authorization: `Bearer ${tokenA}`,
-							"x-rilo-worker": "a",
-							"x-rilo-instance": "http-only",
+							"x-virello-worker": "a",
+							"x-virello-instance": "http-only",
 						},
 					})
 				).status,
@@ -209,8 +209,8 @@ describe("authenticated coordinator on real WebSockets", () => {
 			const response = await fetch(s.coordinator.url!.replace("ws:", "http:"), {
 				headers: {
 					authorization: `Bearer ${tokenA}`,
-					"x-rilo-worker": "a",
-					"x-rilo-instance": "invalid-handshake",
+					"x-virello-worker": "a",
+					"x-virello-instance": "invalid-handshake",
 					upgrade: "websocket",
 				},
 			});
@@ -230,8 +230,8 @@ describe("authenticated coordinator on real WebSockets", () => {
 			const response = await fetch(s.coordinator.url!.replace("ws:", "http:"), {
 				headers: {
 					authorization: `Bearer ${tokenA}`,
-					"x-rilo-worker": "a",
-					"x-rilo-instance": owner.instance,
+					"x-virello-worker": "a",
+					"x-virello-instance": owner.instance,
 					upgrade: "websocket",
 				},
 			});

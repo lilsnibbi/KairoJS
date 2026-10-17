@@ -4,13 +4,13 @@ import {
 	ApplicationCommandType,
 	type Client,
 } from "discord.js";
-import { Command, RiloClient } from "rilo";
+import { Command, VirelloClient } from "virello";
 import {
 	handleBulkOverwrite,
 	setBulkOverwriteRetries,
 } from "../../../src/commands/registration/registries";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
@@ -25,7 +25,7 @@ class TestCommandManager extends ApplicationCommandManager {
 
 for (const guildId of [undefined, "123456789012345681"]) {
 	test(`bulk registration retries a failed ${guildId ? "guild" : "global"} overwrite before storing its returned ID`, async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: { debug() {}, notif() {}, alert() {}, error() {} },
 		});
@@ -67,7 +67,7 @@ for (const guildId of [undefined, "123456789012345681"]) {
 
 for (const guildId of [undefined, "123456789012345681"]) {
 	test(`bulk registration routes identical names by command type in ${guildId ? "guild" : "global"} scope`, async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			logger: { debug() {}, notif() {}, alert() {}, error() {} },
 		});

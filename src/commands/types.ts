@@ -18,7 +18,7 @@ import type { ApplicationCommandRegistry } from "./registration/Registry";
 export type DetailedDescriptionCommand =
 	string | DetailedDescriptionCommandObject;
 
-/** Augmentable shape for application-specific command help data. Rilo stores it without interpreting its fields. */
+/** Augmentable shape for application-specific command help data. Virello stores it without interpreting its fields. */
 export interface DetailedDescriptionCommandObject {}
 
 /** The allowed values for {@link CommandOptions.runIn}. */

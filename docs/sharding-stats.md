@@ -22,8 +22,8 @@ const shardZero = one.get(0);
 ```
 
 The return type is `Promise<ReadonlyMap<number, ShardStatsResult>>`. Import
-`ShardStats`, `ShardStatsResult` and `ShardCallOptions` from `rilo` or
-`rilo/sharding`. Entries follow the existing request result shape: `{ shard,
+`ShardStats`, `ShardStatsResult` and `ShardCallOptions` from `virello` or
+`virello/sharding`. Entries follow the existing request result shape: `{ shard,
 ok: true, value }` or `{ shard, ok: false, error }`. Errors are frozen `ShardError`
 copies with a `code` and `message`; a failed entry has no `value` property.
 
@@ -33,7 +33,7 @@ Every call makes new requests through the coordinator, including a request to
 the caller's own shard. The destination reads its client and process state only
 when that request arrives. Stats never use the coordinator's periodic scaling
 metrics, an earlier successful result, or a local shortcut as a fallback.
-The private request name `rilo:stats` is reserved and cannot be registered with
+The private request name `virello:stats` is reserved and cannot be registered with
 `handle()`.
 
 Without an ID, the target set is `0..shardCount - 1` from the caller's reconciled

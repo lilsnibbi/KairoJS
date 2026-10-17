@@ -26,7 +26,7 @@ const originalApplicationCommandToProxy = new WeakMap<
 	CommandTarget<Command>
 >();
 
-/** Decorator function that applies given options to any Rilo module */
+/** Decorator function that applies given options to any Virello module */
 export function ApplyOptions<T extends Module.Options>(
 	optionsOrFn: T | ((parameters: ApplyOptionsCallbackParameters) => T),
 ): ClassDecorator {

@@ -3,16 +3,16 @@ import type { LocaleManager } from "../extensions/localisation/LocaleManager";
 import type { TaskScheduler } from "../extensions/scheduledTasks/TaskScheduler";
 import type { Services } from "../extensions/services/Services";
 import type { ShardLink } from "../sharding/client/Link";
-import type { RiloClient } from "./client/RiloClient";
+import type { VirelloClient } from "./client/VirelloClient";
 import type { LoggerLike } from "./logging/LoggerLike";
 import { ModuleRegistry } from "./modules/ModuleRegistry";
 
-/** Shared client services. Add your own properties by augmenting rilo. */
+/** Shared client services. Add your own properties by augmenting virello. */
 export interface Container {
 	/** The current module registry; initialized even before a client is created. */
 	modules: ModuleRegistry;
-	/** The active RiloClient. Available after construction and removed on shutdown. */
-	client: RiloClient;
+	/** The active VirelloClient. Available after construction and removed on shutdown. */
+	client: VirelloClient;
 	/** The active client's shard messaging and live stats API. */
 	readonly sharding: ShardLink;
 	/** The active client’s logger. Assigned during client construction. */
@@ -30,7 +30,7 @@ export interface Container {
 	services: Services;
 }
 
-/** Shared framework services. Client-specific entries are populated by RiloClient and enabled extensions. */
+/** Shared framework services. Client-specific entries are populated by VirelloClient and enabled extensions. */
 export const container = {
 	/** Initial shared registry, replaced by the active client’s module registry. */
 	modules: new ModuleRegistry(),

@@ -4,17 +4,19 @@ import { mergeObjects } from "../../../src/utilities/index";
 describe("mergeObjects", () => {
 	test("merges prototype-named JSON keys without changing prototypes", () => {
 		const source = JSON.parse(
-			'{"__proto__":{"riloMergePolluted":true},"constructor":{"prototype":{"safe":true}}}',
+			'{"__proto__":{"virelloMergePolluted":true},"constructor":{"prototype":{"safe":true}}}',
 		);
 		const target = {};
 		try {
 			mergeObjects(target, source);
-			expect(Object.hasOwn(Object.prototype, "riloMergePolluted")).toBe(false);
+			expect(Object.hasOwn(Object.prototype, "virelloMergePolluted")).toBe(
+				false,
+			);
 			expect(Object.getPrototypeOf(target)).toBe(Object.prototype);
 			expect(Object.hasOwn(target, "__proto__")).toBe(true);
 			expect(target).toEqual(source);
 		} finally {
-			Reflect.deleteProperty(Object.prototype, "riloMergePolluted");
+			Reflect.deleteProperty(Object.prototype, "virelloMergePolluted");
 		}
 	});
 

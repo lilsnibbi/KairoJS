@@ -1,7 +1,7 @@
 import { Option } from "../../result/index";
 import { PrefixedStrategy } from "../index";
 
-/** The strategy options used in Rilo. */
+/** The strategy options used in Virello. */
 export interface FlagStrategyOptions {
 	/** Accepted key-only flags. Use true to allow any name, or false/an empty list to disable flags. Defaults to an empty list. */
 	flags?: readonly string[] | boolean;

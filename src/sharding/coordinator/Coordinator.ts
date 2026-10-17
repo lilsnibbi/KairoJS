@@ -424,7 +424,7 @@ export class ShardCoordinator {
 		if (this.transition)
 			return new Response("Coordinator draining shards", { status: 503 });
 		const connectionId = crypto.randomUUID();
-		const host = this.hosts.get(request.headers.get("x-rilo-worker") ?? "");
+		const host = this.hosts.get(request.headers.get("x-virello-worker") ?? "");
 		if (
 			!host ||
 			!tokenMatches(request.headers.get("authorization"), host.token)
@@ -443,7 +443,7 @@ export class ShardCoordinator {
 			return new Response("Unauthorized", { status: 401 });
 		}
 		if (request.method === "HEAD") {
-			const instance = request.headers.get("x-rilo-instance");
+			const instance = request.headers.get("x-virello-instance");
 			if (!identifier.allows(instance))
 				return new Response(null, { status: 400 });
 			const reason = this.sessions.has(`${host.id}/${instance}`)
@@ -451,7 +451,7 @@ export class ShardCoordinator {
 				: "";
 			return new Response(null, {
 				status: reason ? 409 : 204,
-				headers: { "x-rilo-reason": reason },
+				headers: { "x-virello-reason": reason },
 			});
 		}
 		const reject = (status: number, reason: string, text: string) => {
@@ -493,7 +493,7 @@ export class ShardCoordinator {
 				"native_upgrade_required",
 				"Native WebSocket upgrade required",
 			);
-		const instance = request.headers.get("x-rilo-instance");
+		const instance = request.headers.get("x-virello-instance");
 		if (!identifier.allows(instance))
 			return reject(400, "invalid_identity", "Invalid identity");
 		if (this.sessions.has(`${host.id}/${instance}`))

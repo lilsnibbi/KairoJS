@@ -26,7 +26,7 @@ import type { Option } from "../utilities/result/index";
 import type { InteractionHandler } from "./interactions/interactionHandler";
 import type { Listener } from "./listener";
 
-/** Discord and Rilo event names. ClientEvents supplies each event’s argument tuple. */
+/** Discord and Virello event names. ClientEvents supplies each event’s argument tuple. */
 export const Events = {
 	// #region Discord.js base events
 	/** Alias of the discord.js ApplicationCommandPermissionsUpdate event. Its payload follows discord.js ClientEvents. */
@@ -184,7 +184,7 @@ export const Events = {
 	WebhooksUpdate: DJSEvents.WebhooksUpdate as const,
 	// #endregion Discord.js base events
 
-	// #region Rilo events
+	// #region Virello events
 	// Message commands chain
 	/** A non-bot message enters prefix parsing. */
 	PreMessageParsed: "preMessageParsed" as const,
@@ -329,7 +329,7 @@ export const Events = {
 	/** A context-menu command attempt finished, with success state and duration. */
 	ContextMenuCommandFinish: "contextMenuCommandFinish" as const,
 
-	// #endregion Rilo events
+	// #endregion Virello events
 } as const;
 
 /** Module metadata attached to an error event. */
@@ -604,192 +604,207 @@ export interface AutocompleteInteractionPayload {
  * Local key alias for the typed event augmentation.
  * @internal
  */
-declare const RiloEvents: typeof Events;
+declare const VirelloEvents: typeof Events;
 
-/** Add Rilo events to the discord.js event map. */
+/** Add Virello events to the discord.js event map. */
 declare module "discord.js" {
 	/** Framework event argument tuples. Listen using Events constants. */
 	interface ClientEvents {
-		// #region Rilo load cycle events
+		// #region Virello load cycle events
 		/** A module was removed after successful cleanup. */
-		[RiloEvents.ModuleUnloaded]: [store: ModuleStore<Module>, module: Module];
+		[VirelloEvents.ModuleUnloaded]: [
+			store: ModuleStore<Module>,
+			module: Module,
+		];
 		/** A module finished activation and entered its store. */
-		[RiloEvents.ModuleLoaded]: [store: ModuleStore<Module>, module: Module];
+		[VirelloEvents.ModuleLoaded]: [store: ModuleStore<Module>, module: Module];
 
 		/** A listener’s run method threw or rejected. */
-		[RiloEvents.ListenerError]: [error: unknown, payload: ListenerErrorPayload];
+		[VirelloEvents.ListenerError]: [
+			error: unknown,
+			payload: ListenerErrorPayload,
+		];
 		/** A command’s application-registration hook failed. */
-		[RiloEvents.CommandApplicationCommandRegistryError]: [
+		[VirelloEvents.CommandApplicationCommandRegistryError]: [
 			error: unknown,
 			command: Command,
 		];
 		/** Application command registration is starting. */
-		[RiloEvents.ApplicationCommandRegistriesInitialising]: [];
+		[VirelloEvents.ApplicationCommandRegistriesInitialising]: [];
 		/** The registration pass completed, with the registry map and elapsed milliseconds. */
-		[RiloEvents.ApplicationCommandRegistriesRegistered]: [
+		[VirelloEvents.ApplicationCommandRegistriesRegistered]: [
 			registries: Map<string, ApplicationCommandRegistry>,
 			timeTaken: number,
 		];
 		/** One global or guild command list was replaced; a null guild ID means global. */
-		[RiloEvents.ApplicationCommandRegistriesBulkOverwrite]: [
+		[VirelloEvents.ApplicationCommandRegistriesBulkOverwrite]: [
 			result: Collection<Snowflake, ApplicationCommand>,
 			guildId: string | null,
 		];
 		/** A global or guild bulk overwrite failed; a null guild ID means global. */
-		[RiloEvents.ApplicationCommandRegistriesBulkOverwriteError]: [
+		[VirelloEvents.ApplicationCommandRegistriesBulkOverwriteError]: [
 			error: unknown,
 			guildId: string | null,
 		];
 
 		/** A non-bot message enters prefix parsing. */
-		[RiloEvents.PreMessageParsed]: [message: Message];
+		[VirelloEvents.PreMessageParsed]: [message: Message];
 		/** A message contains only the bot mention prefix. */
-		[RiloEvents.MentionPrefixOnly]: [message: Message];
+		[VirelloEvents.MentionPrefixOnly]: [message: Message];
 		/** No configured or mention prefix matched the message. */
-		[RiloEvents.NonPrefixedMessage]: [message: Message];
+		[VirelloEvents.NonPrefixedMessage]: [message: Message];
 		/** A message prefix matched, before command-name parsing. */
-		[RiloEvents.PrefixedMessage]: [message: Message, prefix: string | RegExp];
+		[VirelloEvents.PrefixedMessage]: [
+			message: Message,
+			prefix: string | RegExp,
+		];
 
 		/** No command name followed the matched prefix. */
-		[RiloEvents.UnknownMessageCommandName]: [
+		[VirelloEvents.UnknownMessageCommandName]: [
 			payload: UnknownMessageCommandNamePayload,
 		];
 		/** The parsed message command name was not found. */
-		[RiloEvents.UnknownMessageCommand]: [payload: UnknownMessageCommandPayload];
+		[VirelloEvents.UnknownMessageCommand]: [
+			payload: UnknownMessageCommandPayload,
+		];
 		/** A matched command has no messageRun handler. */
-		[RiloEvents.CommandDoesNotHaveMessageCommandHandler]: [
+		[VirelloEvents.CommandDoesNotHaveMessageCommandHandler]: [
 			payload: CommandDoesNotHaveMessageCommandHandler,
 		];
 		/** A message command is ready for precondition checks. */
-		[RiloEvents.PreMessageCommandRun]: [payload: PreMessageCommandRunPayload];
+		[VirelloEvents.PreMessageCommandRun]: [
+			payload: PreMessageCommandRunPayload,
+		];
 
 		/** Message command preconditions returned a denial. */
-		[RiloEvents.MessageCommandDenied]: [
+		[VirelloEvents.MessageCommandDenied]: [
 			error: UserError,
 			payload: MessageCommandDeniedPayload,
 		];
 		/** Message command preconditions passed; argument preparation and execution follow. */
-		[RiloEvents.MessageCommandAccepted]: [
+		[VirelloEvents.MessageCommandAccepted]: [
 			payload: MessageCommandAcceptedPayload,
 		];
 
 		/** A prepared message command is about to run. */
-		[RiloEvents.MessageCommandRun]: [
+		[VirelloEvents.MessageCommandRun]: [
 			message: Message,
 			command: Command,
 			payload: MessageCommandRunPayload,
 		];
 		/** A message command resolved successfully; the payload includes its result and duration. */
-		[RiloEvents.MessageCommandSuccess]: [payload: MessageCommandSuccessPayload];
+		[VirelloEvents.MessageCommandSuccess]: [
+			payload: MessageCommandSuccessPayload,
+		];
 		/** The message-command run phase threw or rejected. Argument preparation failures are reported through ListenerError. */
-		[RiloEvents.MessageCommandError]: [
+		[VirelloEvents.MessageCommandError]: [
 			error: unknown,
 			payload: MessageCommandErrorPayload,
 		];
 		/** A message command attempt finished, with success state and duration. */
-		[RiloEvents.MessageCommandFinish]: [
+		[VirelloEvents.MessageCommandFinish]: [
 			message: Message,
 			command: Command,
 			payload: MessageCommandFinishPayload,
 		];
 
 		/** Sending the message command’s typing indicator failed. */
-		[RiloEvents.MessageCommandTypingError]: [
+		[VirelloEvents.MessageCommandTypingError]: [
 			error: Error,
 			payload: MessageCommandTypingErrorPayload,
 		];
 
 		/** One extension lifecycle hook completed successfully. */
-		[RiloEvents.ExtensionLoaded]: [
+		[VirelloEvents.ExtensionLoaded]: [
 			hook: "setup" | "beforeLogin" | "afterLogin",
 			name: string | undefined,
 		];
 
 		/** An interaction handler’s parse method returned an Option without throwing. */
-		[RiloEvents.InteractionHandlerParseSuccess]: [
+		[VirelloEvents.InteractionHandlerParseSuccess]: [
 			option: Option<unknown>,
 			payload: InteractionHandlerParseSuccess,
 		];
 		/** A handler accepted an interaction with Some; its parsed value is included. */
-		[RiloEvents.InteractionHandlerParseSome]: [
+		[VirelloEvents.InteractionHandlerParseSome]: [
 			option: Option.Some<unknown>,
 			payload: InteractionHandlerParseSome,
 		];
 		/** A handler skipped an interaction with None. */
-		[RiloEvents.InteractionHandlerParseNone]: [
+		[VirelloEvents.InteractionHandlerParseNone]: [
 			option: Option.None,
 			payload: InteractionHandlerParseNone,
 		];
 		/** A handler’s parse method threw or rejected. */
-		[RiloEvents.InteractionHandlerParseError]: [
+		[VirelloEvents.InteractionHandlerParseError]: [
 			error: unknown,
 			payload: InteractionHandlerParseError,
 		];
 		/** An accepted interaction handler’s run method threw or rejected. */
-		[RiloEvents.InteractionHandlerError]: [
+		[VirelloEvents.InteractionHandlerError]: [
 			error: unknown,
 			payload: InteractionHandlerError,
 		];
 
 		/** An autocomplete interaction enters command lookup. */
-		[RiloEvents.PossibleAutocompleteInteraction]: [
+		[VirelloEvents.PossibleAutocompleteInteraction]: [
 			interaction: AutocompleteInteraction,
 		];
 		/** A command’s autocomplete handler threw or rejected. */
-		[RiloEvents.CommandAutocompleteInteractionError]: [
+		[VirelloEvents.CommandAutocompleteInteractionError]: [
 			error: unknown,
 			payload: AutocompleteInteractionPayload,
 		];
 		/** A command’s autocomplete handler completed successfully. */
-		[RiloEvents.CommandAutocompleteInteractionSuccess]: [
+		[VirelloEvents.CommandAutocompleteInteractionSuccess]: [
 			payload: AutocompleteInteractionPayload,
 		];
 
 		// Chat input command chain
 		/** A slash interaction enters command lookup. */
-		[RiloEvents.PossibleChatInputCommand]: [
+		[VirelloEvents.PossibleChatInputCommand]: [
 			interaction: ChatInputCommandInteraction,
 		];
 		/** No local command matched the slash interaction. */
-		[RiloEvents.UnknownChatInputCommand]: [
+		[VirelloEvents.UnknownChatInputCommand]: [
 			payload: UnknownChatInputCommandPayload,
 		];
 		/** The matched command has no slash handler. */
-		[RiloEvents.CommandDoesNotHaveChatInputCommandHandler]: [
+		[VirelloEvents.CommandDoesNotHaveChatInputCommandHandler]: [
 			payload: CommandDoesNotHaveChatInputCommandHandlerPayload,
 		];
 		/** A slash command is ready for precondition checks. */
-		[RiloEvents.PreChatInputCommandRun]: [
+		[VirelloEvents.PreChatInputCommandRun]: [
 			payload: PreChatInputCommandRunPayload,
 		];
 
 		/** The slash command’s preconditions denied the invocation. */
-		[RiloEvents.ChatInputCommandDenied]: [
+		[VirelloEvents.ChatInputCommandDenied]: [
 			error: UserError,
 			payload: ChatInputCommandDeniedPayload,
 		];
 		/** The slash command’s preconditions passed. */
-		[RiloEvents.ChatInputCommandAccepted]: [
+		[VirelloEvents.ChatInputCommandAccepted]: [
 			payload: ChatInputCommandAcceptedPayload,
 		];
 
 		/** An accepted slash handler is about to run. */
-		[RiloEvents.ChatInputCommandRun]: [
+		[VirelloEvents.ChatInputCommandRun]: [
 			interaction: ChatInputCommandInteraction,
 			command: ChatInputCommand,
 			payload: ChatInputCommandRunPayload,
 		];
 		/** A slash handler completed, with its return value and duration. */
-		[RiloEvents.ChatInputCommandSuccess]: [
+		[VirelloEvents.ChatInputCommandSuccess]: [
 			payload: ChatInputCommandSuccessPayload,
 		];
 		/** A slash command attempt threw or rejected. */
-		[RiloEvents.ChatInputCommandError]: [
+		[VirelloEvents.ChatInputCommandError]: [
 			error: unknown,
 			payload: ChatInputCommandErrorPayload,
 		];
 		/** A slash command attempt finished, with success state and duration. */
-		[RiloEvents.ChatInputCommandFinish]: [
+		[VirelloEvents.ChatInputCommandFinish]: [
 			interaction: ChatInputCommandInteraction,
 			command: ChatInputCommand,
 			payload: ChatInputCommandFinishPayload,
@@ -797,55 +812,55 @@ declare module "discord.js" {
 
 		// Context menu command chain
 		/** A context-menu interaction enters command lookup. */
-		[RiloEvents.PossibleContextMenuCommand]: [
+		[VirelloEvents.PossibleContextMenuCommand]: [
 			interaction: ContextMenuCommandInteraction,
 		];
 		/** No local command matched the context-menu interaction. */
-		[RiloEvents.UnknownContextMenuCommand]: [
+		[VirelloEvents.UnknownContextMenuCommand]: [
 			payload: UnknownContextMenuCommandPayload,
 		];
 		/** The matched command has no context-menu handler. */
-		[RiloEvents.CommandDoesNotHaveContextMenuCommandHandler]: [
+		[VirelloEvents.CommandDoesNotHaveContextMenuCommandHandler]: [
 			payload: CommandDoesNotHaveContextMenuCommandHandlerPayload,
 		];
 		/** A context-menu command is ready for precondition checks. */
-		[RiloEvents.PreContextMenuCommandRun]: [
+		[VirelloEvents.PreContextMenuCommandRun]: [
 			payload: PreContextMenuCommandRunPayload,
 		];
 
 		/** The context-menu command’s preconditions denied the invocation. */
-		[RiloEvents.ContextMenuCommandDenied]: [
+		[VirelloEvents.ContextMenuCommandDenied]: [
 			error: UserError,
 			payload: ContextMenuCommandDeniedPayload,
 		];
 		/** The context-menu command’s preconditions passed. */
-		[RiloEvents.ContextMenuCommandAccepted]: [
+		[VirelloEvents.ContextMenuCommandAccepted]: [
 			payload: ContextMenuCommandAcceptedPayload,
 		];
 
 		/** An accepted context-menu handler is about to run. */
-		[RiloEvents.ContextMenuCommandRun]: [
+		[VirelloEvents.ContextMenuCommandRun]: [
 			interaction: ContextMenuCommandInteraction,
 			command: ContextMenuCommand,
 			payload: ContextMenuCommandRunPayload,
 		];
 		/** A context-menu handler completed, with its return value and duration. */
-		[RiloEvents.ContextMenuCommandSuccess]: [
+		[VirelloEvents.ContextMenuCommandSuccess]: [
 			payload: ContextMenuCommandSuccessPayload,
 		];
 		/** A context-menu command attempt threw or rejected. */
-		[RiloEvents.ContextMenuCommandError]: [
+		[VirelloEvents.ContextMenuCommandError]: [
 			error: unknown,
 			payload: ContextMenuCommandErrorPayload,
 		];
 		/** A context-menu command attempt finished, with success state and duration. */
-		[RiloEvents.ContextMenuCommandFinish]: [
+		[VirelloEvents.ContextMenuCommandFinish]: [
 			interaction: ContextMenuCommandInteraction,
 			command: ContextMenuCommand,
 			payload: ContextMenuCommandFinishPayload,
 		];
 
-		// #endregion Rilo load cycle events
+		// #endregion Virello load cycle events
 
 		// #region Termination
 		/** Additional event names may supply arbitrary arguments. */

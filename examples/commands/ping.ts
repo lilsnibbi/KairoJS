@@ -1,5 +1,5 @@
 import { MessageFlags } from "discord.js";
-import { Command } from "rilo/commands";
+import { Command } from "virello/commands";
 import { registerCommand } from "../registration";
 
 export default class PingCommand extends Command {

@@ -1,10 +1,10 @@
-import type { ShardStats } from "rilo/sharding";
+import type { ShardStats } from "virello/sharding";
 
 export type StatsReply =
 	| { shard: number; ok: true; value: ShardStats }
 	| { shard: number; ok: false; error: { code: string; message: string } };
 
-declare module "rilo" {
+declare module "virello" {
 	interface ShardRequests {
 		statsRead: {
 			input: { shard: number | null };

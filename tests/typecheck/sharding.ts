@@ -2,10 +2,10 @@ import { expectTypeOf } from "expect-type";
 import type {
 	ShardStats as CategoryStats,
 	ShardStatsResult as CategoryStatsResult,
-} from "rilo/sharding";
+} from "virello/sharding";
 import type {
 	Container,
-	RiloClient,
+	VirelloClient,
 	ShardManager,
 	ShardResult,
 	ShardStats,
@@ -14,14 +14,19 @@ import type {
 
 expectTypeOf<ShardStats>().toEqualTypeOf<CategoryStats>();
 expectTypeOf<ShardStatsResult>().toEqualTypeOf<CategoryStatsResult>();
-expectTypeOf<Container["sharding"]>().toEqualTypeOf<RiloClient["sharding"]>();
+expectTypeOf<Container["sharding"]>().toEqualTypeOf<
+	VirelloClient["sharding"]
+>();
 
-declare module "rilo" {
+declare module "virello" {
 	interface ShardRequests {
 		typedExample: { input: { count: number }; output: string };
 	}
 }
-export function verifyShardingTypes(client: RiloClient, manager: ShardManager) {
+export function verifyShardingTypes(
+	client: VirelloClient,
+	manager: ShardManager,
+) {
 	expectTypeOf(
 		client.sharding.request(0, "typedExample", { count: 1 }),
 	).toEqualTypeOf<Promise<string>>();

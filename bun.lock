@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "rilo",
+      "name": "virello",
       "dependencies": {
         "@discordjs/builders": "^1.13.0",
         "@discordjs/collection": "^2.1.1",

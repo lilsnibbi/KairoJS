@@ -1,4 +1,4 @@
-# Rilo
+# Virello
 
 A modular Discord framework for Bun, written in TypeScript and built on discord.js. Organise your bot into commands, listeners and services, with explicit module loading and shared lifecycle management.
 
@@ -15,11 +15,11 @@ A modular Discord framework for Bun, written in TypeScript and built on discord.
 
 ## Original engine milestone
 
-The experimental [native Discord engine](docs/engine.md) is available through `rilo/engine`. It owns gateway sessions, REST and cache while the existing framework keeps its current runtime. Run `bun examples/engine/offline.ts` for a local connect/reply/resume demonstration with no Discord credentials.
+The experimental [native Discord engine](docs/engine.md) is available through `virello/engine`. It owns gateway sessions, REST and cache while the existing framework keeps its current runtime. Run `bun examples/engine/offline.ts` for a local connect/reply/resume demonstration with no Discord credentials.
 
 ## Getting started
 
-Use **Bun 1.4.3 or newer**. Rilo runs TypeScript directly; no compilation step is required.
+Use **Bun 1.4.3 or newer**. Virello runs TypeScript directly; no compilation step is required.
 
 From this repository, install dependencies:
 
@@ -40,10 +40,10 @@ The host starts two bot processes by default. Try `/ping`, `/stats` and `/shard`
 
 ### Create your own bot
 
-In a separate Bun project, install your local Rilo checkout and discord.js. Replace the path with your checkout location:
+In a separate Bun project, install your local Virello checkout and discord.js. Replace the path with your checkout location:
 
 ```sh
-bun add /absolute/path/to/Rilo discord.js
+bun add /absolute/path/to/Virello discord.js
 ```
 
 Use this layout:
@@ -60,12 +60,12 @@ Create `index.ts`:
 
 ```ts
 import { GatewayIntentBits } from "discord.js";
-import { RiloClient } from "rilo";
+import { VirelloClient } from "virello";
 
 const token = Bun.env.DISCORD_TOKEN;
 if (!token) throw new Error("Set DISCORD_TOKEN in your .env file.");
 
-const client = new RiloClient({
+const client = new VirelloClient({
 	intents: [GatewayIntentBits.Guilds],
 	root: import.meta.dir,
 	modules: { commands: "commands/**/*.ts" },
@@ -81,7 +81,7 @@ await client.login(token);
 Create `commands/ping.ts`:
 
 ```ts
-import { Command } from "rilo";
+import { Command } from "virello";
 
 export default class PingCommand extends Command {
 	static override options: Command.Options = {
@@ -115,13 +115,13 @@ The filename supplies the command name. Module paths are explicit glob patterns 
 Import from the package root or a focused entrypoint:
 
 ```ts
-import { RiloClient } from "rilo/client";
-import { Command, Precondition } from "rilo/commands";
-import { Task } from "rilo/scheduling";
-import { Result } from "rilo/utilities";
+import { VirelloClient } from "virello/client";
+import { Command, Precondition } from "virello/commands";
+import { Task } from "virello/scheduling";
+import { Result } from "virello/utilities";
 ```
 
-Other entrypoints include `modules`, `events`, `extensions`, `localisation`, `services`, `sharding`, `discord`, `time` and `validation`. Root and category imports share the same classes and state. Keep TypeScript declaration augmentation on `rilo`.
+Other entrypoints include `modules`, `events`, `extensions`, `localisation`, `services`, `sharding`, `discord`, `time` and `validation`. Root and category imports share the same classes and state. Keep TypeScript declaration augmentation on `virello`.
 
 ## Examples
 
@@ -146,11 +146,11 @@ Use **Bun canary**, the project's standard toolchain. Install it with `bun upgra
 | `bun fmt --check` | Check formatting without writing files  |
 | `bun fmt`         | Apply formatting                        |
 
-Redis integration tests require `RILO_TEST_REDIS_URL` pointing to a disposable Redis instance; otherwise those tests are skipped locally.
+Redis integration tests require `VIRELLO_TEST_REDIS_URL` pointing to a disposable Redis instance; otherwise those tests are skipped locally.
 
 Run `bun scripts/ci.ts` with that loopback Redis URL for complete validation: zero skipped tests, native Bun type checking, linting, formatting and both offline examples. On the Ubuntu x64 CI runner, `bash scripts/checkActions.sh` also checks the workflow with checksum-pinned actionlint.
 
-See [migration notes](BREAKING_CHANGES.md) when moving from an earlier Rilo API.
+See [migration notes](BREAKING_CHANGES.md) when moving from an earlier Virello API.
 
 See [console logging](docs/console-logging.md) for readable text/JSON output,
 redaction, custom logger compatibility and the offline `bun scripts/logging-demo.ts` preview.

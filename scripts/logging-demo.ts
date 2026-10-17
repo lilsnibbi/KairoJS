@@ -14,7 +14,7 @@ const requestedLayout = process.argv
 	.find((arg) => arg.startsWith("--layout="))
 	?.slice(9);
 const logger = createConsoleLogger(
-	"Rilo",
+	"Virello",
 	{
 		level: "DEBUG",
 		colors: process.argv.includes("--color") ? true : "auto",

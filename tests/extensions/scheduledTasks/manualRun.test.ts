@@ -1,20 +1,20 @@
 import { afterEach, expect, test } from "bun:test";
-import { container, RiloClient, Task } from "rilo";
+import { container, VirelloClient, Task } from "virello";
 
-declare module "rilo" {
+declare module "virello" {
 	interface Tasks {
 		manualDrain: never;
 	}
 }
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
 });
 
 test("client shutdown drains manually started tasks before unloading their resources", async () => {
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: { debug() {}, notif() {}, alert() {}, error() {} },
 	});

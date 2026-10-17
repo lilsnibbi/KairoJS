@@ -2,7 +2,7 @@ import { type Client, WebSocketManager } from "discord.js";
 import { ShardError } from "../types";
 
 /** discord.js 14 adapter: retire its whole gateway manager to discard cached shard count/session resume data.
- * Keep the RiloClient, modules, REST client and application listeners alive across dormant assignments.
+ * Keep the VirelloClient, modules, REST client and application listeners alive across dormant assignments.
  * The exported WebSocketManager's lifecycle methods are private in its TypeScript declarations.
  */
 export class ManagedGateway {

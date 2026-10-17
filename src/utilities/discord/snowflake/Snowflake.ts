@@ -1,8 +1,8 @@
-const IncrementSymbol = Symbol("rilo/snowflake.increment");
-const EpochSymbol = Symbol("rilo/snowflake.epoch");
-const EpochNumberSymbol = Symbol("rilo/snowflake.epoch.number");
-const ProcessIdSymbol = Symbol("rilo/snowflake.processId");
-const WorkerIdSymbol = Symbol("rilo/snowflake.workerId");
+const IncrementSymbol = Symbol("virello/snowflake.increment");
+const EpochSymbol = Symbol("virello/snowflake.epoch");
+const EpochNumberSymbol = Symbol("virello/snowflake.epoch.number");
+const ProcessIdSymbol = Symbol("virello/snowflake.processId");
+const WorkerIdSymbol = Symbol("virello/snowflake.workerId");
 
 /** The maximum value the `workerId` field accepts in snowflakes. */
 export const MaximumWorkerId = 0b11111n;

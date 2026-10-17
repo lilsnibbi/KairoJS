@@ -11,7 +11,7 @@ export function assertCanaryToolchain(
 export function requiredRedisUrl(value: string | undefined): string {
 	if (!value)
 		throw new Error(
-			"Complete validation requires RILO_TEST_REDIS_URL; Redis tests must not skip.",
+			"Complete validation requires VIRELLO_TEST_REDIS_URL; Redis tests must not skip.",
 		);
 	const url = new URL(value);
 	if (

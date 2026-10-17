@@ -19,7 +19,7 @@ import {
 	MessageFlags,
 	SeparatorBuilder,
 } from "discord.js";
-import { container, Pagination, type PaginationTarget } from "rilo";
+import { container, Pagination, type PaginationTarget } from "virello";
 
 type Snapshot = {
 	components: (

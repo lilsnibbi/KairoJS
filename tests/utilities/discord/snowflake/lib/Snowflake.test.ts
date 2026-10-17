@@ -219,7 +219,7 @@ describe("Snowflake", () => {
 		describe("increment overrides", () => {
 			const IncrementSymbol = Object.getOwnPropertySymbols(
 				new Snowflake(sampleEpoch),
-			).find((s) => s.description === "rilo/snowflake.increment");
+			).find((s) => s.description === "virello/snowflake.increment");
 
 			if (!IncrementSymbol)
 				throw new TypeError("Could not find IncrementSymbol");

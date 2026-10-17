@@ -1,4 +1,4 @@
-import { type LoggerLike, logEvent } from "rilo/engine";
+import { type LoggerLike, logEvent } from "virello/engine";
 import { exampleLogger } from "./logging";
 
 export function onShutdown(

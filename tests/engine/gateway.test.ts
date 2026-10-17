@@ -123,7 +123,7 @@ describe("GatewayShard", () => {
 				token: "literal-fake-token",
 				intents: 1,
 				shard: [1, 2],
-				properties: { browser: "rilo-engine", device: "rilo-engine" },
+				properties: { browser: "virello-engine", device: "virello-engine" },
 			},
 		});
 		expect(h.urls[0]).toBe("wss://gateway.example.test/?v=10&encoding=json");

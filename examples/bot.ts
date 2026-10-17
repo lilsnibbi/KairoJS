@@ -1,4 +1,4 @@
-import { logEvent } from "rilo/client";
+import { logEvent } from "virello/client";
 import { createBot } from "./client";
 import { ExampleConfigurationError, requiredEnv } from "./config";
 import { cleanupFailedStartup, exampleLogger, startupFailed } from "./logging";
@@ -15,7 +15,7 @@ async function main(): Promise<void> {
 	try {
 		if (!client.sharding.enabled)
 			throw new ExampleConfigurationError(
-				"RILO_SHARD",
+				"VIRELLO_SHARD",
 				"Start examples/host.ts; the host launches one bot process per assigned shard.",
 			);
 		if (offline) {

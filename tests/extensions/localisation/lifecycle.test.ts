@@ -1,16 +1,16 @@
 import { afterEach, expect, spyOn, test } from "bun:test";
 import { ApplicationCommandManager, Client, Collection } from "discord.js";
-import * as Rilo from "rilo";
+import * as Virello from "virello";
 import {
 	ApplicationCommandRegistry,
 	Command,
 	container,
-	RiloClient,
+	VirelloClient,
 	type LoggerLike,
-} from "rilo";
+} from "virello";
 import { handleRegistryAPICalls } from "../../../src/commands/registration/registries";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 class TestCommandManager extends ApplicationCommandManager {
 	public constructor(client: Client) {
 		super(client as Client<true>);
@@ -35,15 +35,15 @@ function logger() {
 }
 
 test("editable re-execution exports/config/listeners are removed while ordinary message handling remains", async () => {
-	expect("EditExtension" in Rilo).toBe(false);
+	expect("EditExtension" in Virello).toBe(false);
 	expect(
 		() =>
-			new RiloClient({
+			new VirelloClient({
 				intents: [],
 				extensions: { editableReplies: {} },
 			} as never),
 	).toThrow("Unknown built-in extension");
-	client = new RiloClient({ intents: [], messageCommands: true });
+	client = new VirelloClient({ intents: [], messageCommands: true });
 	await client.load();
 	expect(client.extensions).toHaveLength(5);
 	expect(client.modules.require("listeners").has("EditableMessageUpdate")).toBe(
@@ -60,7 +60,7 @@ test("login loads the default-enabled local manager before the Discord transport
 		return "local-test";
 	});
 	restores.push(() => hook.mockRestore());
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		extensions: {
 			localisation: {
@@ -77,7 +77,7 @@ test("invalid localisation engine configuration follows recoverable extension fa
 	const logs = logger();
 	const hook = spyOn(Client.prototype, "login").mockResolvedValue("local-test");
 	restores.push(() => hook.mockRestore());
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: logs.value,
 		extensions: { localisation: { i18next: { saveMissing: true } } },
@@ -100,7 +100,7 @@ test("invalid localisation engine configuration follows recoverable extension fa
 
 test("real discord.js manager serialises translated registry payloads for global/guild REST and retains returned ID routing", async () => {
 	const logs = logger();
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: logs.value,
 		extensions: {
@@ -213,7 +213,7 @@ test("real discord.js manager serialises translated registry payloads for global
 
 test("strict translation errors isolate their command while other commands reach the mocked REST boundary", async () => {
 	const logs = logger();
-	client = new RiloClient({
+	client = new VirelloClient({
 		intents: [],
 		logger: logs.value,
 		extensions: {

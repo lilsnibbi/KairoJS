@@ -5,10 +5,10 @@ import {
 	type TaskResolvable,
 	type TaskRunContext,
 	TaskScheduler,
-} from "rilo";
+} from "virello";
 import { nextOccurrence } from "../../../src/extensions/scheduledTasks/timing";
 
-declare module "rilo" {
+declare module "virello" {
 	interface Tasks {
 		timerTest: never;
 		payloadTest: { value: string };
@@ -223,7 +223,7 @@ test("cron scheduling keeps timezones and DST while intervals skip missed occurr
 	expect(nextOccurrence({ interval: 1000 }, 5000, 10400)).toBe(11000);
 });
 
-const url = process.env.RILO_TEST_REDIS_URL;
+const url = process.env.VIRELLO_TEST_REDIS_URL;
 describe.skipIf(!url)("live Redis scheduler", () => {
 	async function withTestUser(
 		run: (
@@ -235,7 +235,7 @@ describe.skipIf(!url)("live Redis scheduler", () => {
 		if (!["127.0.0.1", "localhost", "[::1]"].includes(new URL(url!).hostname))
 			throw new Error("Expected loopback test Redis");
 		const admin = new RedisClient(url!);
-		const username = `rilo-test-${crypto.randomUUID()}`;
+		const username = `virello-test-${crypto.randomUUID()}`;
 		const password = crypto.randomUUID();
 		const address = new URL(url!);
 		address.username = username;
@@ -247,7 +247,7 @@ describe.skipIf(!url)("live Redis scheduler", () => {
 				username,
 				"on",
 				`>${password}`,
-				"~rilo:tasks:v1:*",
+				"~virello:tasks:v1:*",
 				"+ping",
 				"+eval",
 				"+hget",

@@ -1,6 +1,6 @@
 import "./contracts";
-import { logEvent } from "rilo/client";
-import { ShardCoordinator, ShardManager } from "rilo/sharding";
+import { logEvent } from "virello/client";
+import { ShardCoordinator, ShardManager } from "virello/sharding";
 import { exampleLogger } from "./logging";
 import { summarizeStats } from "./stats";
 

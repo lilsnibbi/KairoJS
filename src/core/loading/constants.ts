@@ -1,2 +1,2 @@
 export const VirtualPath = "::virtual::";
-export const RegisteredModules = Symbol("rilo:registeredModules");
+export const RegisteredModules = Symbol("virello:registeredModules");

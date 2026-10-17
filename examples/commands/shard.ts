@@ -1,6 +1,6 @@
 import { MessageFlags } from "discord.js";
-import { logEvent } from "rilo/client";
-import { Command } from "rilo/commands";
+import { logEvent } from "virello/client";
+import { Command } from "virello/commands";
 import { registerCommand } from "../registration";
 
 export default class ShardCommand extends Command {

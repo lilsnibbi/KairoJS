@@ -1,6 +1,6 @@
 # Original Discord engine milestone
 
-`rilo/engine` is an experimental, independent Bun client implemented inside Rilo. It owns its gateway session, REST transport and synchronous cache. The existing RiloClient, module system, commands, extensions and root exports retain their current behavior. Importing the engine does not migrate framework features.
+`virello/engine` is an experimental, independent Bun client implemented inside Virello. It owns its gateway session, REST transport and synchronous cache. The existing VirelloClient, module system, commands, extensions and root exports retain their current behavior. Importing the engine does not migrate framework features.
 
 ## Run it
 
@@ -19,7 +19,7 @@ The offline example creates a loopback HTTP/WebSocket server, receives a message
 `bun examples/engine/live.ts` only logs instructions. To opt into Discord yourself, set `DISCORD_TOKEN` and add `--live`. The example requires Guilds, GuildMessages and MessageContent intents, plus permission to read and send in the channel. It replies to `!engine-ping`. Its interaction branch handles an already registered `engine-ping` command; it does not register commands. No live Discord validation was performed.
 
 ```ts
-import { createConsoleLogger, EngineClient, logEvent } from "rilo/engine";
+import { createConsoleLogger, EngineClient, logEvent } from "virello/engine";
 import {
 	GatewayIntentBits,
 	InteractionResponseType,
@@ -103,7 +103,7 @@ Historical validation on 2026-10-11 used Bun 1.4.2 on Windows x64 and a disposab
 
 - `bun install --frozen-lockfile --ignore-scripts`: succeeded without lock changes.
 - `bun run engine:test`: 76 passing tests across four files, 279 assertions.
-- `bun scripts/ci.ts` with `RILO_TEST_REDIS_URL`: 2,361 passing tests across 226 files, 4,943 assertions, zero failures and zero skipped tests.
+- `bun scripts/ci.ts` with `VIRELLO_TEST_REDIS_URL`: 2,361 passing tests across 226 files, 4,943 assertions, zero failures and zero skipped tests.
 - The same CI run passed type checking, the lint and formatting checks configured at the time, the existing offline framework example, the engine offline example and `bun run smoke`.
 - The smoke test packed and installed the package in a temporary consumer, audited public exports/notices, loaded a framework command and ran the native engine connect/reply/resume example.
 
@@ -123,22 +123,22 @@ Reviewed on 2026-10-11:
 
 `$MessageUpdateData` conservatively permits omitted native update fields with Partial plus required id/channel_id. Version 0.38.56 declares the create fields required for updates. This engine retains the agreed partial-update contract without renaming or reinterpreting fields.
 
-The Ovencord checkout was read only. Package boundaries, WebSocketShard/identify strategies, REST SequentialHandler's bucket/major/global separation, and CachedManager's resident patching boundary informed the review. Its source, Collection abstraction, compatibility API and benchmark claims were not copied. Rilo uses its own Map/Set stores, scheduler, lifecycle and helpers.
+The Ovencord checkout was read only. Package boundaries, WebSocketShard/identify strategies, REST SequentialHandler's bucket/major/global separation, and CachedManager's resident patching boundary informed the review. Its source, Collection abstraction, compatibility API and benchmark claims were not copied. Virello uses its own Map/Set stores, scheduler, lifecycle and helpers.
 
 ## Production gaps
 
 - A real bot session needs explicit approval. Extended reconnect soak tests and large real guild payloads remain untested; this milestone uses deterministic mocks and local servers.
-- One shard per client is supported. The local identify budget cannot account for other processes or persist session starts across restarts. Supply waitForIdentify when sharing a token and integrate the existing Rilo coordinator.
+- One shard per client is supported. The local identify budget cannot account for other processes or persist session starts across restarts. Supply waitForIdentify when sharing a token and integrate the existing Virello coordinator.
 - Add full payload validation and broader cache projections. Reaction counts, user updates across every guild, thread membership and ancillary guild collections still need reconciliation. This is not complete Discord cache coverage.
 - Add compression, multipart uploads, additional typed endpoints, proactive global pacing, route-specific sublimits, retry telemetry and deadline-aware prioritization. Different routes can be coalesced only after headers reveal their shared bucket.
 - Interaction callbacks share the bounded REST scheduler. Respond or defer promptly to meet Discord's initial-response deadline; automatic deferral, follow-up helpers and deadline reservation remain future work.
 - Profile real traces before changing policy. Activity traversal, cache misses and JSON parsing need realistic workload evaluation.
 
-## Future Rilo integration
+## Future Virello integration
 
 1. Introduce engine-facing command/listener contexts using native payloads and thin helpers, then test adapters for current framework contracts.
 2. Replace discord.js-specific permission, resolver, collector, pagination and registration dependencies at explicit boundaries without building a compatibility clone.
 3. Wire ShardLink.waitForIdentify, shard readiness and cleanup into EngineClient's injected permits and state hooks.
-4. Port extensions and example bots with contract tests before changing RiloClient's runtime and retiring discord.js dependencies.
+4. Port extensions and example bots with contract tests before changing VirelloClient's runtime and retiring discord.js dependencies.
 
-The independent subpath is deliberate. The root API baseline stays intact, and a test verifies that this engine and the existing offline RiloClient coexist without changing the framework container.
+The independent subpath is deliberate. The root API baseline stays intact, and a test verifies that this engine and the existing offline VirelloClient coexist without changing the framework container.

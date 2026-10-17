@@ -1,4 +1,4 @@
-import type { RiloClient } from "../../core/client/RiloClient";
+import type { VirelloClient } from "../../core/client/VirelloClient";
 import { Extension } from "../../core/lifecycle/Extension";
 import { container } from "../../core/modules/index";
 import { LocaleManager } from "./index";
@@ -9,7 +9,7 @@ export class LocaleExtension extends Extension {
 	 * Register translation resources and helpers during client construction.
 	 * @param client - Client being configured.
 	 */
-	static override setup(client: RiloClient): void {
+	static override setup(client: VirelloClient): void {
 		container.i18n = new LocaleManager(
 			client.options.extensions?.localisation || undefined,
 		);

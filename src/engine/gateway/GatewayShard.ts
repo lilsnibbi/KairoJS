@@ -291,8 +291,8 @@ export class GatewayShard {
 						shard: this.shard,
 						properties: {
 							os: process.platform,
-							browser: "rilo-engine",
-							device: "rilo-engine",
+							browser: "virello-engine",
+							device: "virello-engine",
 						},
 					},
 				});

@@ -8,7 +8,7 @@ the same `ShardManager` and bot entrypoint.
 ## Coordinator configuration
 
 ```ts
-import { ShardCoordinator } from "rilo/sharding";
+import { ShardCoordinator } from "virello/sharding";
 
 const coordinator = new ShardCoordinator({
 	shardCount: 2,
@@ -180,7 +180,7 @@ cooldown, readiness and allowance checks. Periodic checks continue automatically
 
 Structured logs emit `scaling_status`, `scaling_failed` and host `reassigned`
 events. Ordinary waiting/stable reasons are logged only when status changes.
-Use `RILO_LOG_FORMAT=json` for full context. Logs contain counts and host IDs,
+Use `VIRELLO_LOG_FORMAT=json` for full context. Logs contain counts and host IDs,
 not guild IDs, tokens or application payloads.
 
 Upgrade coordinator, hosts and children together. The internal transport adds

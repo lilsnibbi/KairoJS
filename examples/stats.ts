@@ -1,4 +1,4 @@
-import type { ShardResult } from "rilo/sharding";
+import type { ShardResult } from "virello/sharding";
 import type { ExampleShardStats } from "./contracts";
 
 /** Console diagnostics stay separate from the Discord reply copy below. */

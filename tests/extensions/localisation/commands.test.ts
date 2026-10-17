@@ -12,11 +12,11 @@ import {
 	container,
 	createLocalizedChoice,
 	type InternationalizationOptions,
-	RiloClient,
+	VirelloClient,
 	LocaleManager,
-} from "rilo";
+} from "virello";
 
-let client: RiloClient | undefined;
+let client: VirelloClient | undefined;
 afterEach(async () => {
 	await client?.destroy();
 	client = undefined;
@@ -625,7 +625,7 @@ describe("Discord command localisation", () => {
 		expect("description_localizations" in result).toBe(false);
 	});
 	test("registry builder/object paths use the same manager and queue only base routing names", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: {
 				localisation: { i18next: { resources }, onDiagnostic: () => {} },
@@ -669,7 +669,7 @@ describe("Discord command localisation", () => {
 		expect(registry["apiCalls"][2]!.builtData.name).toBe("Paint");
 	});
 	test("bad translations isolate one registry call; ordinary registration works with localisation disabled", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: { localisation: false },
 		});
@@ -685,7 +685,7 @@ describe("Discord command localisation", () => {
 		expect(registry["apiCalls"]).toHaveLength(1);
 	});
 	test("legacy helpers preserve pre-set base names, explicit maps and exact choice values without a process-global cache", async () => {
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: {
 				localisation: { i18next: { resources }, onDiagnostic: () => {} },
@@ -709,7 +709,7 @@ describe("Discord command localisation", () => {
 			}).value,
 		).toBe("unchanged");
 		await client.destroy();
-		client = new RiloClient({
+		client = new VirelloClient({
 			intents: [],
 			extensions: {
 				localisation: {

@@ -73,7 +73,7 @@ jobs:
         run: bash scripts/checkActions.sh
       - name: Complete validation (Redis required; no skipped tests)
         env:
-          RILO_TEST_REDIS_URL: redis://127.0.0.1:${{ job.services.redis.ports['6379'] }}
+          VIRELLO_TEST_REDIS_URL: redis://127.0.0.1:${{ job.services.redis.ports['6379'] }}
         run: bun scripts/ci.ts
       - name: Redis diagnostics
         if: failure()
@@ -131,7 +131,7 @@ jobs:
             needs.required.outputs.validation_skipped == 'true')) &&
           github.event_name == 'push' && github.ref_type == 'branch' &&
           github.ref_name == github.event.repository.default_branch &&
-          vars.RILO_RELEASES == 'true' }}
+          vars.VIRELLO_RELEASES == 'true' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     concurrency:
